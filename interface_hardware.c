@@ -33,20 +33,18 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
 /*********** Static functions ***********/
 static void init_portaudio(void)
 {
-    DEBUG_LOG("INITTING\n")
     PaError err = paNoError;
 
     if (pa_initted)
     {
         /* Already initted */
-        DEBUG_LOG("ALREADY INITTED\n")
         return;
     }
 
     pa_initted = 1;
+    err = Pa_Initialize();
     if (err != paNoError)
     {
-        DEBUG_LOG("ERROR\n")
         fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
         pa_initted = 0;
     }
@@ -229,8 +227,6 @@ void list_hw_input_devices(void)
     const PaDeviceInfo *deviceInfo;
 
     init_portaudio();
-
-    DEBUG_LOG("LISTING\n")
 
     defaultInput = Pa_GetDefaultInputDevice();
     defaultOutput = Pa_GetDefaultOutputDevice();
