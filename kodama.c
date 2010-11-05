@@ -5,11 +5,11 @@
 
 #include "hybrid.h"
 #include "interface_hardware.h"
+#include "interface_network.h"
 #include "kodama.h"
 
 struct globals {
     gchar *xmit;
-    gchar *recv;
 } globals;
 
 void usage(char *arg0)
@@ -20,8 +20,7 @@ void usage(char *arg0)
     fprintf(stderr, "-h: this help\n");
     fprintf(stderr, "--------------\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "-x: host:port  Hostname and port to xmit to\n");
-    fprintf(stderr, "-r: port       Portnum to listen on\n");
+    fprintf(stderr, "-x: host    Xmit data to host instead of shortcircuiting\n");
 }
 
 void parse_command_line(int argc, char *argv[])
@@ -44,9 +43,6 @@ void parse_command_line(int argc, char *argv[])
         case 'x':
             globals.xmit = g_strdup_printf("%s", optarg);
             break;
-        case 'r':
-            globals.recv = g_strdup_printf("%s", optarg);
-            break;
         case '?':
             fprintf(stderr, "Unknown option %c.\n", optopt);
             exit(1);
@@ -54,44 +50,19 @@ void parse_command_line(int argc, char *argv[])
     }
 }
 
-void shortcircuit_tx_to_rx(hybrid *h)
-{
-    fprintf(stderr, "shortcircuit_tx_to_rx\n");
-
-    SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
-
-    hybrid_put_rx_samples(h, sb);
-
-    sample_block_destroy(sb);
-
-    if (h->rx_cb_fn)
-        (*h->rx_cb_fn)(h);
-}
-
 int main(int argc, char *argv[])
 {
     parse_command_line(argc, argv);
 
     hybrid *h = hybrid_new();
-    /* Default callback fn - shortcircuit tx to rx */
-    h->tx_cb_fn = shortcircuit_tx_to_rx;
 
-    if (!globals.xmit)
-    {
-        setup_hw_out(h);
-    }
-    else
-    {
-        setup_network_out(h, globals.xmit);
-    }
+    setup_hw_in(h);
+    setup_hw_out(h);
 
-    if (!globals.recv)
+    if (globals.xmit)
     {
-        setup_hw_in(h);
-    }
-    else
-    {
-        setup_network_in(h, globals.recv);
+        setup_network_xmit(h, globals.xmit);
+        setup_network_recv(h);
     }
 
     GMainLoop *loop;

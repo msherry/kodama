@@ -12,6 +12,8 @@
 #define NUM_CHANNELS (1)
 #define SAMPLE_RATE  (8000)
 
+#define PORTNUM (765)
+
 /* Select sample format. TODO: let's not make these constants, yes? */
 #if 0
 #define PA_SAMPLE_TYPE  paFloat32
