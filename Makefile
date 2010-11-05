@@ -17,7 +17,7 @@ LIBRARIES = -lportaudio
 # 	GLIB_LIBS := -L/opt/local/lib -lglib-2.0
 # endif
 
-OBJS = kodama.o interface_hardware.o
+OBJS = cbuffer.o interface_hardware.o kodama.o
 
 ALL: kodama
 
