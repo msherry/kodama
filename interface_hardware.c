@@ -33,26 +33,26 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
 /*********** Static functions ***********/
 static void init_portaudio(void)
 {
+    DEBUG_LOG("INITTING\n")
     PaError err = paNoError;
 
     if (pa_initted)
     {
         /* Already initted */
+        DEBUG_LOG("ALREADY INITTED\n")
         return;
     }
 
     pa_initted = 1;
     if (err != paNoError)
     {
+        DEBUG_LOG("ERROR\n")
         fprintf(stderr, "portaudio error: %s\n", Pa_GetErrorText(err));
         pa_initted = 0;
     }
 }
 
 
-/* Set up a stream to read from the microphone and fill a buffer (contained in
- * the stream_context), then call whatever function is contained in sc (passing
- * sc as an arg). */
 void setup_hw_in(hybrid *h)
 {
     PaError err = paNoError;
@@ -63,7 +63,8 @@ void setup_hw_in(hybrid *h)
     inputParameters.device = Pa_GetDefaultInputDevice();
     inputParameters.channelCount = NUM_CHANNELS;
     inputParameters.sampleFormat = PA_SAMPLE_TYPE;
-    inputParameters.suggestedLatency = Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
+    inputParameters.suggestedLatency = \
+        Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
     inputParameters.hostApiSpecificStreamInfo = NULL;
 
     err = Pa_OpenStream(&in_stream, &inputParameters, NULL, SAMPLE_RATE,
@@ -102,7 +103,8 @@ void setup_hw_out(hybrid *h)
     outputParameters.device = Pa_GetDefaultOutputDevice();
     outputParameters.channelCount = NUM_CHANNELS;
     outputParameters.sampleFormat = PA_SAMPLE_TYPE;
-    outputParameters.suggestedLatency = Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
+    outputParameters.suggestedLatency = \
+        Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
     err = Pa_OpenStream(&out_stream, NULL, &outputParameters, SAMPLE_RATE,
@@ -227,6 +229,8 @@ void list_hw_input_devices(void)
     const PaDeviceInfo *deviceInfo;
 
     init_portaudio();
+
+    DEBUG_LOG("LISTING\n")
 
     defaultInput = Pa_GetDefaultInputDevice();
     defaultOutput = Pa_GetDefaultOutputDevice();

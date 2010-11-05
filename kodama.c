@@ -45,8 +45,6 @@ void parse_command_line(int argc, char *argv[])
   }
 }
 
-/* Pass data from the tx cb to the rx cb, skipping the xmit/recv functions. For
- * local testing */
 void shortcircuit_tx_to_rx(hybrid *h)
 {
   fprintf(stderr, "shortcircuit_tx_to_rx\n");
@@ -78,6 +76,10 @@ int main(int argc, char *argv[])
 
   setup_hw_in(h);
   setup_hw_out(h);
+
+  /* GMainLoop *loop; */
+  /* loop = g_main_loop_new(NULL, FALSE); */
+  /* g_main_loop_run(loop); */
 
   return 0;
 }

@@ -28,7 +28,7 @@ kodama: ${OBJS}
 	${CC} ${CFLAGS} ${INCLUDES} -c $<
 
 clean:
-	rm -f *.o *.out ${PROG}
+	rm -f *.o *.out kodama
 
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
