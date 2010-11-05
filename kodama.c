@@ -1,3 +1,4 @@
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -79,9 +80,9 @@ int main(int argc, char *argv[])
   setup_hw_in(h);
   setup_hw_out(h);
 
-  /* GMainLoop *loop; */
-  /* loop = g_main_loop_new(NULL, FALSE); */
-  /* g_main_loop_run(loop); */
+  GMainLoop *loop;
+  loop = g_main_loop_new(NULL, FALSE);
+  g_main_loop_run(loop);
 
   return 0;
 }
