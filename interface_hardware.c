@@ -35,29 +35,29 @@ done:
 /************** Public functions **************/
 void list_hw_input_devices(void)
 {
-  int i;
-  int defaultInput, defaultOutput;
-  int numDevices;
-  const PaDeviceInfo *deviceInfo;
+    int i;
+    int defaultInput, defaultOutput;
+    int numDevices;
+    const PaDeviceInfo *deviceInfo;
 
-  init_portaudio();
+    init_portaudio();
 
-  defaultInput = Pa_GetDefaultInputDevice();
-  defaultOutput = Pa_GetDefaultOutputDevice();
+    defaultInput = Pa_GetDefaultInputDevice();
+    defaultOutput = Pa_GetDefaultOutputDevice();
 
-  numDevices = Pa_GetDeviceCount();
+    numDevices = Pa_GetDeviceCount();
 
-  for(i=0; i<numDevices; i++)
-  {
-    deviceInfo = Pa_GetDeviceInfo(i);
+    for(i=0; i<numDevices; i++)
+    {
+        deviceInfo = Pa_GetDeviceInfo(i);
 
-    fprintf(stderr, "%d\t%s ", i, deviceInfo->name);
-    if (i == defaultInput)
-      fprintf(stderr, "*");
-    if (i == defaultOutput)
-      fprintf(stderr, "%%");
-    fprintf(stderr, "\n");
-  }
+        fprintf(stderr, "%d\t%s ", i, deviceInfo->name);
+        if (i == defaultInput)
+            fprintf(stderr, "*");
+        if (i == defaultOutput)
+            fprintf(stderr, "%%");
+        fprintf(stderr, "\n");
+    }
 }
 
 
