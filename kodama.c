@@ -80,9 +80,18 @@ int main(int argc, char *argv[])
     {
         setup_hw_out(h);
     }
+    else
+    {
+        setup_network_out(h, globals.xmit);
+    }
+
     if (!globals.recv)
     {
         setup_hw_in(h);
+    }
+    else
+    {
+        setup_network_in(h, globals.recv);
     }
 
     GMainLoop *loop;
