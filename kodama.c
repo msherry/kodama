@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#include "interface_hardware.h"
 #include "kodama.h"
 
 struct globals {
@@ -12,6 +13,7 @@ void usage(char *arg0)
 {
     fprintf(stderr, "Usage: %s [options]...\n", arg0);
     fprintf(stderr, "\n");
+    fprintf(stderr, "-l: list hardware input devices\n");
     fprintf(stderr, "-h: this help\n");
 }
 
@@ -21,12 +23,16 @@ void parse_command_line(int argc, char *argv[])
 
   globals.i = 0;
   opterr = 0;
-  while ((c = getopt(argc, argv, "h")) != -1)
+  while ((c = getopt(argc, argv, "hl")) != -1)
   {
     switch (c)
     {
     case 'h':
         usage(argv[0]);
+        exit(0);
+        break;
+    case 'l':
+        list_hw_input_devices();
         exit(0);
         break;
     /* case 'i': */

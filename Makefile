@@ -1,10 +1,12 @@
+PORTAUDIODIR = portaudio
+
 CC = gcc
 LD = gcc
 
 CFLAGS = -g -Wall -Wextra -DDEBUG=1
-INCLUDES = #-I${PORTAUDIODIR}/include
-LDFLAGS = #-L${PORTAUDIODIR}/lib/.libs
-LIBRARIES =
+INCLUDES = -I${PORTAUDIODIR}/include
+LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
+LIBRARIES = -lportaudio
 
 # OS := $(shell uname)
 # ifeq ($(OS), Linux)
@@ -15,7 +17,7 @@ LIBRARIES =
 # 	GLIB_LIBS := -L/opt/local/lib -lglib-2.0
 # endif
 
-OBJS = kodama.o
+OBJS = kodama.o interface_hardware.o
 
 ALL: kodama
 
