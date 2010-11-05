@@ -54,14 +54,24 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     cbuffer_push_bulk(h->rx_buf, sb);
 }
 
-SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h)
+SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count)
 {
-    SAMPLE_BLOCK *sb = cbuffer_get_all(h->tx_buf);
+    SAMPLE_BLOCK *sb;
+    if (count == 0)
+    {
+        count = cbuffer_get_count(h->tx_buf);
+    }
+    sb = cbuffer_get_samples(h->tx_buf, count);
     return sb;
 }
 
-SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h)
+SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count)
 {
-    SAMPLE_BLOCK *sb = cbuffer_get_all(h->rx_buf);
+    SAMPLE_BLOCK *sb;
+    if (count == 0)
+    {
+        count = cbuffer_get_count(h->rx_buf);
+    }
+    sb = cbuffer_get_samples(h->rx_buf, count);
     return sb;
 }

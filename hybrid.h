@@ -41,8 +41,8 @@ typedef struct hybrid {
 /* Hybrid methods */
 hybrid *hybrid_new(void);
 void hybrid_destroy(hybrid *h);
-SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h);
-SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h);
+SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count);
+SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb);
 void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb);
 

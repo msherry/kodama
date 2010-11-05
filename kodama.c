@@ -58,7 +58,7 @@ void shortcircuit_tx_to_rx(hybrid *h)
 {
   fprintf(stderr, "shortcircuit_tx_to_rx\n");
 
-  SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h);
+  SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
 
   hybrid_put_rx_samples(h, sb);
 
