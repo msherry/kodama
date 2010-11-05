@@ -180,7 +180,7 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
     UNUSED(statusFlags);
 
     /* Currently, we're relying on the fact that if the cbuffer doesn't have
-     * enough frames to satisfy our request, it will return zeroes. */
+     * enough frames to satisfy our request, it will return silence. */
     size_t num_samples_needed = framesPerBuffer * NUM_CHANNELS;
     SAMPLE_BLOCK *sb = hybrid_get_rx_samples(h, num_samples_needed);
     SAMPLE *s = sb->s;
