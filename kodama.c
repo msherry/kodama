@@ -8,7 +8,8 @@
 #include "kodama.h"
 
 struct globals {
-    int i;
+    gchar *xmit;
+    gchar *recv;
 } globals;
 
 void usage(char *arg0)
@@ -17,16 +18,18 @@ void usage(char *arg0)
     fprintf(stderr, "\n");
     fprintf(stderr, "-l: list hardware input devices\n");
     fprintf(stderr, "-h: this help\n");
+    fprintf(stderr, "--------------\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-x: host:port  Hostname and port to xmit to\n");
+    fprintf(stderr, "-r: port       Portnum to listen on\n");
 }
 
 void parse_command_line(int argc, char *argv[])
 {
   int c;
 
-  globals.i = 0;
-
   opterr = 0;
-  while ((c = getopt(argc, argv, "hl")) != -1)
+  while ((c = getopt(argc, argv, "hlx:r:")) != -1)
   {
     switch (c)
     {
@@ -38,9 +41,12 @@ void parse_command_line(int argc, char *argv[])
         list_hw_input_devices();
         exit(0);
         break;
-    /* case 'i': */
-    /*   globals.in_file = g_strdup_printf("%s", optarg); */
-    /*   break; */
+    case 'x':
+      globals.xmit = g_strdup_printf("%s", optarg);
+      break;
+    case 'r':
+      globals.recv = g_strdup_printf("%s", optarg);
+      break;
     case '?':
       fprintf(stderr, "Unknown option %c.\n", optopt);
       exit(1);
@@ -52,14 +58,11 @@ void shortcircuit_tx_to_rx(hybrid *h)
 {
   fprintf(stderr, "shortcircuit_tx_to_rx\n");
 
-  CBuffer *tx_buf = h->tx_buf;
-  CBuffer *rx_buf = h->rx_buf;
+  SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h);
 
-  while (cbuffer_get_count(tx_buf) > 0)
-  {
-    SAMPLE s = cbuffer_pop(tx_buf);
-    cbuffer_push(rx_buf, s);
-  }
+  hybrid_put_rx_samples(h, sb);
+
+  sample_block_destroy(sb);
 
   if (h->rx_cb_fn)
     (*h->rx_cb_fn)(h);
@@ -69,29 +72,18 @@ int main(int argc, char *argv[])
 {
   parse_command_line(argc, argv);
 
-  hybrid *h = calloc(1, sizeof(hybrid));
+  hybrid *h = hybrid_new();
+  /* Default callback fn - shortcircuit tx to rx */
+  h->tx_cb_fn = shortcircuit_tx_to_rx;
+
+  if (!globals.xmit)
   {
-      h->tx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
-      h->rx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
-
-      h->tx_count = 0;
-      h->rx_count = 0;
-
-      /* Default callback fn - shortcircuit tx to rx */
-      h->tx_cb_fn = shortcircuit_tx_to_rx;
-
-      /* Dummy initial data to simulate delay */
-      float NUM_SECONDS = 0;
-      int i;
-      for (i=0; i<NUM_SECONDS * SAMPLE_RATE * NUM_CHANNELS; i++)
-      {
-          printf("%d\n", i);
-          cbuffer_push(h->rx_buf, SAMPLE_SILENCE);
-      }
+      setup_hw_out(h);
   }
-
-  setup_hw_in(h);
-  setup_hw_out(h);
+  if (!globals.recv)
+  {
+      setup_hw_in(h);
+  }
 
   GMainLoop *loop;
   loop = g_main_loop_new(NULL, FALSE);

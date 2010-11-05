@@ -140,7 +140,7 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
     (void) timeInfo;
     (void) statusFlags;
 
-    DEBUG_LOG("handle_read (hardware): %li frames requested\n", framesPerBuffer);
+    /* DEBUG_LOG("handle_read (hardware): %li frames requested\n", framesPerBuffer); */
 
     unsigned int i;
     if( inputBuffer == NULL )
@@ -189,7 +189,7 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
     SAMPLE *wptr = (SAMPLE*)outputBuffer;
     unsigned int i;
 
-    DEBUG_LOG("handle_write (hardware): %li frames requested\n", framesPerBuffer);
+    /* DEBUG_LOG("handle_write (hardware): %li frames requested\n", framesPerBuffer); */
 
     (void)inputBuffer;
     (void)timeInfo;
