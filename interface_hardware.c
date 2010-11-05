@@ -123,7 +123,6 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
         void *userData )
 {
     hybrid *h = (hybrid *)userData;
-    CBuffer *tx_buf = h->tx_buf;
     SAMPLE *rptr = (SAMPLE *)inputBuffer;
 
     UNUSED(outputBuffer);
@@ -132,33 +131,30 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
 
     /* DEBUG_LOG("handle_read (hardware): %li frames requested\n", framesPerBuffer); */
 
-    unsigned int i;
+    size_t num_samples_needed = framesPerBuffer * NUM_CHANNELS;
+    SAMPLE_BLOCK *sb = sample_block_create(num_samples_needed);
+
+    SAMPLE *s = sb->s;
     if( inputBuffer == NULL )
     {
-        for( i=0; i<framesPerBuffer; i++ )
+        /* Push some silence */
+        while(num_samples_needed--)
         {
-            cbuffer_push(tx_buf, SAMPLE_SILENCE);   /* left */
-            if( NUM_CHANNELS == 2 )
-            {
-                cbuffer_push(tx_buf, SAMPLE_SILENCE); /* right */
-            }
+            *s++ = SAMPLE_SILENCE;
         }
     }
     else
     {
-        /* This may discard old data from buf if it hasn't been gotten to
-         * yet. This is intentional */
-        for( i=0; i<framesPerBuffer; i++)
+        /* This may discard old data from the hybrids tx_buf if it hasn't been
+         * gotten to yet. This is intentional */
+        while(num_samples_needed--)
         {
-            SAMPLE s = *rptr++;
-            cbuffer_push(tx_buf, s);  /* left */
-            if( NUM_CHANNELS == 2 )
-            {
-                s = *rptr++;
-                cbuffer_push(tx_buf, s);  /* right */
-            }
+            *s++ = *rptr++;
         }
     }
+
+    hybrid_put_tx_samples(h, sb);
+    sample_block_destroy(sb);
 
     /* The buffer has new data in it - let's inform whoever cares about it */
     if (h->tx_cb_fn)
@@ -175,9 +171,7 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
         void *userData )
 {
     hybrid *h = (hybrid *)userData;
-    CBuffer *rx_buf = h->rx_buf;
     SAMPLE *wptr = (SAMPLE*)outputBuffer;
-    unsigned int i;
 
     /* DEBUG_LOG("handle_write (hardware): %li frames requested\n", framesPerBuffer); */
 
@@ -187,20 +181,16 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
 
     /* Currently, we're relying on the fact that if the cbuffer doesn't have
      * enough frames to satisfy our request, it will return zeroes. */
-    for( i=0; i<framesPerBuffer; i++ )
+    size_t num_samples_needed = framesPerBuffer * NUM_CHANNELS;
+    SAMPLE_BLOCK *sb = hybrid_get_rx_samples(h, num_samples_needed);
+    SAMPLE *s = sb->s;
+    size_t copied = 0;
+    while (copied++ < num_samples_needed)
     {
-        SAMPLE s = cbuffer_pop(rx_buf); /* left */
-        /* if (h->ec) */
-        /*     s = echo_can_update(h->ec, cbuffer_pop(h->ec->cb), s); */
-        *wptr++ = s;
-        if( NUM_CHANNELS == 2 )
-        {
-            s = cbuffer_pop(rx_buf);   /* right */
-            /* if (h->ec) */
-            /*     s = echo_can_update(h->ec, cbuffer_pop(h->ec->cb), s); */
-            *wptr++ = s;
-        }
+        *wptr++ = *s++;
     }
+
+    sample_block_destroy(sb);
 
     /* This is the end of the line for audio data - it's been dumped to the
      * hardware (outputBuffer). No further callbacks possible */

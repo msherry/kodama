@@ -83,9 +83,7 @@ size_t cbuffer_get_free(CBuffer *cb)
 /* Caller is responsible for freeing allocated memory */
 SAMPLE_BLOCK *cbuffer_get_samples(CBuffer *cb, size_t count)
 {
-    SAMPLE_BLOCK *sb = malloc(sizeof(SAMPLE_BLOCK));
-    sb->s = malloc(count * sizeof(SAMPLE));
-    sb->count = count;
+    SAMPLE_BLOCK *sb = sample_block_create(count);
 
     /* TODO: this is probably less efficient than it could be */
     SAMPLE *head = sb->s;
@@ -104,6 +102,15 @@ void cbuffer_push_bulk(CBuffer *cb, SAMPLE_BLOCK *sb)
     {
         cbuffer_push(cb, *s++);
     }
+}
+
+SAMPLE_BLOCK *sample_block_create(size_t count)
+{
+    SAMPLE_BLOCK *sb = malloc(sizeof(SAMPLE_BLOCK));
+    sb->s = malloc(count * sizeof(SAMPLE));
+    sb->count = count;
+
+    return sb;
 }
 
 void sample_block_destroy(SAMPLE_BLOCK *sb)
