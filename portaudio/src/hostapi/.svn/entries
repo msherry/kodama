@@ -1,0 +1,58 @@
+10
+
+dir
+1501
+https://www.portaudio.com/repos/portaudio/trunk/src/hostapi
+https://www.portaudio.com/repos
+
+
+
+2010-05-20T17:28:23.091091Z
+1501
+dmitrykos
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+0f58301d-fd10-0410-b4af-bbb618454e57
+
+alsa
+dir
+
+oss
+dir
+
+wasapi
+dir
+
+wdmks
+dir
+
+wmme
+dir
+
+jack
+dir
+
+coreaudio
+dir
+
+asio
+dir
+
+dsound
+dir
+
+asihpi
+dir
+
