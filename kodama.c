@@ -54,6 +54,7 @@ void shortcircuit_tx_to_rx(hybrid *h)
 
   CBuffer *tx_buf = h->tx_buf;
   CBuffer *rx_buf = h->rx_buf;
+
   while (cbuffer_get_count(tx_buf) > 0)
   {
     SAMPLE s = cbuffer_pop(tx_buf);
@@ -73,8 +74,20 @@ int main(int argc, char *argv[])
       h->tx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
       h->rx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
 
+      h->tx_count = 0;
+      h->rx_count = 0;
+
       /* Default callback fn - shortcircuit tx to rx */
       h->tx_cb_fn = shortcircuit_tx_to_rx;
+
+      /* Dummy initial data to simulate delay */
+      float NUM_SECONDS = 0;
+      int i;
+      for (i=0; i<NUM_SECONDS * SAMPLE_RATE * NUM_CHANNELS; i++)
+      {
+          printf("%d\n", i);
+          cbuffer_push(h->rx_buf, SAMPLE_SILENCE);
+      }
   }
 
   setup_hw_in(h);
