@@ -71,11 +71,6 @@ void setup_hw_in(hybrid *h)
             handle_read,
             h);
 
-    /* err = Pa_OpenDefaultStream(&in_stream, NUM_CHANNELS, NUM_CHANNELS, */
-    /*                            PA_SAMPLE_TYPE, SAMPLE_RATE, */
-    /*                            /\* FRAMES_PER_BUFFER, *\/ */
-    /*                            paFramesPerBufferUnspecified, */
-    /*                            handle_read, hc); */
     if (err != paNoError) goto done;
 
     Pa_StartStream(in_stream);
@@ -110,11 +105,6 @@ void setup_hw_out(hybrid *h)
             paClipOff,
             handle_write,
             h);
-    /* err = Pa_OpenDefaultStream(&out_stream, NUM_CHANNELS, NUM_CHANNELS, */
-    /*                            PA_SAMPLE_TYPE, SAMPLE_RATE, */
-    /*                            /\* FRAMES_PER_BUFFER, *\/ */
-    /*                            paFramesPerBufferUnspecified, */
-    /*                            handle_write, hc); */
 
     if (err != paNoError) goto done;
     Pa_StartStream(out_stream);
@@ -136,9 +126,9 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
     CBuffer *tx_buf = h->tx_buf;
     SAMPLE *rptr = (SAMPLE *)inputBuffer;
 
-    (void) outputBuffer; /* Prevent unused variable warnings. */
-    (void) timeInfo;
-    (void) statusFlags;
+    UNUSED(outputBuffer);
+    UNUSED(timeInfo);
+    UNUSED(statusFlags);
 
     /* DEBUG_LOG("handle_read (hardware): %li frames requested\n", framesPerBuffer); */
 
@@ -191,9 +181,9 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
 
     /* DEBUG_LOG("handle_write (hardware): %li frames requested\n", framesPerBuffer); */
 
-    (void)inputBuffer;
-    (void)timeInfo;
-    (void)statusFlags;
+    UNUSED(inputBuffer);
+    UNUSED(timeInfo);
+    UNUSED(statusFlags);
 
     /* Currently, we're relying on the fact that if the cbuffer doesn't have
      * enough frames to satisfy our request, it will return zeroes. */
@@ -213,7 +203,7 @@ static int handle_write( const void *inputBuffer, void *outputBuffer,
     }
 
     /* This is the end of the line for audio data - it's been dumped to the
-     * hardware. No further callbacks possible */
+     * hardware (outputBuffer). No further callbacks possible */
 
     return 0;
 }
