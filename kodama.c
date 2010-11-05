@@ -26,68 +26,68 @@ void usage(char *arg0)
 
 void parse_command_line(int argc, char *argv[])
 {
-  int c;
+    int c;
 
-  opterr = 0;
-  while ((c = getopt(argc, argv, "hlx:r:")) != -1)
-  {
-    switch (c)
+    opterr = 0;
+    while ((c = getopt(argc, argv, "hlx:r:")) != -1)
     {
-    case 'h':
-        usage(argv[0]);
-        exit(0);
-        break;
-    case 'l':
-        list_hw_input_devices();
-        exit(0);
-        break;
-    case 'x':
-      globals.xmit = g_strdup_printf("%s", optarg);
-      break;
-    case 'r':
-      globals.recv = g_strdup_printf("%s", optarg);
-      break;
-    case '?':
-      fprintf(stderr, "Unknown option %c.\n", optopt);
-      exit(1);
+        switch (c)
+        {
+        case 'h':
+            usage(argv[0]);
+            exit(0);
+            break;
+        case 'l':
+            list_hw_input_devices();
+            exit(0);
+            break;
+        case 'x':
+            globals.xmit = g_strdup_printf("%s", optarg);
+            break;
+        case 'r':
+            globals.recv = g_strdup_printf("%s", optarg);
+            break;
+        case '?':
+            fprintf(stderr, "Unknown option %c.\n", optopt);
+            exit(1);
+        }
     }
-  }
 }
 
 void shortcircuit_tx_to_rx(hybrid *h)
 {
-  fprintf(stderr, "shortcircuit_tx_to_rx\n");
+    fprintf(stderr, "shortcircuit_tx_to_rx\n");
 
-  SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
+    SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
 
-  hybrid_put_rx_samples(h, sb);
+    hybrid_put_rx_samples(h, sb);
 
-  sample_block_destroy(sb);
+    sample_block_destroy(sb);
 
-  if (h->rx_cb_fn)
-    (*h->rx_cb_fn)(h);
+    if (h->rx_cb_fn)
+        (*h->rx_cb_fn)(h);
 }
 
 int main(int argc, char *argv[])
 {
-  parse_command_line(argc, argv);
+    parse_command_line(argc, argv);
 
-  hybrid *h = hybrid_new();
-  /* Default callback fn - shortcircuit tx to rx */
-  h->tx_cb_fn = shortcircuit_tx_to_rx;
+    hybrid *h = hybrid_new();
+    /* Default callback fn - shortcircuit tx to rx */
+    h->tx_cb_fn = shortcircuit_tx_to_rx;
 
-  if (!globals.xmit)
-  {
-      setup_hw_out(h);
-  }
-  if (!globals.recv)
-  {
-      setup_hw_in(h);
-  }
+    if (!globals.xmit)
+    {
+        setup_hw_out(h);
+    }
+    if (!globals.recv)
+    {
+        setup_hw_in(h);
+    }
 
-  GMainLoop *loop;
-  loop = g_main_loop_new(NULL, FALSE);
-  g_main_loop_run(loop);
+    GMainLoop *loop;
+    loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(loop);
 
-  return 0;
+    return 0;
 }
