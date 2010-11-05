@@ -7,14 +7,14 @@
 /*
 
                             +---------------------+
-            in from hw      |                     |  out to
+        in from hw/wowza    |                     |  out to network
                  ----------->      tx_buf         ----------->
                             |                     |
                             |                     |
                             |                     |
                             |                     |
                             |                     |
-                            |                     |
+          out to hw/wowza   |                     |  in from network
                  <----------+      rx_buf         <-----------
                             |                     |
                             |                     |
