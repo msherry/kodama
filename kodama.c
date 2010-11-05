@@ -7,7 +7,7 @@
 #include "kodama.h"
 
 struct globals {
-
+    int i;
 } globals;
 
 void usage(char *arg0)
@@ -21,6 +21,8 @@ void usage(char *arg0)
 void parse_command_line(int argc, char *argv[])
 {
   int c;
+
+  globals.i = 0;
 
   opterr = 0;
   while ((c = getopt(argc, argv, "hl")) != -1)
