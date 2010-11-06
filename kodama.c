@@ -10,7 +10,15 @@
 #include "kodama.h"
 
 struct globals {
-    gchar *host;
+    /* tx side */
+    gchar *txhost;
+    int tx_xmit_port;
+    int tx_recv_port;
+
+    /* rx side */
+    gchar *rxhost;
+    int rx_xmit_port;
+    int rx_recv_port;
 } globals;
 
 GMainLoop *loop;
@@ -21,19 +29,33 @@ void usage(char *arg0)
 {
     fprintf(stderr, "Usage: %s [options]...\n", arg0);
     fprintf(stderr, "\n");
-    fprintf(stderr, "-l: list hardware input devices\n");
+    fprintf(stderr, "-d: list hardware input devices\n");
     fprintf(stderr, "-h: this help\n");
     fprintf(stderr, "--------------\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "-x: host    Xmit data to host instead of shortcircuiting\n");
+    fprintf(stderr, "-t: host   tx side: xmit data to host");
+    fprintf(stderr, "-p: port   tx side: portnum to xmit to");
+    fprintf(stderr, "-l: port   tx side: portnum to listen on");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-r: host   rx side: xmit data to host");
+    fprintf(stderr, "-q: port   rx side: portnum to xmit to");
+    fprintf(stderr, "-a: port   rx side: portnum to listen on");
 }
 
 void parse_command_line(int argc, char *argv[])
 {
+    globals.txhost = NULL;
+    globals.tx_xmit_port = PORTNUM;
+    globals.tx_recv_port = PORTNUM;
+
+    globals.rxhost = NULL;
+    globals.rx_xmit_port = 0;
+    globals.rx_recv_port = 0;
+
     int c;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "hlx:r:")) != -1)
+    while ((c = getopt(argc, argv, "hdt:p:r:q:")) != -1)
     {
         switch (c)
         {
@@ -41,12 +63,27 @@ void parse_command_line(int argc, char *argv[])
             usage(argv[0]);
             exit(0);
             break;
-        case 'l':
+        case 'd':
             list_hw_input_devices();
             exit(0);
             break;
-        case 'x':
-            globals.host = g_strdup_printf("%s", optarg);
+        case 't':
+            globals.txhost = g_strdup_printf("%s", optarg);
+            break;
+        case 'r':
+            globals.rxhost = g_strdup_printf("%s", optarg);
+            break;
+        case 'p':
+            globals.tx_xmit_port = atoi(optarg);
+            break;
+        case 'l':
+            globals.tx_recv_port = atoi(optarg);
+            break;
+        case 'q':
+            globals.rx_xmit_port = atoi(optarg);
+            break;
+        case 'a':
+            globals.rx_recv_port = atoi(optarg);
             break;
         case '?':
             fprintf(stderr, "Unknown option %c.\n", optopt);
@@ -78,14 +115,24 @@ int main(int argc, char *argv[])
 
     hybrid *h = hybrid_new();
 
-    if (globals.host)
+    if (globals.txhost)
     {
-        setup_network_xmit(h, globals.host, tx);
-        setup_network_recv(h, tx); // Yes, we receive on the tx side. Trust me
+        setup_network_xmit(h, globals.txhost, globals.tx_xmit_port, tx);
+        // Yes, we receive on the tx side. Trust me
+        setup_network_recv(h, globals.tx_recv_port, tx);
     }
 
-    setup_hw_in(h);
-    setup_hw_out(h);
+    if (globals.rxhost)
+    {
+        setup_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
+        setup_network_recv(h, globals.rx_recv_port, rx);
+    }
+    else
+    {
+        /* By default, the rx side is hooked up to the microphone and speaker */
+        setup_hw_in(h);
+        setup_hw_out(h);
+    }
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);

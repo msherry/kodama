@@ -6,7 +6,7 @@
 
 /*
 
-            client side                              network side
+         client (rx) side                            network (tx) side
 
                             +---------------------+
         in from hw/wowza    |                     |  out to network

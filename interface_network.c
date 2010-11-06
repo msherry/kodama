@@ -33,10 +33,10 @@ typedef struct xmit_context {
     hybrid_side side;
 } xmit_context;
 
-void setup_network_xmit(hybrid *h, gchar *host, hybrid_side side)
+void setup_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
 {
     GUdpSocket *sock = gnet_udp_socket_new();
-    GInetAddr *addr = gnet_inetaddr_new(host, PORTNUM);
+    GInetAddr *addr = gnet_inetaddr_new(host, port);
 
     xmit_context *xc = malloc(sizeof(xmit_context));
     xc->sock = sock;
@@ -59,10 +59,10 @@ void setup_network_xmit(hybrid *h, gchar *host, hybrid_side side)
     }
 }
 
-void setup_network_recv(hybrid *h, hybrid_side side)
+void setup_network_recv(hybrid *h, int port, hybrid_side side)
 {
     GUdpSocket *sock;
-    if ((sock = udp_listen(PORTNUM)) == NULL)
+    if ((sock = udp_listen(port)) == NULL)
     {
         g_warning("(%s:%d) Unable to set up network recv\n",
             __FILE__, __LINE__);
