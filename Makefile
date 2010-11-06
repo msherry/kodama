@@ -16,11 +16,11 @@ ifeq ($(OS), Linux)
 	GLIB_INCLUDES = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
 	GLIB_LIBS = -L/usr/lib -lgobject-2.0
 else
-	GLIB_INCLUDES := -I/opt/local/include/glib-2.0 \
+	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
 	-I/opt/local/include/gnet-2.0 \
 	-I/opt/local/lib/gnet-2.0/include
-	GLIB_LIBS := -L/opt/local/lib -lglib-2.0 -lgnet-2.0
+	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0
 endif
 
 OBJS = cbuffer.o hybrid.o interface_hardware.o interface_network.o kodama.o
