@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -11,6 +12,10 @@
 struct globals {
     gchar *host;
 } globals;
+
+GMainLoop *loop;
+
+void signal_handler(int signum);
 
 void usage(char *arg0)
 {
@@ -50,9 +55,26 @@ void parse_command_line(int argc, char *argv[])
     }
 }
 
+void init_sig_handlers(void)
+{
+    signal(SIGINT, signal_handler);
+}
+
+void signal_handler(int signum)
+{
+    switch(signum)
+    {
+    case SIGINT:
+        g_main_loop_quit(loop);
+        break;
+    }
+}
+
 int main(int argc, char *argv[])
 {
     parse_command_line(argc, argv);
+
+    init_sig_handlers();
 
     hybrid *h = hybrid_new();
 
@@ -65,7 +87,6 @@ int main(int argc, char *argv[])
         setup_network_recv(h);
     }
 
-    GMainLoop *loop;
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
 

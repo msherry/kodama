@@ -122,7 +122,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     gchar buf[65535];           /* Probably a bad idea, but UDP packets can't be
                                  * larger than this */
     gint num_bytes = gnet_udp_socket_receive(sock, buf, 65535, NULL);
-    g_message("(%s:%d) Read %d bytes\n", __FILE__, __LINE__, num_bytes);
+    /* DEBUG_LOG("(%s:%d) Read %d bytes\n", __FILE__, __LINE__, num_bytes); */
 
     SAMPLE_BLOCK *sb = get_samples_from_message(buf, num_bytes);
     hybrid_put_rx_samples(h, sb);
@@ -140,7 +140,7 @@ static SAMPLE_BLOCK *get_samples_from_message(gchar *buf, gint num_bytes)
     SAMPLE_BLOCK *sb = sample_block_create(count);
     memcpy(sb->s, buf, num_bytes);
 
-    DEBUG_LOG("Received %ld samples", count);
+    /* DEBUG_LOG("(%s:%d) Received %ld samples\n", __FILE__, __LINE__, count); */
 
     return sb;
 }
