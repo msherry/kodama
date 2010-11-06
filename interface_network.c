@@ -12,25 +12,28 @@
 #include "kodama.h"
 
 /*********** Static functions ***********/
-static gboolean udp_listen(int port, hybrid *h);
+static GUdpSocket *udp_listen(int port);
 static gboolean
-handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
+    handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static SAMPLE_BLOCK *message_to_samples(gchar *buf, gint num_bytes);
 static gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes);
-static void xmit_data(hybrid *h);
+static void xmit_data(hybrid *h, hybrid_side side);
+
 
 typedef struct recv_context {
     GUdpSocket *sock;
     hybrid *h;
+    hybrid_side side;
 } recv_context;
 
 
 typedef struct xmit_context {
     GUdpSocket *sock;
     GInetAddr *dest;
+    hybrid_side side;
 } xmit_context;
 
-void setup_network_xmit(hybrid *h, gchar *host)
+void setup_network_xmit(hybrid *h, gchar *host, hybrid_side side)
 {
     GUdpSocket *sock = gnet_udp_socket_new();
     GInetAddr *addr = gnet_inetaddr_new(host, PORTNUM);
@@ -38,34 +41,32 @@ void setup_network_xmit(hybrid *h, gchar *host)
     xmit_context *xc = malloc(sizeof(xmit_context));
     xc->sock = sock;
     xc->dest = addr;
+    xc->side = side;
 
-    /* The hybrid will need this context when it has data */
-    h->tx_cb_data = xc;
-
-    /* When we have data to xmit, send it along */
-    h->tx_cb_fn = xmit_data;
+    /* Set up callbacks in the hybrid depending on which side will be doing this
+     * xmit */
+    if (side == tx)
+    {
+        /* The hybrid will need this context when it has data */
+        h->tx_cb_data = xc;
+        /* When we have data to xmit, send it along */
+        h->tx_cb_fn = xmit_data;
+    }
+    else
+    {
+        h->rx_cb_data = xc;
+        h->rx_cb_fn = xmit_data;
+    }
 }
 
-void setup_network_recv(hybrid *h)
+void setup_network_recv(hybrid *h, hybrid_side side)
 {
-    if (!udp_listen(PORTNUM, h))
+    GUdpSocket *sock;
+    if ((sock = udp_listen(PORTNUM)) == NULL)
     {
         g_warning("(%s:%d) Unable to set up network recv\n",
             __FILE__, __LINE__);
         exit(-1);
-    }
-}
-
-
-static gboolean udp_listen(int port, hybrid *h)
-{
-    GUdpSocket *sock = gnet_udp_socket_new_with_port(port);
-    if (!sock)
-    {
-        g_warning("(%s:%d) Unable to create udp socket on port %d",
-            __FILE__, __LINE__, port);
-        g_warning("%s", strerror(errno));
-        return FALSE;
     }
 
     /* This is NOT a normal GIOChannel - it can't be read or written to
@@ -80,6 +81,7 @@ static gboolean udp_listen(int port, hybrid *h)
     recv_context *rc = malloc(sizeof(recv_context));
     rc->sock = sock;
     rc->h = h;
+    rc->side = side;
 
     /* TODO: this returns an int. Use it to call g_source_remove when we're
      * done */
@@ -90,7 +92,19 @@ static gboolean udp_listen(int port, hybrid *h)
         g_warning("(%s:%d) Can't add watch on GIOChannel", __FILE__, __LINE__);
         g_io_channel_shutdown(ch, FALSE, NULL);
         g_io_channel_unref(ch);
-        return FALSE;
+    }
+}
+
+
+static GUdpSocket *udp_listen(int port)
+{
+    GUdpSocket *sock = gnet_udp_socket_new_with_port(port);
+    if (!sock)
+    {
+        g_warning("(%s:%d) Unable to create udp socket on port %d",
+            __FILE__, __LINE__, port);
+        g_warning("%s", strerror(errno));
+        return NULL;
     }
 
     /* "Before deleting the UDP socket, make sure to remove any watches you have
@@ -98,7 +112,7 @@ static gboolean udp_listen(int port, hybrid *h)
      * integer id returned by g_io_add_watch(). You may find your program stuck
      * in a busy loop at 100% CPU utilisation if you forget to do this." */
 
-    return TRUE;
+    return sock;
 }
 
 static gboolean
@@ -107,6 +121,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     recv_context *rc = (recv_context *)data;
     GUdpSocket *sock = rc->sock;
     hybrid *h = rc->h;
+    hybrid_side side = rc->side;
 
     UNUSED(source);
     UNUSED(cond);
@@ -126,7 +141,15 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     /* DEBUG_LOG("(%s:%d) Read %d bytes\n", __FILE__, __LINE__, num_bytes); */
 
     SAMPLE_BLOCK *sb = message_to_samples(buf, num_bytes);
-    hybrid_put_rx_samples(h, sb);
+
+    if (side == tx)
+    {
+        hybrid_put_rx_samples(h, sb);
+    }
+    else
+    {
+        hybrid_put_tx_samples(h, sb);
+    }
     sample_block_destroy(sb);
 
     return TRUE;
@@ -162,13 +185,31 @@ static gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes)
     return buf;
 }
 
-static void xmit_data(hybrid *h)
+static void xmit_data(hybrid *h, hybrid_side side)
 {
-    xmit_context *xc = (xmit_context *)(h->tx_cb_data);
+    xmit_context *xc;
+    if (side == tx)
+    {
+        xc = (xmit_context *)(h->tx_cb_data);
+    }
+    else
+    {
+        xc = (xmit_context *)(h->rx_cb_data);
+    }
+
     GUdpSocket *sock = xc->sock;
     GInetAddr *dest = xc->dest;
 
-    SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
+    SAMPLE_BLOCK *sb;
+    if (side == tx)
+    {
+        sb = hybrid_get_tx_samples(h, 0);
+    }
+    else
+    {
+        sb = hybrid_get_rx_samples(h, 0);
+    }
+
     if (!sb->count)
     {
         /* Why are we here? */

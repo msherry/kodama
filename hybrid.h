@@ -6,6 +6,8 @@
 
 /*
 
+            client side                              network side
+
                             +---------------------+
         in from hw/wowza    |                     |  out to network
                  ----------->      tx_buf         ----------->
@@ -23,8 +25,12 @@
 
 /* Circular typedefs are awesome */
 struct hybrid;
+typedef enum hybrid_side {
+    tx, rx
+} hybrid_side;
 
-typedef void (*hybrid_callback_fn) (struct hybrid *);
+
+typedef void (*hybrid_callback_fn) (struct hybrid *, hybrid_side side);
 
 typedef struct hybrid {
     CBuffer *tx_buf;
@@ -37,6 +43,7 @@ typedef struct hybrid {
     hybrid_callback_fn rx_cb_fn;
 
     void *tx_cb_data;
+    void *rx_cb_data;
 } hybrid;
 
 

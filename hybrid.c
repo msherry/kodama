@@ -4,7 +4,7 @@
 #include "hybrid.h"
 
 /* Static prototypes */
-static void shortcircuit_tx_to_rx(hybrid *h);
+static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side);
 
 
 hybrid *hybrid_new(void)
@@ -52,6 +52,10 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     /* TODO: increase counts */
 
     cbuffer_push_bulk(h->tx_buf, sb);
+
+    /* We just got some data - inform whoever cares */
+    if (h->tx_cb_fn)
+        (*h->tx_cb_fn)(h, tx);
 }
 
 void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
@@ -59,6 +63,9 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     /* TODO: increase counts */
 
     cbuffer_push_bulk(h->rx_buf, sb);
+    /* We just got some data - inform whoever cares */
+    if (h->rx_cb_fn)
+        (*h->rx_cb_fn)(h, rx);
 }
 
 SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count)
@@ -86,8 +93,12 @@ SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count)
 
 
 /*********** Hybrid transfer functions ***********/
-static void shortcircuit_tx_to_rx(hybrid *h)
+
+/* Default transfer function - moves data instantly from tx_buf to rx_buf */
+static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side)
 {
+    UNUSED(side);
+
     fprintf(stderr, "shortcircuit_tx_to_rx\n");
 
     SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
@@ -95,7 +106,4 @@ static void shortcircuit_tx_to_rx(hybrid *h)
     hybrid_put_rx_samples(h, sb);
 
     sample_block_destroy(sb);
-
-    if (h->rx_cb_fn)
-        (*h->rx_cb_fn)(h);
 }

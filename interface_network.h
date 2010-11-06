@@ -6,7 +6,7 @@
 #include "hybrid.h"
 #include "kodama.h"
 
-void setup_network_xmit(hybrid *h, gchar *host);
-void setup_network_recv(hybrid *h);
+void setup_network_xmit(hybrid *h, gchar *host, hybrid_side side);
+void setup_network_recv(hybrid *h, hybrid_side side);
 
 #endif

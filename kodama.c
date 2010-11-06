@@ -80,8 +80,8 @@ int main(int argc, char *argv[])
 
     if (globals.host)
     {
-        setup_network_xmit(h, globals.host);
-        setup_network_recv(h);
+        setup_network_xmit(h, globals.host, tx);
+        setup_network_recv(h, tx); // Yes, we receive on the tx side. Trust me
     }
 
     setup_hw_in(h);

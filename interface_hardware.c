@@ -145,7 +145,7 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
     }
     else
     {
-        /* This may discard old data from the hybrids tx_buf if it hasn't been
+        /* This may discard old data from the hybrid's tx_buf if it hasn't been
          * gotten to yet. This is intentional */
         while(num_samples_needed--)
         {
@@ -155,10 +155,6 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
 
     hybrid_put_tx_samples(h, sb);
     sample_block_destroy(sb);
-
-    /* The buffer has new data in it - let's inform whoever cares about it */
-    if (h->tx_cb_fn)
-        (*h->tx_cb_fn)(h);
 
     return 0;
 }
