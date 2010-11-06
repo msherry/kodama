@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
+#include "cbuffer.h"
 #include "hybrid.h"
 #include "interface_network.h"
 #include "kodama.h"
@@ -14,11 +15,13 @@
 static gboolean udp_listen(int port, hybrid *h);
 static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
+static SAMPLE_BLOCK *get_samples_from_message(gchar *buf, gint num_bytes);
 
 typedef struct socket_and_hybrid {
     GUdpSocket *sock;
     hybrid *h;
 } socket_and_hybrid;
+
 
 void setup_network_xmit(hybrid *h, gchar *host)
 {
@@ -97,5 +100,28 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         return TRUE;
     }
 
+    /* Ok, we've received some data over the network. If it's valid audio data,
+     * let's put it into our rx_buf */
+    gchar buf[65535];           /* Probably a bad idea, but UDP packets can't be
+                                 * larger than this */
+    gint num_bytes = gnet_udp_socket_receive(sock, buf, 65535, NULL);
+    g_message("(%s:%d) Read %d bytes\n", __FILE__, __LINE__, num_bytes);
+
+    SAMPLE_BLOCK *sb = get_samples_from_message(buf, num_bytes);
+    hybrid_put_rx_samples(h, sb);
+    sample_block_destroy(sb);
+
     return TRUE;
+}
+
+static SAMPLE_BLOCK *get_samples_from_message(gchar *buf, gint num_bytes)
+{
+    /* TODO: real error checking, some sort of protocol, endianness */
+
+    /* TODO: this obviously assumes we have an integral number of samples */
+    size_t count = num_bytes / sizeof(SAMPLE);
+    SAMPLE_BLOCK *sb = sample_block_create(count);
+    memcpy(sb->s, buf, num_bytes);
+
+    return sb;
 }
