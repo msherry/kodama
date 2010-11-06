@@ -12,7 +12,7 @@
 #define NUM_CHANNELS (1)
 #define SAMPLE_RATE  (8000)
 
-#define PORTNUM (765)
+#define PORTNUM (7650)
 
 /* Select sample format. TODO: let's not make these constants, yes? */
 #if 0

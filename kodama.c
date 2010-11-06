@@ -9,7 +9,7 @@
 #include "kodama.h"
 
 struct globals {
-    gchar *xmit;
+    gchar *host;
 } globals;
 
 void usage(char *arg0)
@@ -41,7 +41,7 @@ void parse_command_line(int argc, char *argv[])
             exit(0);
             break;
         case 'x':
-            globals.xmit = g_strdup_printf("%s", optarg);
+            globals.host = g_strdup_printf("%s", optarg);
             break;
         case '?':
             fprintf(stderr, "Unknown option %c.\n", optopt);
@@ -59,9 +59,9 @@ int main(int argc, char *argv[])
     setup_hw_in(h);
     setup_hw_out(h);
 
-    if (globals.xmit)
+    if (globals.host)
     {
-        setup_network_xmit(h, globals.xmit);
+        setup_network_xmit(h, globals.host);
         setup_network_recv(h);
     }
 
