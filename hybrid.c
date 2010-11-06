@@ -19,8 +19,9 @@ hybrid *hybrid_new(void)
 
     /* Default callback fn - shortcircuit tx to rx */
     h->tx_cb_fn = shortcircuit_tx_to_rx;
-
     h->rx_cb_fn = NULL;
+
+    h->tx_cb_data = NULL;
 
     /* Dummy initial data to simulate delay */
     float NUM_SECONDS = 0;

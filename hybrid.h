@@ -35,6 +35,8 @@ typedef struct hybrid {
 
     hybrid_callback_fn tx_cb_fn;
     hybrid_callback_fn rx_cb_fn;
+
+    void *tx_cb_data;
 } hybrid;
 
 

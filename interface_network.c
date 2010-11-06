@@ -16,16 +16,33 @@ static gboolean udp_listen(int port, hybrid *h);
 static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static SAMPLE_BLOCK *get_samples_from_message(gchar *buf, gint num_bytes);
+static void xmit_data(hybrid *h);
 
-typedef struct socket_and_hybrid {
+typedef struct recv_context {
     GUdpSocket *sock;
     hybrid *h;
-} socket_and_hybrid;
+} recv_context;
 
+
+typedef struct xmit_context {
+    GUdpSocket *sock;
+    GInetAddr *dest;
+} xmit_context;
 
 void setup_network_xmit(hybrid *h, gchar *host)
 {
-    /* TODO: change the tx_cb_fn */
+    GUdpSocket *sock = gnet_udp_socket_new();
+    GInetAddr *addr = gnet_inetaddr_new(host, PORTNUM);
+
+    xmit_context *xc = malloc(sizeof(xmit_context));
+    xc->sock = sock;
+    xc->dest = addr;
+
+    /* The hybrid will need this context when it has data */
+    h->tx_cb_data = xc;
+
+    /* When we have data to xmit, send it along */
+    h->tx_cb_fn = xmit_data;
 }
 
 void setup_network_recv(hybrid *h)
@@ -59,15 +76,15 @@ static gboolean udp_listen(int port, hybrid *h)
     g_io_channel_set_buffered(ch, FALSE);
     g_io_channel_set_flags(ch, G_IO_FLAG_NONBLOCK, NULL);
 
-    socket_and_hybrid *sh = malloc(sizeof(socket_and_hybrid));
-    sh->sock = sock;
-    sh->h = h;
+    recv_context *rc = malloc(sizeof(recv_context));
+    rc->sock = sock;
+    rc->h = h;
 
     /* TODO: this returns an int. Use it to call g_source_remove when we're
      * done */
     if (!g_io_add_watch(ch, (G_IO_IN | G_IO_HUP | G_IO_ERR),
             handle_input,
-            sh))
+            rc))
     {
         g_warning("(%s:%d) Can't add watch on GIOChannel", __FILE__, __LINE__);
         g_io_channel_shutdown(ch, FALSE, NULL);
@@ -86,9 +103,9 @@ static gboolean udp_listen(int port, hybrid *h)
 static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 {
-    socket_and_hybrid *sh = (socket_and_hybrid *)data;
-    GUdpSocket *sock = sh->sock;
-    hybrid *h = sh->h;
+    recv_context *rc = (recv_context *)data;
+    GUdpSocket *sock = rc->sock;
+    hybrid *h = rc->h;
 
     UNUSED(source);
     UNUSED(cond);
@@ -123,5 +140,34 @@ static SAMPLE_BLOCK *get_samples_from_message(gchar *buf, gint num_bytes)
     SAMPLE_BLOCK *sb = sample_block_create(count);
     memcpy(sb->s, buf, num_bytes);
 
+    DEBUG_LOG("Received %ld samples", count);
+
     return sb;
+}
+
+static void xmit_data(hybrid *h)
+{
+    xmit_context *xc = (xmit_context *)(h->tx_cb_data);
+    GUdpSocket *sock = xc->sock;
+    GInetAddr *dest = xc->dest;
+
+    SAMPLE_BLOCK *sb = hybrid_get_tx_samples(h, 0);
+    if (!sb->count)
+    {
+        /* Why are we here? */
+        g_warning("xmit_data was called with no data to xmit\n");
+        return;
+    }
+
+    /* We have data to xmit - let's throw it into a buffer and send it out */
+    size_t num_bytes = sb->count * sizeof(SAMPLE);
+    gchar *buf = g_malloc(num_bytes);
+
+    /* TODO: this is just a straight copy - a real protocol would be better */
+    memcpy(buf, sb->s, num_bytes);
+
+    gnet_udp_socket_send(sock, buf, num_bytes, dest);
+
+    g_free(buf);
+    sample_block_destroy(sb);
 }
