@@ -55,7 +55,7 @@ void parse_command_line(int argc, char *argv[])
     int c;
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "hdt:p:r:q:")) != -1)
+    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:")) != -1)
     {
         switch (c)
         {
@@ -124,8 +124,8 @@ int main(int argc, char *argv[])
 
     if (globals.rxhost)
     {
-        setup_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
         setup_network_recv(h, globals.rx_recv_port, rx);
+        setup_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
     }
     else
     {
