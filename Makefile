@@ -12,9 +12,11 @@ LIBRARIES = -lportaudio
 
 OS := $(shell uname)
 ifeq ($(OS), Linux)
-# TODO: gnet
-	GLIB_INCLUDES = -I/usr/include/glib-2.0 -I/usr/lib/glib-2.0/include
-	GLIB_LIBS = -L/usr/lib -lgobject-2.0
+	GLIB_INCLUDES = -I/usr/include/glib-2.0 \
+	-I/usr/include/gnet-2.0 \
+	-I/usr/lib/glib-2.0/include \
+	-I/usr/lib/gnet-2.0/include
+	GLIB_LIBS = -L/usr/lib -lgobject-2.0 -lgnet-2.0
 else
 	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
