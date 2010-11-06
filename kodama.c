@@ -78,14 +78,14 @@ int main(int argc, char *argv[])
 
     hybrid *h = hybrid_new();
 
-    setup_hw_in(h);
-    setup_hw_out(h);
-
     if (globals.host)
     {
         setup_network_xmit(h, globals.host);
         setup_network_recv(h);
     }
+
+    setup_hw_in(h);
+    setup_hw_out(h);
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
