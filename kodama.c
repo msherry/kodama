@@ -54,6 +54,8 @@ void parse_command_line(int argc, char *argv[])
 
     int c;
 
+    /* TODO: keeping these straight is a nightmare. Use long options */
+
     opterr = 0;
     while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:")) != -1)
     {
