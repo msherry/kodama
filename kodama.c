@@ -19,6 +19,9 @@ struct globals {
     gchar *rxhost;
     int rx_xmit_port;
     int rx_recv_port;
+
+    /* Fake delay */
+    int delay_ms;
 } globals;
 
 GMainLoop *loop;
@@ -33,13 +36,15 @@ void usage(char *arg0)
     fprintf(stderr, "-h: this help\n");
     fprintf(stderr, "--------------\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "-t: host   tx side: xmit data to host");
-    fprintf(stderr, "-p: port   tx side: portnum to xmit to");
-    fprintf(stderr, "-l: port   tx side: portnum to listen on");
+    fprintf(stderr, "-t: host   tx side: xmit data to host\n");
+    fprintf(stderr, "-p: port   tx side: portnum to xmit to\n");
+    fprintf(stderr, "-l: port   tx side: portnum to listen on\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "-r: host   rx side: xmit data to host");
-    fprintf(stderr, "-q: port   rx side: portnum to xmit to");
-    fprintf(stderr, "-a: port   rx side: portnum to listen on");
+    fprintf(stderr, "-r: host   rx side: xmit data to host\n");
+    fprintf(stderr, "-q: port   rx side: portnum to xmit to\n");
+    fprintf(stderr, "-a: port   rx side: portnum to listen on\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-m: ms     number of milliseconds of delay to simulate\n");
 }
 
 void parse_command_line(int argc, char *argv[])
@@ -52,12 +57,14 @@ void parse_command_line(int argc, char *argv[])
     globals.rx_xmit_port = 0;
     globals.rx_recv_port = 0;
 
+    globals.delay_ms = 0;
+
     int c;
 
     /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:")) != -1)
+    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:m:")) != -1)
     {
         switch (c)
         {
@@ -86,6 +93,9 @@ void parse_command_line(int argc, char *argv[])
             break;
         case 'a':
             globals.rx_recv_port = atoi(optarg);
+            break;
+        case 'm':
+            globals.delay_ms = atoi(optarg);
             break;
         case '?':
             fprintf(stderr, "Unknown option %c.\n", optopt);
@@ -116,6 +126,8 @@ int main(int argc, char *argv[])
     init_sig_handlers();
 
     hybrid *h = hybrid_new();
+    hybrid_simulate_delay(h, globals.delay_ms);
+
 
     if (globals.txhost)
     {

@@ -23,14 +23,6 @@ hybrid *hybrid_new(void)
 
     h->tx_cb_data = NULL;
 
-    /* Dummy initial data to simulate delay */
-    float NUM_SECONDS = 0;
-    int i;
-    for (i=0; i<NUM_SECONDS * SAMPLE_RATE * NUM_CHANNELS; i++)
-    {
-        cbuffer_push(h->rx_buf, SAMPLE_SILENCE);
-    }
-
     return h;
 }
 
@@ -91,6 +83,15 @@ SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count)
 }
 
 
+void hybrid_simulate_delay(hybrid *h, float ms)
+{
+    /* Dummy initial data to simulate delay */
+    int i;
+    for (i=0; i<(ms * SAMPLE_RATE * NUM_CHANNELS)/1000.0; i++)
+    {
+        cbuffer_push(h->rx_buf, SAMPLE_SILENCE);
+    }
+}
 
 /*********** Hybrid transfer functions ***********/
 
