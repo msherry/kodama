@@ -21,7 +21,8 @@ struct globals {
     int rx_recv_port;
 
     /* Fake delay */
-    int delay_ms;
+    int tx_delay_ms;
+    int rx_delay_ms;
 } globals;
 
 GMainLoop *loop;
@@ -57,14 +58,15 @@ void parse_command_line(int argc, char *argv[])
     globals.rx_xmit_port = 0;
     globals.rx_recv_port = 0;
 
-    globals.delay_ms = 0;
+    globals.tx_delay_ms = 0;
+    globals.rx_delay_ms = 0;
 
     int c;
 
     /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:m:")) != -1)
+    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:m:n:")) != -1)
     {
         switch (c)
         {
@@ -95,7 +97,10 @@ void parse_command_line(int argc, char *argv[])
             globals.rx_recv_port = atoi(optarg);
             break;
         case 'm':
-            globals.delay_ms = atoi(optarg);
+            globals.tx_delay_ms = atoi(optarg);
+            break;
+        case 'n':
+            globals.rx_delay_ms = atoi(optarg);
             break;
         case '?':
             fprintf(stderr, "Unknown option %c.\n", optopt);
@@ -126,7 +131,8 @@ int main(int argc, char *argv[])
     init_sig_handlers();
 
     hybrid *h = hybrid_new();
-    hybrid_simulate_delay(h, globals.delay_ms);
+    hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
+    hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
 
 
     if (globals.txhost)

@@ -55,6 +55,7 @@ SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb);
 void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb);
 
-void hybrid_simulate_delay(hybrid *h, float ms);
+void hybrid_simulate_tx_delay(hybrid *h, float ms);
+void hybrid_simulate_rx_delay(hybrid *h, float ms);
 
 #endif

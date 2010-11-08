@@ -83,7 +83,17 @@ SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count)
 }
 
 
-void hybrid_simulate_delay(hybrid *h, float ms)
+void hybrid_simulate_tx_delay(hybrid *h, float ms)
+{
+    /* Dummy initial data to simulate delay */
+    int i;
+    for (i=0; i<(ms * SAMPLE_RATE * NUM_CHANNELS)/1000.0; i++)
+    {
+        cbuffer_push(h->tx_buf, SAMPLE_SILENCE);
+    }
+}
+
+void hybrid_simulate_rx_delay(hybrid *h, float ms)
 {
     /* Dummy initial data to simulate delay */
     int i;
