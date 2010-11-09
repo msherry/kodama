@@ -2,6 +2,7 @@
 #define _HYBRID_H_
 
 #include "cbuffer.h"
+#include "echo.h"
 #include "kodama.h"
 
 /*
@@ -25,6 +26,7 @@
 
 /* Circular typedefs are awesome */
 struct hybrid;
+
 typedef enum hybrid_side {
     tx, rx
 } hybrid_side;
@@ -44,12 +46,16 @@ typedef struct hybrid {
 
     void *tx_cb_data;
     void *rx_cb_data;
+
+    echo *e;
 } hybrid;
 
 
 /* Hybrid methods */
 hybrid *hybrid_new(void);
 void hybrid_destroy(hybrid *h);
+void hybrid_setup_echo_cancel(hybrid *h);
+
 SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count);
 SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb);

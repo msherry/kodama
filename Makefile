@@ -25,7 +25,8 @@ else
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0
 endif
 
-OBJS = cbuffer.o hybrid.o interface_hardware.o interface_network.o kodama.o
+OBJS = cbuffer.o echo.o hybrid.o interface_hardware.o interface_network.o \
+	kodama.o
 
 ALL: kodama
 

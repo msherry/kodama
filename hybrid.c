@@ -9,7 +9,7 @@ static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side);
 
 hybrid *hybrid_new(void)
 {
-    hybrid *h = calloc(1, sizeof(hybrid));
+    hybrid *h = malloc(sizeof(hybrid));
 
     h->tx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
     h->rx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
@@ -22,6 +22,9 @@ hybrid *hybrid_new(void)
     h->rx_cb_fn = NULL;
 
     h->tx_cb_data = NULL;
+    h->rx_cb_data = NULL;
+
+    h->e = NULL;
 
     return h;
 }
@@ -39,6 +42,11 @@ void hybrid_destroy(hybrid *h)
     free(h);
 }
 
+void hybrid_setup_echo_cancel(hybrid *h)
+{
+    h->e = (echo *)1;
+}
+
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 {
     /* TODO: increase counts */
@@ -53,6 +61,13 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 {
     /* TODO: increase counts */
+
+    /* Hey, let's cancel some echo here for the other party - hopefully they'll
+     * do the same for us */
+    if (h->e)
+    {
+        echo_update(h);
+    }
 
     cbuffer_push_bulk(h->rx_buf, sb);
     /* We just got some data - inform whoever cares */

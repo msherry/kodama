@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     hybrid *h = hybrid_new();
     hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
     hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
-
+    hybrid_setup_echo_cancel(h);
 
     if (globals.txhost)
     {
