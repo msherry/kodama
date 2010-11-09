@@ -1,6 +1,7 @@
 #ifndef _ECHO_H_
 #define _ECHO_H_
 
+#include "cbuffer.h"
 #include "kodama.h"
 
 /* Ridiculous forward declaration */
@@ -20,6 +21,6 @@ typedef struct echo {
 
 echo *echo_create(hybrid_ptr h);
 void echo_destroy(echo *e);
-void echo_update(echo *e, hybrid_ptr h);
+void echo_update(echo *e, hybrid_ptr h, SAMPLE_BLOCK *sb);
 
 #endif

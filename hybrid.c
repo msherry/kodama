@@ -68,7 +68,7 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
      * do the same for us */
     if (h->e)
     {
-        echo_update(h->e, h);
+        echo_update(h->e, h, sb);
     }
 
     cbuffer_push_bulk(h->rx_buf, sb);

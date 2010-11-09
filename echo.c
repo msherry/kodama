@@ -46,11 +46,9 @@ void echo_destroy(echo *e)
     free(e);
 }
 
-void echo_update(echo *e, hybrid *h)
+void echo_update(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
 {
-    /* Currently, we're always on the rx side */
-    SAMPLE_BLOCK *sb = hybrid_get_rx_samples(h, 0);
-
+    UNUSED(h);
 
     /* High-pass filter - filter out sub-300Hz signals */
     size_t i;
@@ -58,12 +56,6 @@ void echo_update(echo *e, hybrid *h)
     {
         sb->s[i] = update_fir(e->hp, sb->s[i]);
     }
-
-
-    /* Put our data back into the rx buffer */
-    hybrid_put_rx_samples_direct(h, sb);
-
-    sample_block_destroy(sb);
 }
 
 /*********** High-pass FIR functions ***********/
