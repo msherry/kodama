@@ -21,19 +21,44 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
                   -0.053661242, -0.051936015, -0.049576525, -0.046636667,
                   -0.043183226};
 
-hp_fir *hp_fir_create(void);
 
-echo *echo_create(void)
+/********* Static functions *********/
+static hp_fir *hp_fir_create(void);
+static void hp_fir_destroy(hp_fir *hp);
+static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
+
+echo *echo_create(hybrid *h)
 {
     echo *e = malloc(sizeof(echo));
     e->hp = hp_fir_create();
 
+    e->h = h;
     return e;
 }
 
-void echo_update(hybrid *h)
+void echo_destroy(echo *e)
 {
-    DEBUG_LOG("HEYHEY WE'RE CANCELING ECHO NOW\n")
+    if (!e)
+    {
+        return;
+    }
+    hp_fir_destroy(e->hp);
+    free(e);
+}
+
+void echo_update(echo *e, hybrid *h)
+{
+    /* Currently, we're always on the rx side */
+    SAMPLE_BLOCK *sb = hybrid_get_rx_samples(h, 0);
+    size_t i;
+    for (i=0; i<sb->count; i++)
+    {
+        sb->s[i] = update_fir(e->hp, sb->s[i]);
+    }
+
+    hybrid_put_rx_samples_direct(h, sb);
+
+    sample_block_destroy(sb);
 }
 
 /*********** High-pass FIR functions ***********/
@@ -44,6 +69,12 @@ hp_fir *hp_fir_create(void)
     h->z = calloc(HP_FIR_SIZE+1, sizeof(SAMPLE));
 
     return h;
+}
+
+void hp_fir_destroy(hp_fir *hp)
+{
+    free(hp->z);
+    free(hp);
 }
 
 SAMPLE update_fir(hp_fir *hp, SAMPLE s)

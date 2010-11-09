@@ -14,10 +14,12 @@ typedef struct hp_fir {
 
 typedef struct echo {
     hp_fir *hp;
+
+    hybrid_ptr h;
 } echo;
 
-echo *echo_create(void);
+echo *echo_create(hybrid_ptr h);
 void echo_destroy(echo *e);
-void echo_update(hybrid_ptr h);
+void echo_update(echo *e, hybrid_ptr h);
 
 #endif

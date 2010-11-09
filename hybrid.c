@@ -39,12 +39,14 @@ void hybrid_destroy(hybrid *h)
     cbuffer_destroy(h->tx_buf);
     cbuffer_destroy(h->rx_buf);
 
+    echo_destroy(h->e);
+
     free(h);
 }
 
 void hybrid_setup_echo_cancel(hybrid *h)
 {
-    h->e = (echo *)1;
+    h->e = echo_create(h);
 }
 
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
@@ -66,13 +68,18 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
      * do the same for us */
     if (h->e)
     {
-        echo_update(h);
+        echo_update(h->e, h);
     }
 
     cbuffer_push_bulk(h->rx_buf, sb);
     /* We just got some data - inform whoever cares */
     if (h->rx_cb_fn)
         (*h->rx_cb_fn)(h, rx);
+}
+
+void hybrid_put_rx_samples_direct(hybrid *h, SAMPLE_BLOCK *sb)
+{
+   cbuffer_push_bulk(h->rx_buf, sb);
 }
 
 SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count)
