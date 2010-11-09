@@ -23,6 +23,9 @@ struct globals {
     /* Fake delay */
     int tx_delay_ms;
     int rx_delay_ms;
+
+    /* rx-side echo cancellation */
+    int echo_cancel;
 } globals;
 
 GMainLoop *loop;
@@ -45,7 +48,10 @@ void usage(char *arg0)
     fprintf(stderr, "-q: port   rx side: portnum to xmit to\n");
     fprintf(stderr, "-a: port   rx side: portnum to listen on\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "-m: ms     number of milliseconds of delay to simulate\n");
+    fprintf(stderr, "-m: ms     tx-side number of milliseconds of delay to simulate\n");
+    fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-e: set up rx-side echo cancellation\n");
 }
 
 void parse_command_line(int argc, char *argv[])
@@ -61,12 +67,14 @@ void parse_command_line(int argc, char *argv[])
     globals.tx_delay_ms = 0;
     globals.rx_delay_ms = 0;
 
+    globals.echo_cancel = 0;
+
     int c;
 
     /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "hdt:r:p:l:q:a:m:n:")) != -1)
+    while ((c = getopt(argc, argv, "ehdt:r:p:l:q:a:m:n:")) != -1)
     {
         switch (c)
         {
@@ -77,6 +85,9 @@ void parse_command_line(int argc, char *argv[])
         case 'd':
             list_hw_input_devices();
             exit(0);
+            break;
+        case 'e':
+            globals.echo_cancel = 1;
             break;
         case 't':
             globals.txhost = g_strdup_printf("%s", optarg);
@@ -133,7 +144,11 @@ int main(int argc, char *argv[])
     hybrid *h = hybrid_new();
     hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
     hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
-    hybrid_setup_echo_cancel(h);
+
+    if (globals.echo_cancel)
+    {
+        hybrid_setup_echo_cancel(h);
+    }
 
     if (globals.txhost)
     {
