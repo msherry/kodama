@@ -59,6 +59,8 @@ typedef struct hp_fir {
 /* NLMS length in taps */
 #define NLMS_LEN (128)
 
+/* zero */
+#define EPSILON (0.000001f)
 
 typedef struct echo {
     CBuffer *rx_buf;
@@ -75,6 +77,7 @@ typedef struct echo {
     hp_fir *hp;
 
     /* IIR filters */
+    struct IIR_DC *iir_dc;
     struct IIR *Fx, *Fe;
 
     double dotp_xf_xf;
