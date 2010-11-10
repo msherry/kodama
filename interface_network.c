@@ -200,6 +200,8 @@ static void xmit_data(hybrid *h, hybrid_side side)
     GUdpSocket *sock = xc->sock;
     GInetAddr *dest = xc->dest;
 
+    /* TODO: don't xmit as soon as we have samples (we get 64 at a time) */
+
     SAMPLE_BLOCK *sb;
     if (side == tx)
     {
