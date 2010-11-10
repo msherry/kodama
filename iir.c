@@ -48,3 +48,24 @@ void iir_destroy(IIR *ir)
 
     free(ir);
 }
+
+
+IIR_DC *iirdc_create(void)
+{
+    IIR_DC *ir = malloc(sizeof(IIR_DC));
+    ir->x = 0.0;
+
+    return ir;
+}
+
+void iirdc_destroy(IIR_DC *ir)
+{
+    free(ir);
+}
+
+float iirdc_highpass(IIR_DC *ir, float in)
+{
+    const float a0 = 0.01f;
+    ir->x += a0 * (in - ir->x);
+    return in - ir->x;
+}
