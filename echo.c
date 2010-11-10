@@ -60,6 +60,7 @@ echo *echo_create(hybrid *h)
 
     e->Fx = iir_create();
     e->Fe = iir_create();
+    e->iir_dc = iirdc_create();
 
     e->h = h;
     return e;
@@ -75,10 +76,13 @@ void echo_destroy(echo *e)
     free(e->w);
     free(e->xf);
     free(e->x);
+
     cbuffer_destroy(e->rx_buf);
+
     hp_fir_destroy(e->hp);
     iir_destroy(e->Fx);
     iir_destroy(e->Fe);
+    iirdc_destroy(e->iir_dc);
 
     free(e);
 }
