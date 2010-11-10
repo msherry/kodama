@@ -49,7 +49,7 @@ typedef struct echo {
 
 echo *echo_create(hybrid_ptr h);
 void echo_destroy(echo *e);
-void echo_update_tx(echo *e, hybrid_ptr h, SAMPLE_BLOCK *sb);
-void echo_update_rx(echo *e, hybrid_ptr h, SAMPLE_BLOCK *sb);
+void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
+void echo_update_rx(echo *e, SAMPLE_BLOCK *sb);
 
 #endif

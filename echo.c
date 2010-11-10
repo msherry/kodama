@@ -52,10 +52,8 @@ void echo_destroy(echo *e)
     free(e);
 }
 
-void echo_update_tx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
+void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
-    UNUSED(h);
-
     /* TODO: during non-doubletalk, this would be a good place to attenuate the
      * tx signal */
 
@@ -87,10 +85,8 @@ void echo_update_tx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
 
 /* This function is expected to update the samples in sb to remove echo - once
  * it complete, they are ready to go out the rx side of the hybrid */
-void echo_update_rx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
+void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
 {
-    UNUSED(h);
-
     cbuffer_push_bulk(e->rx_buf, sb);
 }
 

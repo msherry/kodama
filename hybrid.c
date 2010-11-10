@@ -57,7 +57,7 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
      * do the same for us. This will probably modify the samples in sb */
     if (h->e)
     {
-        echo_update_tx(h->e, h, sb);
+        echo_update_tx(h->e, sb);
     }
 
     cbuffer_push_bulk(h->tx_buf, sb);
@@ -77,7 +77,7 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     {
         /* Give the data to the echo canceler for modification before it hits
          * the rx_buf, where it's fair game for the hardware */
-        echo_update_rx(h->e, h, sb);
+        echo_update_rx(h->e, sb);
     }
 
     cbuffer_push_bulk(h->rx_buf, sb);
