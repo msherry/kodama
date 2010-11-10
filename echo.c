@@ -56,9 +56,6 @@ void echo_destroy(echo *e)
  * it complete, they are ready to go out the tx side of the hybrid */
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
-    /* TODO: during non-doubletalk, this would be a good place to attenuate the
-     * tx signal */
-
     size_t i;
     for (i=0; i<sb->count; i++)
     {
