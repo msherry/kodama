@@ -52,6 +52,8 @@ void echo_destroy(echo *e)
     free(e);
 }
 
+/* This function is expected to update the samples in sb to remove echo - once
+ * it complete, they are ready to go out the tx side of the hybrid */
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
     /* TODO: during non-doubletalk, this would be a good place to attenuate the
@@ -92,8 +94,6 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
 }
 
-/* This function is expected to update the samples in sb to remove echo - once
- * it complete, they are ready to go out the rx side of the hybrid */
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
 {
     cbuffer_push_bulk(e->rx_buf, sb);
@@ -131,12 +131,12 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
         e->holdover = DTD_HOLDOVER;
     }
 
-    sample_block_destroy(sb);
-
     if (e->holdover)
     {
         e->holdover--;
     }
+
+    sample_block_destroy(sb);
 
     return e->holdover > 0;
 }
