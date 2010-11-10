@@ -32,8 +32,7 @@ static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
 echo *echo_create(hybrid *h)
 {
     echo *e = malloc(sizeof(echo));
-    e->tx_buf = cbuffer_init(2000); /* TODO: */
-    e->dtd_rx_buf = cbuffer_init(DTD_LEN * NUM_CHANNELS);
+    e->rx_buf = cbuffer_init(2000); /* TODO: */
     e->hp = hp_fir_create();
 
     e->h = h;
@@ -47,8 +46,7 @@ void echo_destroy(echo *e)
         return;
     }
 
-    cbuffer_destroy(e->dtd_rx_buf);
-    cbuffer_destroy(e->tx_buf);
+    cbuffer_destroy(e->rx_buf);
     hp_fir_destroy(e->hp);
 
     free(e);
@@ -61,7 +59,30 @@ void echo_update_tx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
     /* TODO: during non-doubletalk, this would be a good place to attenuate the
      * tx signal */
 
-    cbuffer_push_bulk(e->tx_buf, sb);
+    size_t i;
+    for (i=0; i<sb->count; i++)
+    {
+        SAMPLE rx, tx;
+
+        rx = cbuffer_pop(e->rx_buf);
+
+        /* High-pass filter - filter out sub-300Hz signals */
+        tx = update_fir(e->hp, sb->s[i]);
+
+        /* Geigel double-talk detector */
+        int update = !dtd(e, tx, rx);
+
+        /* TODO: nlms-pw */
+
+        /* If we're not talking, let's attenuate our signal */
+        if (update)
+        {
+            tx *= M12dB;
+        }
+
+        sb->s[i] = tx;
+    }
+
 }
 
 /* This function is expected to update the samples in sb to remove echo - once
@@ -70,42 +91,19 @@ void echo_update_rx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
 {
     UNUSED(h);
 
-    size_t i;
-    for (i=0; i<sb->count; i++)
-    {
-        SAMPLE rx, tx;
-
-        tx = cbuffer_pop(e->tx_buf);
-
-        /* High-pass filter - filter out sub-300Hz signals */
-        rx = update_fir(e->hp, sb->s[i]);
-
-        /* Geigel double-talk detector */
-        int update = !dtd(e, tx, rx);
-
-
-        /* If we're not talking, let's attenuate our signal */
-        if (update)
-        {
-            /* TODO: gain access to tx samples here and attenuate by 12dB */
-            /* tx *= M12dB */
-        }
-
-        sb->s[i] = rx;
-    }
+    cbuffer_push_bulk(e->rx_buf, sb);
 }
 
 /*********** DTD functions ***********/
 static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
 {
+    UNUSED(rx);
+
     float max = 0;
     size_t i;
 
-    /* Put this received sample into the DTD cbuffer */
-    cbuffer_push(e->dtd_rx_buf, rx);
-
     /* Get the last DTD_LEN rx samples and find the max*/
-    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->dtd_rx_buf, DTD_LEN);
+    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, DTD_LEN);
 
     for (i=0; i<DTD_LEN; i++)
     {

@@ -36,11 +36,10 @@ typedef struct hp_fir {
 
 
 typedef struct echo {
-    CBuffer *tx_buf;
+    CBuffer *rx_buf;
 
     /* DTD */
     int holdover;
-    CBuffer *dtd_rx_buf;
 
     /* HP filter */
     hp_fir *hp;
