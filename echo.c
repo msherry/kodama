@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -45,11 +46,14 @@ echo *echo_create(hybrid *h)
     int i;
     for (i = 0; i < NLMS_LEN; i+=2)
     {
-        e->w[i] = 1.0/NLMS_LEN;
-        e->w[i+1] = 1.0/NLMS_LEN;
+        e->x[i] = 0;
+        e->x[i+1] = 0;
 
         e->xf[i] = 1;
         e->xf[i+1] = 1;
+
+        e->w[i] = 1.0/NLMS_LEN;
+        e->w[i+1] = 1.0/NLMS_LEN;
     }
 
     e->hp = hp_fir_create();
@@ -184,7 +188,18 @@ static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update)
         }
     }
 
-    return (int)err;
+    /* TODO: this whole chain should probably be converted to use floats, so
+     * move this up to the top level */
+    if (err > MAXPCM)
+    {
+        return (int)MAXPCM;
+    }
+    else if (err < -MAXPCM)
+    {
+        return (int)-MAXPCM;
+    }
+
+    return (int)roundf(err);
 }
 
 /*********** DTD functions ***********/
@@ -196,7 +211,8 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
     size_t i;
 
     /* Get the last DTD_LEN rx samples and find the max*/
-    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, DTD_LEN);
+    /* TODO: can we just use e->x here? */
+    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, NLMS_LEN);
 
     for (i=0; i<DTD_LEN; i++)
     {
@@ -212,8 +228,6 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
 
     SAMPLE a_tx = abs(tx);
 
-    DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:\t%5d\n", tx, rx, a_tx, (int)max)
-
     if (a_tx > (GeigelThreshold * max))
     {
         e->holdover = DTD_HOLDOVER;
@@ -225,6 +239,9 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
     }
 
     sample_block_destroy(sb);
+
+    DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
+        tx, rx, a_tx, (int)max, (e->holdover > 0))
 
     return e->holdover > 0;
 }

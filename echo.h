@@ -77,7 +77,7 @@ typedef struct echo {
     /* IIR filters */
     struct IIR *Fx, *Fe;
 
-    float dotp_xf_xf;
+    double dotp_xf_xf;
 
     struct hybrid *h;
 } echo;

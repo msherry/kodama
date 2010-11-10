@@ -8,7 +8,7 @@ LD = gcc
 CFLAGS = -g -Wall -Wextra -DDEBUG=1
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
-LIBRARIES = -lportaudio
+LIBRARIES = -lportaudio -lm
 
 OS := $(shell uname)
 ifeq ($(OS), Linux)
