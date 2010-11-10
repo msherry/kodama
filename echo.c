@@ -3,6 +3,7 @@
 
 #include "echo.h"
 #include "hybrid.h"
+#include "iir.h"
 #include "kodama.h"
 
 /*
@@ -24,6 +25,7 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
+static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update);
 static int dtd(echo *e, SAMPLE tx, SAMPLE rx);
 static void hp_fir_destroy(hp_fir *hp);
 static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
@@ -32,8 +34,28 @@ static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
 echo *echo_create(hybrid *h)
 {
     echo *e = malloc(sizeof(echo));
-    e->rx_buf = cbuffer_init(2000); /* TODO: */
+
+    e->rx_buf = cbuffer_init(NLMS_LEN);
+    e->x      = malloc(NLMS_LEN * sizeof(float));
+    e->xf     = malloc(NLMS_LEN * sizeof(float));
+    e->w      = malloc(NLMS_LEN * sizeof(float));
+
+    /* HACK: we increment w rather than setting it directly, so it needs to have
+     * a valid IEEE-754 value */
+    int i;
+    for (i = 0; i < NLMS_LEN; i+=2)
+    {
+        e->w[i] = 1.0/NLMS_LEN;
+        e->w[i+1] = 1.0/NLMS_LEN;
+
+        e->xf[i] = 1;
+        e->xf[i+1] = 1;
+    }
+
     e->hp = hp_fir_create();
+
+    e->Fx = iir_create();
+    e->Fe = iir_create();
 
     e->h = h;
     return e;
@@ -46,8 +68,13 @@ void echo_destroy(echo *e)
         return;
     }
 
+    free(e->w);
+    free(e->xf);
+    free(e->x);
     cbuffer_destroy(e->rx_buf);
     hp_fir_destroy(e->hp);
+    iir_destroy(e->Fx);
+    iir_destroy(e->Fe);
 
     free(e);
 }
@@ -78,10 +105,11 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /*     DEBUG_LOG(" ") */
         /* } */
 
-        /* TODO: nlms-pw */
+        /* nlms-pw */
+        tx = nlms_pw(e, tx, rx, update);
 
         /* If we're not talking, let's attenuate our signal */
-        if (update)
+        if (!update)
         {
             tx *= M12dB;
         }
@@ -94,6 +122,64 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
 {
     cbuffer_push_bulk(e->rx_buf, sb);
+}
+
+/*********** NLMS functions ***********/
+static float dotp(float *a, float *b)
+{
+    float sum0 = 0.0, sum1 = 0.0;
+
+    int i;
+    for (i=0; i<NLMS_LEN; i+=2)
+    {
+        sum0 += a[i] * b[i];
+        sum1 += a[i+1] * b[i+1];
+        /* DEBUG_LOG("a[i]: %f\ta[i+1]: %f\tb[i]: %f\tb[i+1]:\t%f\n", */
+        /*     a[i], a[i+1], b[i], b[i+1]) */
+        /* DEBUG_LOG("sum0: %f\tsum1: %f\n", sum0, sum1) */
+    }
+    return sum0+sum1;
+}
+
+static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update)
+{
+    float d = (float)tx;
+
+    /* Shift samples down to make room for new ones. Almost certainly will have
+     * to be sped up */
+    memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
+    memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float));
+
+    e->x[0] = (float)rx;
+    e->xf[0] = iir_highpass(e->Fx, d); /* pre-whitening of x */
+
+    /* DEBUG_LOG("dotp e->w, e->x\n") */
+    float err = d - dotp(e->w, e->x);
+    float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
+
+    /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]) */
+
+    /* TODO: we can update this iteratively for great justice */
+    /* DEBUG_LOG("dotp e->xf, e->xf\n") */
+    e->dotp_xf_xf = dotp(e->xf, e->xf);
+    /* DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf) */
+    if (update)
+    {
+        float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
+        /* DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef) */
+
+        /* Update tap weights */
+        int i;
+        for (i = 0; i < NLMS_LEN; i += 2)
+        {
+            /* DEBUG_LOG("old e->w[%d]: %f\t", i, e->w[i]) */
+            e->w[i] += u_ef*e->xf[i];
+            /* DEBUG_LOG("new e->w[%d]: %f\n", i, e->w[i]) */
+            e->w[i+1] += u_ef*e->xf[i+1];
+        }
+    }
+
+    return (int)err;
 }
 
 /*********** DTD functions ***********/
@@ -121,7 +207,7 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
 
     SAMPLE a_tx = abs(tx);
 
-    /* DEBUG_LOG("tx: %d\trx: %d\ta_tx: %d\tmax:\t%d\n", tx, rx, a_tx, (int)max) */
+    DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:\t%5d\n", tx, rx, a_tx, (int)max)
 
     if (a_tx > (GeigelThreshold * max))
     {

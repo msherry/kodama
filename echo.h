@@ -4,9 +4,6 @@
 #include "cbuffer.h"
 #include "kodama.h"
 
-/* Ridiculous forward declaration */
-typedef struct hybrid *hybrid_ptr;
-
 typedef struct hp_fir {
     SAMPLE *z;
 } hp_fir;
@@ -20,6 +17,30 @@ typedef struct hp_fir {
 #define M18dB (0.125f)
 #define M24dB (0.063f)
 
+/* dB values for 16bit PCM */
+/* MxdB_PCM = 32767 * 10 ^ (x / 20) */
+#define M10dB_PCM (10362.0f)
+#define M20dB_PCM (3277.0f)
+#define M25dB_PCM (1843.0f)
+#define M30dB_PCM (1026.0f)
+#define M35dB_PCM (583.0f)
+#define M40dB_PCM (328.0f)
+#define M45dB_PCM (184.0f)
+#define M50dB_PCM (104.0f)
+#define M55dB_PCM (58.0f)
+#define M60dB_PCM (33.0f)
+#define M65dB_PCM (18.0f)
+#define M70dB_PCM (10.0f)
+#define M75dB_PCM (6.0f)
+#define M80dB_PCM (3.0f)
+#define M85dB_PCM (2.0f)
+#define M90dB_PCM (1.0f)
+
+#define MAXPCM (32767.0f)
+
+/* convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give
+ * more AEC in lower frequencies, but less AEC in higher frequencies. */
+#define STEPSIZE (0.7f)
 
 /* Number of taps for high-pass (300Hz+) filter */
 #define HP_FIR_SIZE (13)
@@ -33,21 +54,33 @@ typedef struct hp_fir {
 /* DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 
+/* NLMS length in taps */
+#define NLMS_LEN (1)
 
 
 typedef struct echo {
     CBuffer *rx_buf;
 
+    /* TODO: is this the same as rx_buf? */
+    float *x;                   /* tap delayed speaker signal */
+    float *xf;                  /* pre-whitened tap delayed speaker signal */
+    float *w;                   /* tap weights */
+
     /* DTD */
     int holdover;
 
-    /* HP filter */
+    /* FIR filter */
     hp_fir *hp;
 
-    hybrid_ptr h;
+    /* IIR filters */
+    struct IIR *Fx, *Fe;
+
+    float dotp_xf_xf;
+
+    struct hybrid *h;
 } echo;
 
-echo *echo_create(hybrid_ptr h);
+echo *echo_create(struct hybrid *h);
 void echo_destroy(echo *e);
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb);

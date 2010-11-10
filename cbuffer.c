@@ -9,7 +9,8 @@ CBuffer *cbuffer_init(size_t capacity)
 {
     CBuffer *cb = malloc(sizeof(CBuffer));
 
-    cb->buf = malloc(capacity * sizeof(SAMPLE));
+    /* TODO: this only works if SAMPLE_SILENCE == 0 */
+    cb->buf = calloc(capacity, sizeof(SAMPLE));
     cb->end = (SAMPLE *)cb->buf + capacity;
     cb->capacity = capacity;
     cb->count = 0;
