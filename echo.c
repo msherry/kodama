@@ -70,6 +70,15 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* Geigel double-talk detector */
         int update = !dtd(e, tx, rx);
 
+        /* if (!update) */
+        /* { */
+        /*     DEBUG_LOG("doubletalk\n") */
+        /* } */
+        /* else */
+        /* { */
+        /*     DEBUG_LOG(" ") */
+        /* } */
+
         /* TODO: nlms-pw */
 
         /* If we're not talking, let's attenuate our signal */
