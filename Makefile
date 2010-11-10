@@ -5,7 +5,9 @@ PORTAUDIODIR = portaudio
 CC = gcc
 LD = gcc
 
-CFLAGS = -g -Wall -Wextra -DDEBUG=1
+PEDANTIC = -pedantic -Wno-variadic-macros -Wno-declaration-after-statement
+
+CFLAGS = -g ${PEDANTIC} -Wall -Wextra -DDEBUG=1 -std=gnu99
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
 LIBRARIES = -lportaudio -lm

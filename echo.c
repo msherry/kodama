@@ -26,10 +26,10 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
-static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update);
-static int dtd(echo *e, SAMPLE tx, SAMPLE rx);
+static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx, int update);
+static int dtd(echo *e, float tx, SAMPLE rx);
 static void hp_fir_destroy(hp_fir *hp);
-static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
+static float update_fir(hp_fir *hp, float in);
 
 
 echo *echo_create(hybrid *h)
@@ -95,14 +95,18 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
     for (i=0; i<sb->count; i++)
     {
         SAMPLE rx, tx;
+        float tx_f;
 
         rx = cbuffer_pop(e->rx_buf);
+        tx = sb->s[i];
+
+        tx_f = (float)tx;
 
         /* High-pass filter - filter out sub-300Hz signals */
-        tx = update_fir(e->hp, sb->s[i]);
+        tx_f = update_fir(e->hp, tx_f);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx, rx);
+        int update = !dtd(e, tx_f, rx);
 
         /* if (!update) */
         /* { */
@@ -114,7 +118,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* } */
 
         /* nlms-pw */
-        tx = nlms_pw(e, tx, rx, update);
+        tx_f = nlms_pw(e, tx_f, rx, update);
 
         /* If we're not talking, let's attenuate our signal */
         if (!update)
@@ -122,7 +126,21 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
             tx *= M12dB;
         }
 
-        sb->s[i] = tx;
+        /* clipping */
+        if (tx > MAXPCM)
+        {
+            tx = MAXPCM;
+        }
+        else if (tx < -MAXPCM)
+        {
+            tx = -MAXPCM;
+        }
+        else
+        {
+            tx = roundf(tx_f);
+        }
+
+        sb->s[i] = (int)tx;
     }
 
 }
@@ -149,20 +167,25 @@ static float dotp(float *a, float *b)
     return sum0+sum1;
 }
 
-static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update)
+static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx, int update)
 {
-    float d = (float)tx;
+    float rx_f = (float)rx;
+
+    if (rx == 0)
+    {
+        rx_f = M85dB_PCM;
+    }
 
     /* Shift samples down to make room for new ones. Almost certainly will have
      * to be sped up */
     memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
     memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float));
 
-    e->x[0] = (float)rx;
-    e->xf[0] = iir_highpass(e->Fx, d); /* pre-whitening of x */
+    e->x[0] = rx_f;
+    e->xf[0] = iir_highpass(e->Fx, tx); /* pre-whitening of x */
 
     /* DEBUG_LOG("dotp e->w, e->x\n") */
-    float err = d - dotp(e->w, e->x);
+    float err = tx - dotp(e->w, e->x);
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
 
     /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]) */
@@ -192,26 +215,22 @@ static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update)
         }
     }
 
-    /* TODO: this whole chain should probably be converted to use floats, so
-     * move this up to the top level */
-    if (err > MAXPCM)
+    int i;
+    for (i = 0; i < NLMS_LEN; i++)
     {
-        return (int)MAXPCM;
+        DEBUG_LOG("%.02f ", e->w[i])
     }
-    else if (err < -MAXPCM)
-    {
-        return (int)-MAXPCM;
-    }
+    DEBUG_LOG("%s", "\n")
 
-    return (int)roundf(err);
+    return err;
 }
 
 /*********** DTD functions ***********/
-static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
+static int dtd(echo *e, float tx, SAMPLE rx)
 {
     UNUSED(rx);
 
-    float max = 0;
+    float max = 0.0;
     size_t i;
 
     /* Get the last DTD_LEN rx samples and find the max*/
@@ -230,7 +249,7 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
     }
     /* DEBUG_LOG("\n"); */
 
-    SAMPLE a_tx = abs(tx);
+    SAMPLE a_tx = fabsf(tx);
 
     if (a_tx > (GeigelThreshold * max))
     {
@@ -244,8 +263,8 @@ static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
 
     sample_block_destroy(sb);
 
-    DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
-        tx, rx, a_tx, (int)max, (e->holdover > 0))
+    /* DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
+    /*     tx, rx, a_tx, (int)max, (e->holdover > 0)) */
 
     return e->holdover > 0;
 }
@@ -255,7 +274,7 @@ static hp_fir *hp_fir_create(void)
 {
     hp_fir *h = malloc(sizeof(hp_fir));
     /* 13-tap filter */
-    h->z = calloc(HP_FIR_SIZE+1, sizeof(SAMPLE));
+    h->z = calloc(HP_FIR_SIZE+1, sizeof(float));
 
     return h;
 }
@@ -266,12 +285,12 @@ void hp_fir_destroy(hp_fir *hp)
     free(hp);
 }
 
-SAMPLE update_fir(hp_fir *hp, SAMPLE s)
+float update_fir(hp_fir *hp, float in)
 {
     /* Shift the samples down to make room for the new one */
-    memmove(hp->z+1, hp->z, HP_FIR_SIZE*sizeof(SAMPLE));
+    memmove(hp->z+1, hp->z, HP_FIR_SIZE*sizeof(float));
 
-    hp->z[0] = s;
+    hp->z[0] = in;
 
     /* Partially unrolled */
     SAMPLE sum0=0.0, sum1=0.0;

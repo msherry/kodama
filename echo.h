@@ -5,7 +5,7 @@
 #include "kodama.h"
 
 typedef struct hp_fir {
-    SAMPLE *z;
+    float *z;
 } hp_fir;
 
 /* dB Values */
