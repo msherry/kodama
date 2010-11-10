@@ -1,6 +1,7 @@
 #include <stdlib.h>
 
 #include "cbuffer.h"
+#include "echo.h"
 #include "hybrid.h"
 
 /* Static prototypes */

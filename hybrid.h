@@ -1,10 +1,6 @@
 #ifndef _HYBRID_H_
 #define _HYBRID_H_
 
-#include "cbuffer.h"
-#include "echo.h"
-#include "kodama.h"
-
 /*
 
          client (rx) side                            network (tx) side
@@ -35,8 +31,8 @@ typedef enum hybrid_side {
 typedef void (*hybrid_callback_fn) (struct hybrid *, hybrid_side side);
 
 typedef struct hybrid {
-    CBuffer *tx_buf;
-    CBuffer *rx_buf;
+    struct CBuffer *tx_buf;
+    struct CBuffer *rx_buf;
 
     unsigned long tx_count;
     unsigned long rx_count;
@@ -47,7 +43,7 @@ typedef struct hybrid {
     void *tx_cb_data;
     void *rx_cb_data;
 
-    echo *e;
+    struct echo *e;
 } hybrid;
 
 
@@ -56,11 +52,11 @@ hybrid *hybrid_new(void);
 void hybrid_destroy(hybrid *h);
 void hybrid_setup_echo_cancel(hybrid *h);
 
-SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count);
-SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
-void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb);
-void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb);
-void hybrid_put_rx_samples_direct(hybrid *h, SAMPLE_BLOCK *sb);
+struct SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count);
+struct SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
+void hybrid_put_tx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
+void hybrid_put_rx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
+void hybrid_put_rx_samples_direct(hybrid *h, struct SAMPLE_BLOCK *sb);
 
 void hybrid_simulate_tx_delay(hybrid *h, float ms);
 void hybrid_simulate_rx_delay(hybrid *h, float ms);
