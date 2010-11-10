@@ -53,6 +53,13 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 {
     /* TODO: increase counts */
 
+    /* This will probably NOT modify the samples in sb - we're just letting the
+     * echo canceler see them */
+    if (h->e)
+    {
+        echo_update_tx(h->e, h, sb);
+    }
+
     cbuffer_push_bulk(h->tx_buf, sb);
 
     /* We just got some data - inform whoever cares */
@@ -65,10 +72,12 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     /* TODO: increase counts */
 
     /* Hey, let's cancel some echo here for the other party - hopefully they'll
-     * do the same for us */
+     * do the same for us. This will probably modify the samples in sb */
     if (h->e)
     {
-        echo_update(h->e, h, sb);
+        /* Give the data to the echo canceler for modification before it hits
+         * the rx_buf, where it's fair game for the hardware */
+        echo_update_rx(h->e, h, sb);
     }
 
     cbuffer_push_bulk(h->rx_buf, sb);

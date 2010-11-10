@@ -36,6 +36,7 @@ size_t cbuffer_get_free(CBuffer *cb);
 
 void cbuffer_push_bulk(CBuffer *cb, SAMPLE_BLOCK *sb);
 SAMPLE_BLOCK *cbuffer_get_samples(CBuffer *cb, size_t count);
+SAMPLE_BLOCK *cbuffer_peek_samples(CBuffer *cb, size_t count);
 
 /* SAMPLE_BLOCK methods */
 SAMPLE_BLOCK *sample_block_create(size_t count);

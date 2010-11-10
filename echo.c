@@ -24,12 +24,16 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
+static int dtd(echo *e, SAMPLE tx, SAMPLE rx);
 static void hp_fir_destroy(hp_fir *hp);
 static SAMPLE update_fir(hp_fir *hp, SAMPLE s);
+
 
 echo *echo_create(hybrid *h)
 {
     echo *e = malloc(sizeof(echo));
+    e->tx_buf = cbuffer_init(2000); /* TODO: */
+    e->dtd_rx_buf = cbuffer_init(DTD_LEN * NUM_CHANNELS);
     e->hp = hp_fir_create();
 
     e->h = h;
@@ -42,24 +46,96 @@ void echo_destroy(echo *e)
     {
         return;
     }
+
+    cbuffer_destroy(e->dtd_rx_buf);
+    cbuffer_destroy(e->tx_buf);
     hp_fir_destroy(e->hp);
     free(e);
 }
 
-void echo_update(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
+void echo_update_tx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
+{
+    UNUSED(h);
+    cbuffer_push_bulk(e->tx_buf, sb);
+}
+
+/* This function is expected to update the samples in sb to remove echo - once
+ * it complete, they are ready to go out the rx side of the hybrid */
+void echo_update_rx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
 {
     UNUSED(h);
 
-    /* High-pass filter - filter out sub-300Hz signals */
     size_t i;
     for (i=0; i<sb->count; i++)
     {
-        sb->s[i] = update_fir(e->hp, sb->s[i]);
+        SAMPLE rx, tx;
+
+        tx = cbuffer_pop(e->tx_buf);
+
+        /* High-pass filter - filter out sub-300Hz signals */
+        rx = update_fir(e->hp, sb->s[i]);
+
+        /* Geigel double-talk detector */
+        int doubletalk = dtd(e, tx, rx);
+
+        /* if (doubletalk) */
+        /* { */
+        /*     DEBUG_LOG("Doubletalk detected\n") */
+        /* } */
+        /* else */
+        /* { */
+        /*     DEBUG_LOG(" "); */
+        /* } */
+
+        sb->s[i] = rx;
     }
 }
 
+/*********** DTD functions ***********/
+static int dtd(echo *e, SAMPLE tx, SAMPLE rx)
+{
+    float max = 0;
+    size_t i;
+
+    /* Put this received sample into the DTD cbuffer */
+    cbuffer_push(e->dtd_rx_buf, rx);
+
+    /* Get the last DTD_LEN rx samples and find the max*/
+    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->dtd_rx_buf, DTD_LEN);
+
+    for (i=0; i<DTD_LEN; i++)
+    {
+        /* TODO: this only works for integral SAMPLE types */
+        SAMPLE a = abs(sb->s[i]);
+        /* DEBUG_LOG("%d, ", a); */
+        if (a > max)
+        {
+            max = a;
+        }
+    }
+    /* DEBUG_LOG("\n"); */
+
+    SAMPLE a_tx = abs(tx);
+
+    /* DEBUG_LOG("tx: %d\trx: %d\ta_tx: %d\tmax:\t%d\n", tx, rx, a_tx, (int)max) */
+
+    if (a_tx > (GeigelThreshold * max))
+    {
+        e->holdover = DTD_HOLDOVER;
+    }
+
+    sample_block_destroy(sb);
+
+    if (e->holdover)
+    {
+        e->holdover--;
+    }
+
+    return e->holdover > 0;
+}
+
 /*********** High-pass FIR functions ***********/
-hp_fir *hp_fir_create(void)
+static hp_fir *hp_fir_create(void)
 {
     hp_fir *h = malloc(sizeof(hp_fir));
     /* 13-tap filter */

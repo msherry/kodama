@@ -31,8 +31,7 @@ void cbuffer_destroy(CBuffer *cb)
 
 void cbuffer_push(CBuffer *cb, SAMPLE elem)
 {
-    *(cb->head) = elem;
-    cb->head++;
+    *(cb->head++) = elem;
     if (cb->head == cb->end)
     {
         cb->head = cb->buf;
@@ -90,6 +89,34 @@ SAMPLE_BLOCK *cbuffer_get_samples(CBuffer *cb, size_t count)
     while (count--)
     {
         *(head++) = cbuffer_pop(cb);
+    }
+
+    return sb;
+}
+
+/* Returns count samples, but leaves the samples in the buffer. Caller is
+ * responsible for freeing allocated memory */
+SAMPLE_BLOCK *cbuffer_peek_samples(CBuffer *cb, size_t count)
+{
+    SAMPLE_BLOCK *sb = sample_block_create(count);
+
+    SAMPLE *s = sb->s;
+    SAMPLE *fake_head = cb->head;
+    size_t i=0;
+    while (i++ < count)
+    {
+        SAMPLE sample = *(fake_head--);
+        /* If that wasn't valid (not enough entries in the cbuffer, use silence
+         * instead) */
+        if (i > sb->count)
+        {
+            sample = SAMPLE_SILENCE;
+        }
+        *(s++) = sample;
+        if (fake_head == (cb->buf-1))
+        {
+            fake_head = cb->end-1;
+        }
     }
 
     return sb;
