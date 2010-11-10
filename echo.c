@@ -162,6 +162,11 @@ static SAMPLE nlms_pw(echo *e, SAMPLE tx, SAMPLE rx, int update)
     /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
     e->dotp_xf_xf = dotp(e->xf, e->xf);
+    if (e->dotp_xf_xf == 0.0)
+    {
+        e->dotp_xf_xf = NLMS_LEN * MIN_XF * MIN_XF;
+    }
+
     /* DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf) */
     if (update)
     {

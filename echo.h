@@ -38,6 +38,8 @@ typedef struct hp_fir {
 
 #define MAXPCM (32767.0f)
 
+#define MIN_XF M85dB_PCM
+
 /* convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
@@ -55,7 +57,7 @@ typedef struct hp_fir {
 #define GeigelThreshold (M6dB)
 
 /* NLMS length in taps */
-#define NLMS_LEN (1)
+#define NLMS_LEN (128)
 
 
 typedef struct echo {
