@@ -3,6 +3,7 @@
 #include <string.h>
 
 #include "cbuffer.h"
+#include "kodama.h"
 
 CBuffer *cbuffer_init(size_t capacity)
 {
