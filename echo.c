@@ -50,12 +50,17 @@ void echo_destroy(echo *e)
     cbuffer_destroy(e->dtd_rx_buf);
     cbuffer_destroy(e->tx_buf);
     hp_fir_destroy(e->hp);
+
     free(e);
 }
 
 void echo_update_tx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
 {
     UNUSED(h);
+
+    /* TODO: during non-doubletalk, this would be a good place to attenuate the
+     * tx signal */
+
     cbuffer_push_bulk(e->tx_buf, sb);
 }
 
@@ -76,16 +81,15 @@ void echo_update_rx(echo *e, hybrid *h, SAMPLE_BLOCK *sb)
         rx = update_fir(e->hp, sb->s[i]);
 
         /* Geigel double-talk detector */
-        int doubletalk = dtd(e, tx, rx);
+        int update = !dtd(e, tx, rx);
 
-        /* if (doubletalk) */
-        /* { */
-        /*     DEBUG_LOG("Doubletalk detected\n") */
-        /* } */
-        /* else */
-        /* { */
-        /*     DEBUG_LOG(" "); */
-        /* } */
+
+        /* If we're not talking, let's attenuate our signal */
+        if (update)
+        {
+            /* TODO: gain access to tx samples here and attenuate by 12dB */
+            /* tx *= M12dB */
+        }
 
         sb->s[i] = rx;
     }
