@@ -110,7 +110,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         rx = (float)rx_s;
 
         /* High-pass filter - filter out sub-300Hz signals */
-        /* tx = update_fir(e->hp, tx); */
+        tx = update_fir(e->hp, tx);
 
         /* Geigel double-talk detector */
         int update = !dtd(e, tx);
@@ -209,7 +209,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
     /* e->dotp_xf_xf = dotp(e->xf, e->xf); */
-    e->dotp_xf_xf += ((e->xf[0] * e->xf[0]) - last_xf);
+    e->dotp_xf_xf += (e->xf[0] * e->xf[0] - last_xf);
 
     if (e->dotp_xf_xf == 0.0)
     {
@@ -244,7 +244,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
             e->w[i+1] += u_ef*e->xf[i+1];
         }
     }
-
     return err;
 }
 
