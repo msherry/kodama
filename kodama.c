@@ -1,3 +1,4 @@
+#include <execinfo.h>
 #include <glib.h>
 #include <signal.h>
 #include <stdio.h>
@@ -173,4 +174,27 @@ int main(int argc, char *argv[])
     g_main_loop_run(loop);
 
     return 0;
+}
+
+
+void stack_trace(int die)
+{
+    void *array[10];
+    size_t size, i;
+    char **strings;
+
+    size = backtrace(array, 10);
+    strings = backtrace_symbols(array, size);
+
+    for(i = 0; i<size; i++)
+    {
+        fprintf(stderr, "%s\n", strings[i]);
+    }
+
+    free(strings);
+
+    if (die)
+    {
+        exit(-1);
+    }
 }

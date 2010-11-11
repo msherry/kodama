@@ -40,4 +40,6 @@ typedef unsigned char SAMPLE;
 /* Macro stolen from lighty for unused values */
 #define UNUSED(x) ( (void)(x) )
 
+void stack_trace(int die);
+
 #endif

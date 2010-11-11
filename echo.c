@@ -26,7 +26,7 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
-static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx, int update);
+static float nlms_pw(echo *e, float tx, SAMPLE rx, int update);
 static int dtd(echo *e, float tx, SAMPLE rx);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
@@ -169,7 +169,7 @@ static float dotp(float *a, float *b)
     return sum0+sum1;
 }
 
-static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
+static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
 {
     float rx = (float)rx_s;
 

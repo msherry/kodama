@@ -1,6 +1,8 @@
 syntax: regexp
 portaudio/
 ^kodama$
+TAGS
 
 syntax: glob
 *.o
+*.out
