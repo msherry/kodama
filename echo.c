@@ -40,23 +40,26 @@ echo *echo_create(hybrid *h)
     echo *e = malloc(sizeof(echo));
 
     e->rx_buf = cbuffer_init(NLMS_LEN);
-    e->x      = malloc(NLMS_LEN * sizeof(float));
-    e->xf     = malloc(NLMS_LEN * sizeof(float));
-    e->w      = malloc(NLMS_LEN * sizeof(float));
+    e->x  = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
+    e->xf = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
+    e->w  = malloc(NLMS_LEN * sizeof(float));
+
+    e->j  = NLMS_EXT;
 
     /* HACK: we increment w rather than setting it directly, so it needs to have
      * a valid IEEE-754 value */
     int i;
+    int j = e->j;
     for (i = 0; i < NLMS_LEN; i+=2)
     {
-        e->x[i] = 0;
-        e->x[i+1] = 0;
+        e->x[j+i] = 0;
+        e->x[j+i+1] = 0;
 
-        e->xf[i] = 1.0/NLMS_LEN;
-        e->xf[i+1] = 1.0/NLMS_LEN;
+        e->xf[j+i] = 1.0/NLMS_LEN;
+        e->xf[j+i+1] = 1.0/NLMS_LEN;
 
-        e->w[i] = 1.0/NLMS_LEN;
-        e->w[i+1] = 1.0/NLMS_LEN;
+        e->w[j+i] = 1.0/NLMS_LEN;
+        e->w[j+i+1] = 1.0/NLMS_LEN;
     }
 
     e->hp = hp_fir_create();
@@ -181,15 +184,16 @@ static float dotp(float *a, float *b)
 
 static float nlms_pw(echo *e, float tx, float rx, int update)
 {
+    int j = e->j;
     /* Shift samples down to make room for new ones. Almost certainly will have
      * to be sped up */
-    memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
-    /* Save the last value of xf[] */
-    float last_xf = e->xf[NLMS_LEN-1];
-    memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float));
+    /* memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float)); */
+    /* /\* Save the last value of xf[] *\/ */
+    /* float last_xf = e->xf[NLMS_LEN-1]; */
+    /* memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float)); */
 
-    e->x[0] = rx;
-    e->xf[0] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
+    e->x[j] = rx;
+    e->xf[j] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
     float dotp_w_x = dotp(e->w, e->x);
     /* DEBUG_LOG("tx: %f\trx: %f\n", tx, rx) */
@@ -204,12 +208,14 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 
     /* DEBUG_LOG("tx: %f\terr: %f\n", tx, err); */
 
-    /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]); */
+    /* DEBUG_LOG("x[j]: %f\txf[j]: %f\n", e->x[j], e->xf[j]); */
 
-    /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
     /* e->dotp_xf_xf = dotp(e->xf, e->xf); */
-    e->dotp_xf_xf += (e->xf[0] * e->xf[0] - last_xf);
+
+    /* Iterative update */
+    e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
+        e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
 
     if (e->dotp_xf_xf == 0.0)
     {
@@ -217,7 +223,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         int i;
         for (i = 0; i < NLMS_LEN; i++)
         {
-            DEBUG_LOG("%.02f ", e->xf[i]);
+            DEBUG_LOG("%.02f ", e->xf[j+i]);
         }
         DEBUG_LOG("%s\n\n", "");
         stack_trace(1);
@@ -239,11 +245,19 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         for (i = 0; i < NLMS_LEN; i += 2)
         {
             /* DEBUG_LOG("old e->w[%d]: %f\t", i, e->w[i]) */
-            e->w[i] += u_ef*e->xf[i];
+            e->w[j+i] += u_ef*e->xf[j+i];
             /* DEBUG_LOG("new e->w[%d]: %f\n", i, e->w[i]) */
-            e->w[i+1] += u_ef*e->xf[i+1];
+            e->w[j+i+1] += u_ef*e->xf[j+i+1];
         }
     }
+
+    if (--e->j < 0)
+    {
+        e->j = NLMS_EXT;
+        memmove(e->x+j+1, e->x, (NLMS_LEN-1)*sizeof(float));
+        memmove(e->xf+j+1, e->xf, (NLMS_LEN-1)*sizeof(float));
+    }
+
     return err;
 }
 
