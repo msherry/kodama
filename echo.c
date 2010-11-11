@@ -26,8 +26,8 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
-static float nlms_pw(echo *e, float tx, SAMPLE rx, int update);
-static int dtd(echo *e, float tx, SAMPLE rx);
+static float nlms_pw(echo *e, float tx, float rx, int update);
+static int dtd(echo *e, float tx);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
 
@@ -96,28 +96,29 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
     size_t i;
     for (i=0; i<sb->count; i++)
     {
-        SAMPLE rx, tx_s;
-        float tx;
+        SAMPLE rx_s, tx_s;
+        float tx, rx;
 
-        rx = cbuffer_pop(e->rx_buf);
+        rx_s = cbuffer_pop(e->rx_buf);
         tx_s = sb->s[i];
 
         tx = (float)tx_s;
+        rx = (float)rx_s;
 
         /* High-pass filter - filter out sub-300Hz signals */
         tx = update_fir(e->hp, tx);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx, rx);
+        int update = !dtd(e, tx);
 
-        /* if (!update) */
-        /* { */
-        /*     DEBUG_LOG("doubletalk\n") */
-        /* } */
-        /* else */
-        /* { */
-        /*     DEBUG_LOG(" ") */
-        /* } */
+        if (!update)
+        {
+            DEBUG_LOG("%s\n", "doubletalk");
+        }
+        else
+        {
+            DEBUG_LOG("%s", " ");
+        }
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -162,17 +163,12 @@ static float dotp(float *a, float *b)
     {
         sum0 += a[i] * b[i];
         sum1 += a[i+1] * b[i+1];
-        /* DEBUG_LOG("a[i]: %f\ta[i+1]: %f\tb[i]: %f\tb[i+1]:\t%f\n", */
-        /*     a[i], a[i+1], b[i], b[i+1]) */
-        /* DEBUG_LOG("sum0: %f\tsum1: %f\n", sum0, sum1) */
     }
     return sum0+sum1;
 }
 
-static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
+static float nlms_pw(echo *e, float tx, float rx, int update)
 {
-    float rx = (float)rx_s;
-
     /* Shift samples down to make room for new ones. Almost certainly will have
      * to be sped up */
     memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
@@ -194,6 +190,8 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
         stack_trace(1);
     }
 
+    DEBUG_LOG("tx: %f\terr: %f\n", tx, err);
+
     /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]); */
 
     /* TODO: we can update this iteratively for great justice */
@@ -212,11 +210,6 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
         DEBUG_LOG("%s\n\n", "");
         stack_trace(1);
     }
-
-    /* if (e->dotp_xf_xf == 0.0) */
-    /* { */
-    /*     e->dotp_xf_xf = NLMS_LEN * MIN_XF * MIN_XF; */
-    /* } */
 
     /* DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf) */
     if (update)
@@ -240,21 +233,14 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
         }
     }
 
-    /* int i; */
-    /* for (i = 0; i < NLMS_LEN; i++) */
-    /* { */
-    /*     DEBUG_LOG("%.02f ", e->w[i]) */
-    /* } */
-    /* DEBUG_LOG("%s", "\n\n") */
-
     return err;
 }
 
 /*********** DTD functions ***********/
-static int dtd(echo *e, float tx, SAMPLE rx)
-{
-    UNUSED(rx);
 
+/* Compare against the last NLMS_LEN samples */
+static int dtd(echo *e, float tx)
+{
     float max = 0.0;
     size_t i;
 
@@ -262,7 +248,7 @@ static int dtd(echo *e, float tx, SAMPLE rx)
     /* TODO: can we just use e->x here? */
     SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, NLMS_LEN);
 
-    for (i=0; i<DTD_LEN; i++)
+    for (i=0; i<NLMS_LEN; i++)
     {
         /* TODO: this only works for integral SAMPLE types */
         SAMPLE a = abs(sb->s[i]);
@@ -288,8 +274,8 @@ static int dtd(echo *e, float tx, SAMPLE rx)
 
     sample_block_destroy(sb);
 
-    /* DEBUG_LOG("tx: %5d\trx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
-    /*     tx, rx, a_tx, (int)max, (e->holdover > 0)) */
+    DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
+        tx, a_tx, (int)max, (e->holdover > 0))
 
     return e->holdover > 0;
 }
