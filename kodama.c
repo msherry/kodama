@@ -186,7 +186,7 @@ void stack_trace(int die)
     size = backtrace(array, 10);
     strings = backtrace_symbols(array, size);
 
-    for(i = 0; i<size; i++)
+    for(i = 1; i<size; i++)     /* skip the trace for our own function */
     {
         fprintf(stderr, "%s\n", strings[i]);
     }

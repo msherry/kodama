@@ -176,6 +176,8 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     /* Shift samples down to make room for new ones. Almost certainly will have
      * to be sped up */
     memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
+    /* Save the last value of xf[] */
+    float last_xf = e->xf[NLMS_LEN-1];
     memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float));
 
     e->x[0] = rx;
@@ -186,12 +188,31 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     DEBUG_LOG("dotp(e->w, e->x): %f\n", dotp_w_x)
     float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
+    if (isnan(ef))
+    {
+        DEBUG_LOG("%s\n", "ef went NaN");
+        stack_trace(1);
+    }
 
-    DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0])
+    DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]);
 
     /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
-    e->dotp_xf_xf = dotp(e->xf, e->xf);
+    /* e->dotp_xf_xf = dotp(e->xf, e->xf); */
+    e->dotp_xf_xf += ((e->xf[0] * e->xf[0]) - last_xf);
+
+    if (e->dotp_xf_xf == 0.0)
+    {
+        DEBUG_LOG("%s\n", "dotp_xf_xf went to zero");
+        int i;
+        for (i = 0; i < NLMS_LEN; i++)
+        {
+            DEBUG_LOG("%.02f ", e->xf[i]);
+        }
+        DEBUG_LOG("%s\n\n", "");
+        stack_trace(1);
+    }
+
     /* if (e->dotp_xf_xf == 0.0) */
     /* { */
     /*     e->dotp_xf_xf = NLMS_LEN * MIN_XF * MIN_XF; */
@@ -201,7 +222,12 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     if (update)
     {
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
-        DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef)
+        DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef);
+        if (isinf(u_ef))
+        {
+            DEBUG_LOG("%s\n", "u_ef went infinite");
+            stack_trace(1);
+        }
 
         /* Update tap weights */
         int i;
