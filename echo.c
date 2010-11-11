@@ -272,7 +272,7 @@ static int dtd(echo *e, float tx)
     }
     /* DEBUG_LOG("\n"); */
 
-    SAMPLE a_tx = fabsf(tx);
+    float a_tx = fabsf(tx);
 
     if (a_tx > (GeigelThreshold * max))
     {
@@ -286,8 +286,8 @@ static int dtd(echo *e, float tx)
 
     sample_block_destroy(sb);
 
-    DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
-        tx, a_tx, (int)max, (e->holdover > 0))
+    DEBUG_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
+        (int)tx, (int)a_tx, (int)max, (e->holdover > 0))
 
     return e->holdover > 0;
 }
