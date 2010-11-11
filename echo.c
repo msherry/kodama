@@ -256,7 +256,7 @@ static int dtd(echo *e, float tx)
     float max = 0.0;
     size_t i;
 
-    /* Get the last DTD_LEN rx samples and find the max*/
+    /* Get the last NLMS_LEN rx samples and find the max*/
     /* TODO: can we just use e->x here? */
     SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, NLMS_LEN);
 
@@ -286,8 +286,8 @@ static int dtd(echo *e, float tx)
 
     sample_block_destroy(sb);
 
-    /* DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
-    /*     tx, a_tx, (int)max, (e->holdover > 0)) */
+    DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
+        tx, a_tx, (int)max, (e->holdover > 0))
 
     return e->holdover > 0;
 }
