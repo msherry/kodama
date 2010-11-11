@@ -49,8 +49,8 @@ echo *echo_create(hybrid *h)
         e->x[i] = 0;
         e->x[i+1] = 0;
 
-        e->xf[i] = 1;
-        e->xf[i+1] = 1;
+        e->xf[i] = 1.0/NLMS_LEN;
+        e->xf[i+1] = 1.0/NLMS_LEN;
 
         e->w[i] = 1.0/NLMS_LEN;
         e->w[i+1] = 1.0/NLMS_LEN;
@@ -61,6 +61,8 @@ echo *echo_create(hybrid *h)
     e->Fx = iir_create();
     e->Fe = iir_create();
     e->iir_dc = iirdc_create();
+
+    e->dotp_xf_xf = M80dB_PCM;
 
     e->h = h;
     return e;
@@ -94,19 +96,19 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
     size_t i;
     for (i=0; i<sb->count; i++)
     {
-        SAMPLE rx, tx;
-        float tx_f;
+        SAMPLE rx, tx_s;
+        float tx;
 
         rx = cbuffer_pop(e->rx_buf);
-        tx = sb->s[i];
+        tx_s = sb->s[i];
 
-        tx_f = (float)tx;
+        tx = (float)tx_s;
 
         /* High-pass filter - filter out sub-300Hz signals */
-        tx_f = update_fir(e->hp, tx_f);
+        tx = update_fir(e->hp, tx);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx_f, rx);
+        int update = !dtd(e, tx, rx);
 
         /* if (!update) */
         /* { */
@@ -118,7 +120,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* } */
 
         /* nlms-pw */
-        tx_f = nlms_pw(e, tx_f, rx, update);
+        tx = nlms_pw(e, tx, rx, update);
 
         /* If we're not talking, let's attenuate our signal */
         if (!update)
@@ -137,7 +139,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         }
         else
         {
-            tx = roundf(tx_f);
+            tx = roundf(tx);
         }
 
         sb->s[i] = (int)tx;
@@ -167,42 +169,39 @@ static float dotp(float *a, float *b)
     return sum0+sum1;
 }
 
-static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx, int update)
+static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
 {
-    float rx_f = (float)rx;
-
-    if (rx == 0)
-    {
-        rx_f = M85dB_PCM;
-    }
+    float rx = (float)rx_s;
 
     /* Shift samples down to make room for new ones. Almost certainly will have
      * to be sped up */
     memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float));
     memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float));
 
-    e->x[0] = rx_f;
-    e->xf[0] = iir_highpass(e->Fx, tx); /* pre-whitening of x */
+    e->x[0] = rx;
+    e->xf[0] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
-    /* DEBUG_LOG("dotp e->w, e->x\n") */
-    float err = tx - dotp(e->w, e->x);
+    float dotp_w_x = dotp(e->w, e->x);
+    DEBUG_LOG("tx: %f\trx: %f\n", tx, rx)
+    DEBUG_LOG("dotp(e->w, e->x): %f\n", dotp_w_x)
+    float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
 
-    /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]) */
+    DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0])
 
     /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
     e->dotp_xf_xf = dotp(e->xf, e->xf);
-    if (e->dotp_xf_xf == 0.0)
-    {
-        e->dotp_xf_xf = NLMS_LEN * MIN_XF * MIN_XF;
-    }
+    /* if (e->dotp_xf_xf == 0.0) */
+    /* { */
+    /*     e->dotp_xf_xf = NLMS_LEN * MIN_XF * MIN_XF; */
+    /* } */
 
     /* DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf) */
     if (update)
     {
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
-        /* DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef) */
+        DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef)
 
         /* Update tap weights */
         int i;
@@ -215,12 +214,12 @@ static SAMPLE nlms_pw(echo *e, float tx, SAMPLE rx, int update)
         }
     }
 
-    int i;
-    for (i = 0; i < NLMS_LEN; i++)
-    {
-        DEBUG_LOG("%.02f ", e->w[i])
-    }
-    DEBUG_LOG("%s", "\n")
+    /* int i; */
+    /* for (i = 0; i < NLMS_LEN; i++) */
+    /* { */
+    /*     DEBUG_LOG("%.02f ", e->w[i]) */
+    /* } */
+    DEBUG_LOG("%s", "\n\n")
 
     return err;
 }
