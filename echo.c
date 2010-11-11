@@ -18,11 +18,14 @@ Order: 12
 Transition band: 100.0 Hz
 Stopband attenuation: 10.0 dB
 */
+
 float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
                   -0.053661242, -0.054712527, 0.82598513, -0.054712527,
                   -0.053661242, -0.051936015, -0.049576525, -0.046636667,
                   -0.043183226};
 
+/* Number of taps for high-pass (300Hz+) filter */
+#define HP_FIR_SIZE (13)
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
@@ -94,6 +97,7 @@ void echo_destroy(echo *e)
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
     size_t i;
+    int any_doubletalk = 0;
     for (i=0; i<sb->count; i++)
     {
         SAMPLE rx_s, tx_s;
@@ -106,19 +110,20 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         rx = (float)rx_s;
 
         /* High-pass filter - filter out sub-300Hz signals */
-        tx = update_fir(e->hp, tx);
+        /* tx = update_fir(e->hp, tx); */
 
         /* Geigel double-talk detector */
         int update = !dtd(e, tx);
 
         if (!update)
         {
-            DEBUG_LOG("%s\n", "doubletalk");
+            /* DEBUG_LOG("%s\n", "doubletalk"); */
+            any_doubletalk = 1;
         }
-        else
-        {
-            DEBUG_LOG("%s", " ");
-        }
+        /* else */
+        /* { */
+        /*     DEBUG_LOG("%s", " "); */
+        /* } */
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -145,7 +150,14 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         sb->s[i] = (int)tx;
     }
-
+    if (any_doubletalk)
+    {
+        DEBUG_LOG("%s\n", "doubletalk");
+    }
+    else
+    {
+        DEBUG_LOG("%s\n", "");
+    }
 }
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
@@ -190,7 +202,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         stack_trace(1);
     }
 
-    DEBUG_LOG("tx: %f\terr: %f\n", tx, err);
+    /* DEBUG_LOG("tx: %f\terr: %f\n", tx, err); */
 
     /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]); */
 
@@ -274,8 +286,8 @@ static int dtd(echo *e, float tx)
 
     sample_block_destroy(sb);
 
-    DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
-        tx, a_tx, (int)max, (e->holdover > 0))
+    /* DEBUG_LOG("tx: %5f\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
+    /*     tx, a_tx, (int)max, (e->holdover > 0)) */
 
     return e->holdover > 0;
 }
@@ -296,6 +308,7 @@ void hp_fir_destroy(hp_fir *hp)
     free(hp);
 }
 
+/* TODO: is this working correctly? */
 float update_fir(hp_fir *hp, float in)
 {
     /* Shift the samples down to make room for the new one */

@@ -44,12 +44,6 @@ typedef struct hp_fir {
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
-/* Number of taps for high-pass (300Hz+) filter */
-#define HP_FIR_SIZE (13)
-
-/* Number of taps for DTD calculation */
-#define DTD_LEN (16)
-
 /* Holdover for DTD, in taps */
 #define DTD_HOLDOVER (30)
 
