@@ -184,8 +184,8 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     e->xf[0] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
     float dotp_w_x = dotp(e->w, e->x);
-    DEBUG_LOG("tx: %f\trx: %f\n", tx, rx)
-    DEBUG_LOG("dotp(e->w, e->x): %f\n", dotp_w_x)
+    /* DEBUG_LOG("tx: %f\trx: %f\n", tx, rx) */
+    /* DEBUG_LOG("dotp(e->w, e->x): %f\n", dotp_w_x) */
     float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
     if (isnan(ef))
@@ -194,7 +194,7 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
         stack_trace(1);
     }
 
-    DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]);
+    /* DEBUG_LOG("x[0]: %f\txf[0]: %f\n", e->x[0], e->xf[0]); */
 
     /* TODO: we can update this iteratively for great justice */
     /* DEBUG_LOG("dotp e->xf, e->xf\n") */
@@ -222,7 +222,7 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     if (update)
     {
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
-        DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef);
+        /* DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef); */
         if (isinf(u_ef))
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
@@ -245,7 +245,7 @@ static float nlms_pw(echo *e, float tx, SAMPLE rx_s, int update)
     /* { */
     /*     DEBUG_LOG("%.02f ", e->w[i]) */
     /* } */
-    DEBUG_LOG("%s", "\n\n")
+    /* DEBUG_LOG("%s", "\n\n") */
 
     return err;
 }
