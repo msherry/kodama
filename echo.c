@@ -90,7 +90,7 @@ void echo_destroy(echo *e)
 }
 
 /* This function is expected to update the samples in sb to remove echo - once
- * it complete, they are ready to go out the tx side of the hybrid */
+ * it completes, they are ready to go out the tx side of the hybrid */
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
     size_t i;
