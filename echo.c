@@ -118,17 +118,13 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* Geigel double-talk detector */
         int update = !dtd(e, tx);
 
-        if (!update)
-        {
-            any_doubletalk = 1;
-        }
-
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
 
         /* If we're not talking, let's attenuate our signal */
         if (!update)
         {
+            any_doubletalk = 1;
             tx *= M12dB;
         }
 
