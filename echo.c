@@ -229,9 +229,9 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         for (i = 0; i < NLMS_LEN; i += 2)
         {
             /* DEBUG_LOG("old e->w[%d]: %f\t", i, e->w[i]) */
-            e->w[j+i] += u_ef*e->xf[j+i];
+            e->w[i] += u_ef*e->xf[j+i];
             /* DEBUG_LOG("new e->w[%d]: %f\n", i, e->w[i]) */
-            e->w[j+i+1] += u_ef*e->xf[j+i+1];
+            e->w[i+1] += u_ef*e->xf[j+i+1];
         }
     }
 
