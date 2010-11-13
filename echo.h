@@ -45,13 +45,16 @@ typedef struct hp_fir {
 #define STEPSIZE (0.7f)
 
 /* Holdover for DTD, in taps */
-#define DTD_HOLDOVER (30)
+#define DTD_HOLDOVER (240)
 
 /* DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 
 /* NLMS length in taps */
-#define NLMS_LEN (128)
+#define NLMS_LEN (512)
+
+/* Extension for NLMS buffer to minimize memmoves */
+#define NLMS_EXT (100)
 
 /* zero */
 #define EPSILON (0.000001f)
@@ -63,6 +66,9 @@ typedef struct echo {
     float *x;                   /* tap delayed speaker signal */
     float *xf;                  /* pre-whitened tap delayed speaker signal */
     float *w;                   /* tap weights */
+
+    /* offset into x and xf */
+    int j;
 
     /* DTD */
     int holdover;

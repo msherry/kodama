@@ -29,6 +29,7 @@ float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 
 /********* Static functions *********/
 static hp_fir *hp_fir_create(void);
+static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
 static int dtd(echo *e, float tx);
 static void hp_fir_destroy(hp_fir *hp);
@@ -122,25 +123,17 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         tx = nlms_pw(e, tx, rx, update);
 
         /* If we're not talking, let's attenuate our signal */
-        if (!update)
+        if (update)
         {
-            any_doubletalk = 1;
             tx *= M12dB;
-        }
-
-        /* clipping */
-        if (tx > MAXPCM)
-        {
-            tx = MAXPCM;
-        }
-        else if (tx < -MAXPCM)
-        {
-            tx = -MAXPCM;
         }
         else
         {
-            tx = roundf(tx);
+            any_doubletalk = 1;
         }
+
+        /* clipping */
+        tx = clip(tx);
 
         sb->s[i] = (int)tx;
     }
@@ -150,6 +143,24 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
 {
     cbuffer_push_bulk(e->rx_buf, sb);
+}
+
+static inline float clip(float in)
+{
+    float out;
+    if (in > MAXPCM)
+    {
+        out = MAXPCM;
+    }
+    else if (in < -MAXPCM)
+    {
+        out = -MAXPCM;
+    }
+    else
+    {
+        out = roundf(in);
+    }
+    return out;
 }
 
 /*********** NLMS functions ***********/
