@@ -264,6 +264,8 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 /*********** DTD functions ***********/
 
 /* Compare against the last NLMS_LEN samples */
+/* TODO: apparently Geigel works well on line echo, but rather more poorly on
+ * acoustic echo. Look into something more sophisticated. */
 static int dtd(echo *e, float tx)
 {
     float max = 0.0;
