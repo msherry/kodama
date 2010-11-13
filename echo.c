@@ -120,13 +120,8 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         if (!update)
         {
-            /* DEBUG_LOG("%s\n", "doubletalk"); */
             any_doubletalk = 1;
         }
-        /* else */
-        /* { */
-        /*     DEBUG_LOG("%s", " "); */
-        /* } */
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -153,14 +148,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         sb->s[i] = (int)tx;
     }
-    if (any_doubletalk)
-    {
-        DEBUG_LOG("%s\n", "doubletalk");
-    }
-    else
-    {
-        DEBUG_LOG("%s\n", "");
-    }
+    DEBUG_LOG("%s\n", any_doubletalk ? "doubletalk" : " ");
 }
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
