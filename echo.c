@@ -180,12 +180,6 @@ static float dotp(float *a, float *b)
 static float nlms_pw(echo *e, float tx, float rx, int update)
 {
     int j = e->j;
-    /* Shift samples down to make room for new ones. Almost certainly will have
-     * to be sped up */
-    /* memmove(e->x+1, e->x, (NLMS_LEN-1)*sizeof(float)); */
-    /* /\* Save the last value of xf[] *\/ */
-    /* float last_xf = e->xf[NLMS_LEN-1]; */
-    /* memmove(e->xf+1, e->xf, (NLMS_LEN-1)*sizeof(float)); */
 
     e->x[j] = rx;
     e->xf[j] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
@@ -246,6 +240,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         }
     }
 
+    /* Keep us within our sample buffers */
     if (--e->j < 0)
     {
         e->j = NLMS_EXT;
