@@ -50,8 +50,8 @@ typedef struct hp_fir {
 /* DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 
-/* NLMS length in taps */
-#define NLMS_LEN (512)
+/* NLMS length in taps (ms * 8) */
+#define NLMS_LEN (200 * 8)
 
 /* Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
