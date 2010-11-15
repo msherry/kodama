@@ -10,25 +10,6 @@
 #include "interface_network.h"
 #include "kodama.h"
 
-struct globals {
-    /* tx side */
-    gchar *txhost;
-    int tx_xmit_port;
-    int tx_recv_port;
-
-    /* rx side */
-    gchar *rxhost;
-    int rx_xmit_port;
-    int rx_recv_port;
-
-    /* Fake delay */
-    int tx_delay_ms;
-    int rx_delay_ms;
-
-    /* rx-side echo cancellation */
-    int echo_cancel;
-} globals;
-
 GMainLoop *loop;
 
 void signal_handler(int signum);
@@ -53,6 +34,8 @@ void usage(char *arg0)
     fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "-e: set up rx-side echo cancellation\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "-v:        verbose output\n");
 }
 
 void parse_command_line(int argc, char *argv[])
@@ -75,7 +58,7 @@ void parse_command_line(int argc, char *argv[])
     /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "ehdt:r:p:l:q:a:m:n:")) != -1)
+    while ((c = getopt(argc, argv, "ehdt:r:p:l:q:a:m:n:v")) != -1)
     {
         switch (c)
         {
@@ -89,6 +72,9 @@ void parse_command_line(int argc, char *argv[])
             break;
         case 'e':
             globals.echo_cancel = 1;
+            break;
+        case 'v':
+            globals.verbose = 1;
             break;
         case 't':
             globals.txhost = g_strdup_printf("%s", optarg);

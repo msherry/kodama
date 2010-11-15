@@ -137,7 +137,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         sb->s[i] = (int)tx;
     }
-    DEBUG_LOG("%s\n", any_doubletalk ? "doubletalk" : " ");
+    VERBOSE_LOG("%s\n", any_doubletalk ? "doubletalk" : " ");
 }
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
@@ -291,7 +291,7 @@ static int dtd(echo *e, float tx)
 
     sample_block_destroy(sb);
 
-    DEBUG_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
+    VERBOSE_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
         (int)tx, (int)a_tx, (int)max, (e->holdover > 0))
 
     return e->holdover > 0;
