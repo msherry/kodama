@@ -44,8 +44,8 @@ typedef struct hp_fir {
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
-/* Holdover for DTD, in taps */
-#define DTD_HOLDOVER (240)
+/* Holdover for DTD, in taps (ms * 8) */
+#define DTD_HOLDOVER (30 * 8)
 
 /* DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
