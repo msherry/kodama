@@ -215,6 +215,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         if (isinf(u_ef))
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
+            DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
             stack_trace(1);
         }
 
