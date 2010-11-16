@@ -39,7 +39,7 @@ kodama: ${OBJS}
 
 %.o: %.c
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
-	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -MM $< > $*.d
+	${CC} ${CFLAGS} -MM $< > $*.d
 
 clean:
 	rm -f *.o *.out *.d kodama
