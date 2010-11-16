@@ -59,8 +59,8 @@ echo *echo_create(hybrid *h)
         e->xf[j+i] = 1.0/NLMS_LEN;
         e->xf[j+i+1] = 1.0/NLMS_LEN;
 
-        e->w[j+i] = 1.0/NLMS_LEN;
-        e->w[j+i+1] = 1.0/NLMS_LEN;
+        e->w[i] = 1.0/NLMS_LEN;
+        e->w[i+1] = 1.0/NLMS_LEN;
     }
 
     e->hp = hp_fir_create();
