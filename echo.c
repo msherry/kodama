@@ -185,8 +185,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     e->xf[j] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
     float dotp_w_x = dotp(e->w, e->x);
-    /* DEBUG_LOG("tx: %f\trx: %f\n", tx, rx) */
-    /* DEBUG_LOG("dotp(e->w, e->x): %f\n", dotp_w_x) */
     float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
     if (isnan(ef))
@@ -194,13 +192,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         DEBUG_LOG("%s\n", "ef went NaN");
         stack_trace(1);
     }
-
-    /* DEBUG_LOG("tx: %f\terr: %f\n", tx, err); */
-
-    /* DEBUG_LOG("x[j]: %f\txf[j]: %f\n", e->x[j], e->xf[j]); */
-
-    /* DEBUG_LOG("dotp e->xf, e->xf\n") */
-    /* e->dotp_xf_xf = dotp(e->xf, e->xf); */
 
     /* Iterative update */
     e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
@@ -218,11 +209,9 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         stack_trace(1);
     }
 
-    /* DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf) */
     if (update)
     {
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
-        /* DEBUG_LOG("err: %f\tef: %f\tu_ef: %f\n", err, ef, u_ef); */
         if (isinf(u_ef))
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
@@ -233,9 +222,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         int i;
         for (i = 0; i < NLMS_LEN; i += 2)
         {
-            /* DEBUG_LOG("old e->w[%d]: %f\t", i, e->w[i]) */
             e->w[i] += u_ef*e->xf[j+i];
-            /* DEBUG_LOG("new e->w[%d]: %f\n", i, e->w[i]) */
             e->w[i+1] += u_ef*e->xf[j+i+1];
         }
     }
