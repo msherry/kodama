@@ -118,6 +118,7 @@ int hybrid_get_rx_sample_count(hybrid *h)
 {
     return cbuffer_get_count(h->rx_buf);
 }
+
 void hybrid_simulate_tx_delay(hybrid *h, float ms)
 {
     /* Dummy initial data to simulate delay */
