@@ -54,6 +54,8 @@ void hybrid_setup_echo_cancel(hybrid *h);
 
 struct SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count);
 struct SAMPLE_BLOCK *hybrid_get_rx_samples(hybrid *h, size_t count);
+int hybrid_get_tx_sample_count(hybrid *h);
+int hybrid_get_rx_sample_count(hybrid *h);
 void hybrid_put_tx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
 void hybrid_put_rx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
 void hybrid_put_rx_samples_direct(hybrid *h, struct SAMPLE_BLOCK *sb);
