@@ -184,7 +184,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     e->x[j] = rx;
     e->xf[j] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
-    float dotp_w_x = dotp(e->w, e->x);
+    float dotp_w_x = dotp(e->w, e->x+j);
     float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
     if (isnan(ef))
@@ -252,14 +252,12 @@ static int dtd(echo *e, float tx)
 
     for (i=0; i<NLMS_LEN-1; i++)
     {
-        float a = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
-        /* DEBUG_LOG("%d, ", a); */
-        if (a > max)
+        float rx = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
+        if (rx > max)
         {
-            max = a;
+            max = rx;
         }
     }
-    /* DEBUG_LOG("\n"); */
 
     float a_tx = fabsf(tx);
 
