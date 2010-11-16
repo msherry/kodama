@@ -35,8 +35,11 @@ ALL: kodama
 kodama: ${OBJS}
 	${LD} -o kodama ${LDFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
 
+-include ${OBJS:.o=.d}
+
 %.o: %.c
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
+	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -MM $< > $*.d
 
 clean:
 	rm -f *.o *.out kodama

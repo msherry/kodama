@@ -6,3 +6,5 @@ TAGS
 syntax: glob
 *.o
 *.out
+*.d
+.depend
