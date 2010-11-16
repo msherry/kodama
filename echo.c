@@ -258,17 +258,14 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
  * acoustic echo. Look into something more sophisticated. */
 static int dtd(echo *e, float tx)
 {
+    /* Get the last NLMS_LEN rx samples and find the max*/
     float max = 0.0;
     size_t i;
+    int j = e->j;
 
-    /* Get the last NLMS_LEN rx samples and find the max*/
-    /* TODO: can we just use e->x here? */
-    SAMPLE_BLOCK *sb = cbuffer_peek_samples(e->rx_buf, NLMS_LEN);
-
-    for (i=0; i<NLMS_LEN; i++)
+    for (i=0; i<NLMS_LEN-1; i++)
     {
-        /* TODO: this only works for integral SAMPLE types */
-        SAMPLE a = abs(sb->s[i]);
+        float a = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
         /* DEBUG_LOG("%d, ", a); */
         if (a > max)
         {
@@ -288,8 +285,6 @@ static int dtd(echo *e, float tx)
     {
         e->holdover--;
     }
-
-    sample_block_destroy(sb);
 
     VERBOSE_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
         (int)tx, (int)a_tx, (int)max, (e->holdover > 0))
