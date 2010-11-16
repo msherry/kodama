@@ -8,7 +8,7 @@
 
 #include "cbuffer.h"
 #include "hybrid.h"
-#include "interface_network.h"
+#include "interface_udp.h"
 #include "kodama.h"
 
 /*********** Static functions ***********/

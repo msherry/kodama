@@ -7,7 +7,7 @@
 
 #include "hybrid.h"
 #include "interface_hardware.h"
-#include "interface_network.h"
+#include "interface_udp.h"
 #include "kodama.h"
 
 GMainLoop *loop;
