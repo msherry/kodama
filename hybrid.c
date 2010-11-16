@@ -87,11 +87,6 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     h->rx_count += sb->count;
 }
 
-void hybrid_put_rx_samples_direct(hybrid *h, SAMPLE_BLOCK *sb)
-{
-   cbuffer_push_bulk(h->rx_buf, sb);
-}
-
 SAMPLE_BLOCK *hybrid_get_tx_samples(hybrid *h, size_t count)
 {
     SAMPLE_BLOCK *sb;

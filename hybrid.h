@@ -58,7 +58,6 @@ int hybrid_get_tx_sample_count(hybrid *h);
 int hybrid_get_rx_sample_count(hybrid *h);
 void hybrid_put_tx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
 void hybrid_put_rx_samples(hybrid *h, struct SAMPLE_BLOCK *sb);
-void hybrid_put_rx_samples_direct(hybrid *h, struct SAMPLE_BLOCK *sb);
 
 void hybrid_simulate_tx_delay(hybrid *h, float ms);
 void hybrid_simulate_rx_delay(hybrid *h, float ms);
