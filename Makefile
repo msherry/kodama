@@ -42,7 +42,7 @@ kodama: ${OBJS}
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -MM $< > $*.d
 
 clean:
-	rm -f *.o *.out kodama
+	rm -f *.o *.out *.d kodama
 
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
