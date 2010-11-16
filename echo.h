@@ -56,9 +56,6 @@ typedef struct hp_fir {
 /* Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
 
-/* zero */
-#define EPSILON (0.000001f)
-
 typedef struct echo {
     CBuffer *rx_buf;
 
