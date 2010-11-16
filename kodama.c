@@ -55,6 +55,8 @@ void parse_command_line(int argc, char *argv[])
 
     globals.echo_cancel = 0;
 
+    globals.shardnum = -1;
+
     int c;
 
     /* TODO: keeping these straight is a nightmare. Use long options */
@@ -153,32 +155,37 @@ int main(int argc, char *argv[])
 
     init_sig_handlers();
 
-    hybrid *h = hybrid_new();
-    hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
-    hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
+    /* If no shardnum is given, we're running in standalone mode */
+    if (globals.shardnum == -1)
+    {
+        hybrid *h = hybrid_new();
+        hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
+        hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
 
-    if (globals.echo_cancel)
-    {
-        hybrid_setup_echo_cancel(h);
-    }
+        if (globals.echo_cancel)
+        {
+            hybrid_setup_echo_cancel(h);
+        }
 
-    if (globals.txhost)
-    {
-        setup_network_xmit(h, globals.txhost, globals.tx_xmit_port, tx);
-        // Yes, we receive on the tx side. Trust me
-        setup_network_recv(h, globals.tx_recv_port, tx);
-    }
+        if (globals.txhost)
+        {
+            setup_udp_network_xmit(h, globals.txhost, globals.tx_xmit_port, tx);
+            // Yes, we receive on the tx side. Trust me
+            setup_udp_network_recv(h, globals.tx_recv_port, tx);
+        }
 
-    if (globals.rxhost)
-    {
-        setup_network_recv(h, globals.rx_recv_port, rx);
-        setup_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
-    }
-    else
-    {
-        /* By default, the rx side is hooked up to the microphone and speaker */
-        setup_hw_in(h);
-        setup_hw_out(h);
+        if (globals.rxhost)
+        {
+            setup_udp_network_recv(h, globals.rx_recv_port, rx);
+            setup_udp_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
+        }
+        else
+        {
+            /* By default, the rx side is hooked up to the microphone and
+             * speaker */
+            setup_hw_in(h);
+            setup_hw_out(h);
+        }
     }
 
     loop = g_main_loop_new(NULL, FALSE);

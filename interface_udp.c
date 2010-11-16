@@ -34,7 +34,7 @@ typedef struct xmit_context {
     protocol proto;
 } xmit_context;
 
-void setup_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
+void setup_udp_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
 {
     GUdpSocket *sock = gnet_udp_socket_new();
     GInetAddr *addr = gnet_inetaddr_new(host, port);
@@ -61,7 +61,7 @@ void setup_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
     }
 }
 
-void setup_network_recv(hybrid *h, int port, hybrid_side side)
+void setup_udp_network_recv(hybrid *h, int port, hybrid_side side)
 {
     GUdpSocket *sock;
     if ((sock = udp_listen(port)) == NULL)
