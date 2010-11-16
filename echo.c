@@ -231,8 +231,8 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     if (--e->j < 0)
     {
         e->j = NLMS_EXT;
-        memmove(e->x+j+1, e->x, (NLMS_LEN-1)*sizeof(float));
-        memmove(e->xf+j+1, e->xf, (NLMS_LEN-1)*sizeof(float));
+        memmove(e->x+e->j+1, e->x, (NLMS_LEN-1)*sizeof(float));
+        memmove(e->xf+e->j+1, e->xf, (NLMS_LEN-1)*sizeof(float));
     }
 
     return err;
