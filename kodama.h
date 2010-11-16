@@ -7,12 +7,12 @@
 /* Yay C preprocessor */
 #include <stdio.h>              /* Just in case */
 
-#define DEBUG_LOG(x, ...) {fprintf(stderr, x, ##__VA_ARGS__); fflush(stderr);}
+#define DEBUG_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 #else
-#define DEBUG_LOG(x) {}
+#define DEBUG_LOG() {}
 #endif
 
-#define VERBOSE_LOG(x, ...) {if (globals.verbose) {fprintf(stderr, x, ##__VA_ARGS__); fflush(stderr);}}
+#define VERBOSE_LOG(...) {if (globals.verbose) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}}
 
 #define NUM_CHANNELS (1)
 #define SAMPLE_RATE  (8000)
