@@ -23,6 +23,7 @@ typedef struct recv_context {
     GUdpSocket *sock;
     hybrid *h;
     hybrid_side side;
+    protocol proto;             /* TODO: probably unnecessary */
 } recv_context;
 
 
@@ -30,6 +31,7 @@ typedef struct xmit_context {
     GUdpSocket *sock;
     GInetAddr *dest;
     hybrid_side side;
+    protocol proto;
 } xmit_context;
 
 void setup_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
@@ -41,6 +43,7 @@ void setup_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
     xc->sock = sock;
     xc->dest = addr;
     xc->side = side;
+    xc->proto = raw;            /* for now, udp connections are always raw */
 
     /* Set up callbacks in the hybrid depending on which side will be doing this
      * xmit */
@@ -81,6 +84,7 @@ void setup_network_recv(hybrid *h, int port, hybrid_side side)
     rc->sock = sock;
     rc->h = h;
     rc->side = side;
+    rc->proto = raw;
 
     /* TODO: this returns an int. Use it to call g_source_remove when we're
      * done */
@@ -189,7 +193,7 @@ static void xmit_data(hybrid *h, hybrid_side side)
     }
 
     gint num_bytes;
-    gchar *buf = samples_to_message(sb, &num_bytes);
+    gchar *buf = samples_to_message(sb, &num_bytes, xc->proto);
 
     gnet_udp_socket_send(sock, buf, num_bytes, dest);
 
