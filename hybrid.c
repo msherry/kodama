@@ -52,8 +52,6 @@ void hybrid_setup_echo_cancel(hybrid *h)
 
 void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 {
-    /* TODO: increase counts */
-
     /* Hey, let's cancel some echo here for the other party - hopefully they'll
      * do the same for us. This will probably modify the samples in sb */
     if (h->e)
@@ -66,12 +64,12 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     /* We just got some data - inform whoever cares */
     if (h->tx_cb_fn)
         (*h->tx_cb_fn)(h, tx);
+
+    h->tx_count += sb->count;
 }
 
 void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 {
-    /* TODO: increase counts */
-
     /* This will probably NOT modify the samples in sb - we're just letting the
      * echo canceler see them */
     if (h->e)
@@ -85,6 +83,8 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     /* We just got some data - inform whoever cares */
     if (h->rx_cb_fn)
         (*h->rx_cb_fn)(h, rx);
+
+    h->rx_count += sb->count;
 }
 
 void hybrid_put_rx_samples_direct(hybrid *h, SAMPLE_BLOCK *sb)
