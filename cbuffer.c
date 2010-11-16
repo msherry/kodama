@@ -59,7 +59,9 @@ SAMPLE cbuffer_pop(CBuffer *cb)
 
     if (cb->count == 0)
     {
-        return SAMPLE_SILENCE;  /* This is really an error */
+        /* TODO: Can we do better here? If we decide to return silence, should
+         * we freeze echo cancellation updating? */
+        return SAMPLE_SILENCE;
     }
 
     ret = *(cb->tail);
