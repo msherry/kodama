@@ -1,8 +1,10 @@
 #include <execinfo.h>
+#include <getopt.h>
 #include <glib.h>
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include "hybrid.h"
@@ -58,10 +60,31 @@ void parse_command_line(int argc, char *argv[])
     /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
-    while ((c = getopt(argc, argv, "ehdt:r:p:l:q:a:m:n:v")) != -1)
+    while (1)
     {
+        int option_index = 0;
+        static struct option long_options[] = {
+            /* {name, has_arg, flag, val},  */
+            {"shard", 1, 0, 0}, /* 0 */
+            {0, 0, 0, 0}
+        };
+        c = getopt_long(argc, argv, "ehdt:r:p:l:q:a:m:n:v", long_options,
+            &option_index);
+
+        if (c == -1)
+        {
+            break;
+        }
+
         switch (c)
         {
+        case 0:
+            if (!strcmp("shard", long_options[option_index].name))
+            {
+                int shardnum = atoi(optarg);
+                globals.shardnum = shardnum;
+            }
+           break;
         case 'h':
             usage(argv[0]);
             exit(0);
@@ -101,8 +124,10 @@ void parse_command_line(int argc, char *argv[])
             globals.rx_delay_ms = atoi(optarg);
             break;
         case '?':
-            fprintf(stderr, "Unknown option %c.\n", optopt);
+            fprintf(stderr, "Unknown option '%c'\n", optopt);
             exit(1);
+        default:
+            DEBUG_LOG("?? getopt_long returned character code 0%o\n", c);
         }
     }
 }

@@ -67,6 +67,8 @@ struct globals {
 
     /* Verbose mode */
     int verbose;
+
+    int shardnum;
 } globals;
 
 #endif
