@@ -28,7 +28,7 @@ else
 endif
 
 OBJS = cbuffer.o echo.o hybrid.o iir.o interface_hardware.o \
-	interface_udp.o kodama.o
+	interface_udp.o kodama.o protocol.o
 
 ALL: kodama
 

@@ -10,13 +10,12 @@
 #include "hybrid.h"
 #include "interface_udp.h"
 #include "kodama.h"
+#include "protocol.h"
 
 /*********** Static functions ***********/
 static GUdpSocket *udp_listen(int port);
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
-static SAMPLE_BLOCK *message_to_samples(gchar *buf, gint num_bytes);
-static gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes);
 static void xmit_data(hybrid *h, hybrid_side side);
 
 
@@ -153,36 +152,6 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     sample_block_destroy(sb);
 
     return TRUE;
-}
-
-/* Convert a buffer of bytes (gchars) from the network into a
- * SAMPLE_BLOCK. Caller must free SAMPLE_BLOCK */
-static SAMPLE_BLOCK *message_to_samples(gchar *buf, gint num_bytes)
-{
-    /* TODO: real error checking, some sort of protocol, endianness */
-
-    /* TODO: this obviously assumes we have an integral number of samples */
-    size_t count = num_bytes / sizeof(SAMPLE);
-    SAMPLE_BLOCK *sb = sample_block_create(count);
-    memcpy(sb->s, buf, num_bytes);
-
-    /* DEBUG_LOG("(%s:%d) Received %ld samples\n", __FILE__, __LINE__, count); */
-
-    return sb;
-}
-
-/* Convert a SAMPLE_BLOCK into a buffer of bytes (gchars) for transmission on
- * the network. Caller must free buffer */
-static gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes)
-{
-    /* We have data to xmit - let's throw it into a buffer and send it out */
-    *num_bytes = sb->count * sizeof(SAMPLE);
-    gchar *buf = g_malloc(*num_bytes);
-
-    /* TODO: this is just a straight copy - a real protocol would be better */
-    memcpy(buf, sb->s, *num_bytes);
-
-    return buf;
 }
 
 static void xmit_data(hybrid *h, hybrid_side side)
