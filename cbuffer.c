@@ -58,7 +58,9 @@ SAMPLE cbuffer_pop(CBuffer *cb)
     SAMPLE ret;
 
     if (cb->count == 0)
+    {
         return SAMPLE_SILENCE;  /* This is really an error */
+    }
 
     ret = *(cb->tail);
     cb->tail++;
