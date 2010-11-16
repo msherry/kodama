@@ -2,6 +2,7 @@ syntax: regexp
 portaudio/
 ^kodama$
 TAGS
+TODO
 
 syntax: glob
 *.o
