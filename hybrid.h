@@ -48,7 +48,8 @@ typedef struct hybrid {
 
 
 /* Hybrid methods */
-hybrid *hybrid_new(void);
+void init_hybrids(void);
+hybrid *get_hybrid(const char *hid);
 void hybrid_destroy(hybrid *h);
 void hybrid_setup_echo_cancel(hybrid *h);
 

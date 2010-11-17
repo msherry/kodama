@@ -154,12 +154,13 @@ int main(int argc, char *argv[])
 {
     parse_command_line(argc, argv);
 
+    init_hybrids();
     init_sig_handlers();
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)
     {
-        hybrid *h = hybrid_new();
+        hybrid *h = get_hybrid("default");
         hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
         hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
 

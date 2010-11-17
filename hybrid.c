@@ -1,14 +1,35 @@
+#include <glib.h>
 #include <stdlib.h>
 
 #include "cbuffer.h"
 #include "echo.h"
 #include "hybrid.h"
 
+/* Globals */
+GHashTable *id_to_hybrid;
+
 /* Static prototypes */
+static hybrid *hybrid_new(void);
 static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side);
 
+void init_hybrids(void)
+{
+    id_to_hybrid = g_hash_table_new(g_str_hash, g_str_equal);
+}
 
-hybrid *hybrid_new(void)
+/* Get the hybrid with the specified ID, creating it if necessary */
+hybrid *get_hybrid(const char *hid)
+{
+    hybrid *h = g_hash_table_lookup(id_to_hybrid, hid);
+    if (!h)
+    {
+        h = hybrid_new();
+        g_hash_table_insert(id_to_hybrid, (gpointer)hid, h);
+    }
+    return h;
+}
+
+static hybrid *hybrid_new(void)
 {
     hybrid *h = malloc(sizeof(hybrid));
 
