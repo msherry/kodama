@@ -9,6 +9,7 @@
 
 #include "hybrid.h"
 #include "interface_hardware.h"
+#include "interface_tcp.h"
 #include "interface_udp.h"
 #include "kodama.h"
 

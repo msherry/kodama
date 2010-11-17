@@ -1,5 +1,5 @@
-#ifndef _INTERFACE_NETWORK_H_
-#define _INTERFACE_NETWORK_H_
+#ifndef _INTERFACE_UDP_H_
+#define _INTERFACE_UDP_H_
 
 #include <glib.h>
 

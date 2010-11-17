@@ -18,7 +18,6 @@ static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static void xmit_data(hybrid *h, hybrid_side side);
 
-
 typedef struct recv_context {
     GUdpSocket *sock;
     hybrid *h;
@@ -122,8 +121,9 @@ static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 {
     recv_context *rc = (recv_context *)data;
+
     GUdpSocket *sock = rc->sock;
-    hybrid *h = rc->h;
+    hybrid *h        = rc->h;
     hybrid_side side = rc->side;
 
     UNUSED(source);
@@ -140,6 +140,9 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
      * let's put it into our rx_buf */
     gchar buf[65535];           /* Probably a bad idea, but UDP packets can't be
                                  * larger than this */
+
+    /* UDP sockets are special and can't use the normal GIOChannel functions to
+     * read data */
     gint num_bytes = gnet_udp_socket_receive(sock, buf, 65535, NULL);
     /* DEBUG_LOG("(%s:%d) Read %d bytes\n", __FILE__, __LINE__, num_bytes); */
 
