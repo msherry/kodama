@@ -303,7 +303,6 @@ float update_fir(hp_fir * restrict hp, float in)
 
     hp->z[0] = in;
 
-    /* Partially unrolled */
     float sum = 0.0;
     int i;
     for (i=0; i<HP_FIR_SIZE; i++)
