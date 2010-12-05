@@ -166,8 +166,6 @@ static inline float clip(float in)
 /*********** NLMS functions ***********/
 static float dotp(float * restrict a, float * restrict b)
 {
-    /* TODO: -ftree-vectorize, then SSE */
-
     float sum = 0.0;
 
     int i;

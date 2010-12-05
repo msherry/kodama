@@ -43,7 +43,7 @@ kodama: ${OBJS}
 	${CC} ${CFLAGS} -MM $< > $*.d
 
 clean:
-	rm -f *.o *.s *.i *.out *.d *flymake kodama
+	rm -f *.o *.s *.i *.out *.d *flymake* kodama
 
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
