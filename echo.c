@@ -38,7 +38,7 @@ static float update_fir(hp_fir *hp, float in);
 
 echo *echo_create(hybrid *h)
 {
-    echo *e = malloc(sizeof(echo));
+    echo * restrict e = malloc(sizeof(echo));
 
     e->rx_buf = cbuffer_init(NLMS_LEN);
     e->x  = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
@@ -51,16 +51,11 @@ echo *echo_create(hybrid *h)
      * a valid IEEE-754 value */
     int i;
     int j = e->j;
-    for (i = 0; i < NLMS_LEN; i+=2)
+    for (i = 0; i < NLMS_LEN; i++)
     {
         e->x[j+i] = 0;
-        e->x[j+i+1] = 0;
-
         e->xf[j+i] = 1.0/NLMS_LEN;
-        e->xf[j+i+1] = 1.0/NLMS_LEN;
-
         e->w[i] = 1.0/NLMS_LEN;
-        e->w[i+1] = 1.0/NLMS_LEN;
     }
 
     e->hp = hp_fir_create();
