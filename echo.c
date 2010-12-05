@@ -222,10 +222,13 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 
         /* Update tap weights */
         int i;
-        for (i = 0; i < NLMS_LEN; i += 2)
+
+        float * restrict weights = e->w;
+        float * restrict xf      = e->xf;
+
+        for (i = 0; i < NLMS_LEN; i++)
         {
-            e->w[i] += u_ef*e->xf[j+i];
-            e->w[i+1] += u_ef*e->xf[j+i+1];
+            weights[i] += u_ef*xf[j+i];
         }
     }
 
