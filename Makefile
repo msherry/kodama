@@ -6,9 +6,9 @@ CC = gcc
 LD = gcc
 
 PEDANTIC = -pedantic -Wno-variadic-macros -Wno-declaration-after-statement
+OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
 
-CFLAGS = -g ${PEDANTIC} -Wall -Wextra -DDEBUG=1 -std=gnu99 -save-temps
-OPTFLAGS = #-O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse3
+CFLAGS = -g ${PEDANTIC} ${OPTFLAGS} -Wall -Wextra -DDEBUG=1 -std=gnu99 -save-temps
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
 LIBRARIES = -lportaudio -lm
@@ -39,8 +39,8 @@ kodama: ${OBJS}
 -include ${OBJS:.o=.d}
 
 %.o: %.c
-	${CC} ${CFLAGS} ${OPTFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
-	${CC} ${CFLAGS} ${OPTFLAGS} -MM $< > $*.d
+	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
+	${CC} ${CFLAGS} -MM $< > $*.d
 
 clean:
 	rm -f *.o *.s *.i *.out *.d *flymake kodama
