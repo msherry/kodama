@@ -42,7 +42,7 @@ echo *echo_create(hybrid *h)
 {
     echo * restrict e = malloc(sizeof(echo));
 
-    e->rx_buf = cbuffer_init(NLMS_LEN);
+    e->rx_buf = cbuffer_init((size_t)NLMS_LEN);
     e->x  = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
     e->xf = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
     e->w  = malloc(NLMS_LEN * sizeof(float));

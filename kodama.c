@@ -16,6 +16,7 @@
 GMainLoop *loop;
 globals_t globals;
 
+void usage(char *arg0);
 void signal_handler(int signum);
 
 void usage(char *arg0)

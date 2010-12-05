@@ -123,7 +123,7 @@ static int handle_read( const void *inputBuffer, void *outputBuffer,
         void *userData )
 {
     hybrid *h = (hybrid *)userData;
-    SAMPLE *rptr = (SAMPLE *)inputBuffer;
+    const SAMPLE *rptr = (const SAMPLE *)inputBuffer;
 
     UNUSED(outputBuffer);
     UNUSED(timeInfo);

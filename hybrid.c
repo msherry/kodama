@@ -18,7 +18,7 @@ void init_hybrids(void)
 }
 
 /* Get the hybrid with the specified ID, creating it if necessary */
-hybrid *get_hybrid(const char *hid)
+hybrid *get_hybrid(char *hid)
 {
     hybrid *h = g_hash_table_lookup(id_to_hybrid, hid);
     if (!h)
