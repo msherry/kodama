@@ -65,7 +65,7 @@ void iirdc_destroy(IIR_DC *ir)
 
 float iirdc_highpass(IIR_DC *ir, float in)
 {
-    const float a0 = 0.01f;
-    ir->x += a0 * (in - ir->x);
+    const float a = 0.01f;
+    ir->x += a * (in - ir->x);
     return in - ir->x;
 }

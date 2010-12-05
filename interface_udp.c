@@ -46,7 +46,7 @@ void setup_udp_network_xmit(hybrid *h, gchar *host, int port, hybrid_side side)
 
     /* Set up callbacks in the hybrid depending on which side will be doing this
      * xmit */
-    if (side == tx)
+    if (side == tx_side)
     {
         /* The hybrid will need this context when it has data */
         h->tx_cb_data = xc;
@@ -148,7 +148,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
     SAMPLE_BLOCK *sb = message_to_samples(buf, num_bytes);
 
-    if (side == tx)
+    if (side == tx_side)
     {
         hybrid_put_rx_samples(h, sb);
     }
@@ -164,7 +164,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 static void xmit_data(hybrid *h, hybrid_side side)
 {
     xmit_context *xc;
-    if (side == tx)
+    if (side == tx_side)
     {
         xc = (xmit_context *)(h->tx_cb_data);
     }
@@ -179,7 +179,7 @@ static void xmit_data(hybrid *h, hybrid_side side)
     /* TODO: don't xmit as soon as we have samples (we get 64 at a time) */
 
     SAMPLE_BLOCK *sb;
-    if (side == tx)
+    if (side == tx_side)
     {
         sb = hybrid_get_tx_samples(h, 0);
     }

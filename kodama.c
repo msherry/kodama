@@ -14,6 +14,7 @@
 #include "kodama.h"
 
 GMainLoop *loop;
+globals_t globals;
 
 void signal_handler(int signum);
 
@@ -171,15 +172,17 @@ int main(int argc, char *argv[])
 
         if (globals.txhost)
         {
-            setup_udp_network_xmit(h, globals.txhost, globals.tx_xmit_port, tx);
+            setup_udp_network_xmit(h, globals.txhost, globals.tx_xmit_port,
+                    tx_side);
             // Yes, we receive on the tx side. Trust me
-            setup_udp_network_recv(h, globals.tx_recv_port, tx);
+            setup_udp_network_recv(h, globals.tx_recv_port, tx_side);
         }
 
         if (globals.rxhost)
         {
-            setup_udp_network_recv(h, globals.rx_recv_port, rx);
-            setup_udp_network_xmit(h, globals.rxhost, globals.rx_xmit_port, rx);
+            setup_udp_network_recv(h, globals.rx_recv_port, rx_side);
+            setup_udp_network_xmit(h, globals.rxhost, globals.rx_xmit_port,
+                    rx_side);
         }
         else
         {

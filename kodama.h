@@ -30,7 +30,7 @@ typedef int16_t SAMPLE;
 
 void stack_trace(int die);
 
-struct globals {
+typedef struct globals_t {
     /* tx side */
     gchar *txhost;
     int tx_xmit_port;
@@ -52,6 +52,6 @@ struct globals {
     int verbose;
 
     int shardnum;
-} globals;
+} globals_t;
 
 #endif

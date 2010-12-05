@@ -84,7 +84,7 @@ void hybrid_put_tx_samples(hybrid *h, SAMPLE_BLOCK *sb)
 
     /* We just got some data - inform whoever cares */
     if (h->tx_cb_fn)
-        (*h->tx_cb_fn)(h, tx);
+        (*h->tx_cb_fn)(h, tx_side);
 
     h->tx_count += sb->count;
 }
@@ -103,7 +103,7 @@ void hybrid_put_rx_samples(hybrid *h, SAMPLE_BLOCK *sb)
     cbuffer_push_bulk(h->rx_buf, sb);
     /* We just got some data - inform whoever cares */
     if (h->rx_cb_fn)
-        (*h->rx_cb_fn)(h, rx);
+        (*h->rx_cb_fn)(h, rx_side);
 
     h->rx_count += sb->count;
 }

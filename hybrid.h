@@ -24,7 +24,7 @@
 struct hybrid;
 
 typedef enum hybrid_side {
-    tx, rx
+    tx_side, rx_side
 } hybrid_side;
 
 
