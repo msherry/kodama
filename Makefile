@@ -5,7 +5,7 @@ PORTAUDIODIR = portaudio
 CC = gcc
 LD = gcc
 
-PEDANTIC = -pedantic -Wno-variadic-macros -Wno-declaration-after-statement
+PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
 
 CFLAGS = -g ${PEDANTIC} ${OPTFLAGS} -Wall -Wextra -DDEBUG=1 -std=gnu99 -save-temps
