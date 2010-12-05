@@ -164,7 +164,7 @@ static inline float clip(float in)
 }
 
 /*********** NLMS functions ***********/
-static float dotp(float *a, float *b)
+static float dotp(float * restrict a, float * restrict b)
 {
     float sum0 = 0.0, sum1 = 0.0;
 
