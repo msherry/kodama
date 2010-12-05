@@ -19,7 +19,7 @@ Transition band: 100.0 Hz
 Stopband attenuation: 10.0 dB
 */
 
-float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
+const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
                   -0.053661242, -0.054712527, 0.82598513, -0.054712527,
                   -0.053661242, -0.051936015, -0.049576525, -0.046636667,
                   -0.043183226};
@@ -166,15 +166,16 @@ static inline float clip(float in)
 /*********** NLMS functions ***********/
 static float dotp(float * restrict a, float * restrict b)
 {
-    float sum0 = 0.0, sum1 = 0.0;
+    /* TODO: -ftree-vectorize, then SSE */
+
+    float sum = 0.0;
 
     int i;
-    for (i=0; i<NLMS_LEN; i+=2)
+    for (i=0; i<NLMS_LEN; i++)
     {
-        sum0 += a[i] * b[i];
-        sum1 += a[i+1] * b[i+1];
+        sum += a[i] * b[i];
     }
-    return sum0+sum1;
+    return sum;
 }
 
 static float nlms_pw(echo *e, float tx, float rx, int update)
@@ -295,7 +296,7 @@ void hp_fir_destroy(hp_fir *hp)
 }
 
 /* TODO: is this working correctly? */
-float update_fir(hp_fir *hp, float in)
+float update_fir(hp_fir * restrict hp, float in)
 {
     /* Shift the samples down to make room for the new one */
     memmove(hp->z+1, hp->z, HP_FIR_SIZE*sizeof(float));
@@ -303,12 +304,11 @@ float update_fir(hp_fir *hp, float in)
     hp->z[0] = in;
 
     /* Partially unrolled */
-    SAMPLE sum0=0.0, sum1=0.0;
+    float sum = 0.0;
     int i;
-    for (i=0; i<=HP_FIR_SIZE; i+=2)
+    for (i=0; i<HP_FIR_SIZE; i++)
     {
-        sum0 += HP_FIR[i] * hp->z[i];
-        sum1 += HP_FIR[i+1] * hp->z[i+1];
+        sum += HP_FIR[i] * hp->z[i];
     }
-    return sum0 + sum1;
+    return sum;
 }
