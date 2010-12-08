@@ -16,10 +16,12 @@
 GMainLoop *loop;
 globals_t globals;
 
-void usage(char *arg0);
-void signal_handler(int signum);
+static void usage(char *arg0);
+static void parse_command_line(int argc, char **argv);
+static void signal_handler(int signum);
+static void init_sig_handlers(void);
 
-void usage(char *arg0)
+static void usage(char *arg0)
 {
     fprintf(stderr, "Usage: %s [options]...\n", arg0);
     fprintf(stderr, "\n");
@@ -27,6 +29,7 @@ void usage(char *arg0)
     fprintf(stderr, "-h: this help\n");
     fprintf(stderr, "--------------\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "Standalone options:\n");
     fprintf(stderr, "-t: host   tx side: xmit data to host\n");
     fprintf(stderr, "-p: port   tx side: portnum to xmit to\n");
     fprintf(stderr, "-l: port   tx side: portnum to listen on\n");
@@ -38,12 +41,18 @@ void usage(char *arg0)
     fprintf(stderr, "-m: ms     tx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "IMO options:\n");
+    fprintf(stderr, "--shard: shardnum of this shard (enables imo mode)\n");
+    fprintf(stderr, "--server: <ip:port> Wowza server and port to connect to\n");
+    fprintf(stderr, "\n");
+    fprintf(stderr, "\n");
     fprintf(stderr, "-e: set up rx-side echo cancellation\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "-v:        verbose output\n");
 }
 
-void parse_command_line(int argc, char *argv[])
+static void parse_command_line(int argc, char *argv[])
 {
     globals.txhost = NULL;
     globals.tx_xmit_port = PORTNUM;
@@ -59,10 +68,10 @@ void parse_command_line(int argc, char *argv[])
     globals.echo_cancel = 0;
 
     globals.shardnum = -1;
+    globals.server_host = NULL;
+    globals.server_port = -1;
 
     int c;
-
-    /* TODO: keeping these straight is a nightmare. Use long options */
 
     opterr = 0;
     while (1)
@@ -71,6 +80,7 @@ void parse_command_line(int argc, char *argv[])
         static struct option long_options[] = {
             /* {name, has_arg, flag, val},  */
             {"shard", 1, 0, 0}, /* 0 */
+            {"server", 1, 0, 0},
             {0, 0, 0, 0}
         };
         c = getopt_long(argc, argv, "ehdt:r:p:l:q:a:m:n:v", long_options,
@@ -88,6 +98,17 @@ void parse_command_line(int argc, char *argv[])
             {
                 int shardnum = atoi(optarg);
                 globals.shardnum = shardnum;
+            }
+            else if (!strcmp("server", long_options[option_index].name))
+            {
+                gchar **host_and_port = g_strsplit(optarg, ":", 2);
+
+                /* TODO: error checking would be great here, but let's just not
+                 * call this program with bad options, no? */
+                globals.server_host = g_strdup(host_and_port[0]);
+                globals.server_port = atoi(host_and_port[1]);
+
+                g_strfreev(host_and_port);
             }
            break;
         case 'h':
@@ -137,12 +158,12 @@ void parse_command_line(int argc, char *argv[])
     }
 }
 
-void init_sig_handlers(void)
+static void init_sig_handlers(void)
 {
     signal(SIGINT, signal_handler);
 }
 
-void signal_handler(int signum)
+static void signal_handler(int signum)
 {
     switch(signum)
     {
@@ -192,6 +213,12 @@ int main(int argc, char *argv[])
             setup_hw_in(h);
             setup_hw_out(h);
         }
+    }
+    else
+    {
+        /* We're in imo mode - connect to a wowza and echo cancel data from
+         * it */
+        setup_tcp_connection(globals.server_host, globals.server_port);
     }
 
     loop = g_main_loop_new(NULL, FALSE);

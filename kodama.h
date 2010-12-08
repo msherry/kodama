@@ -51,7 +51,10 @@ typedef struct globals_t {
     /* Verbose mode */
     int verbose;
 
+    /* Imo flags */
     int shardnum;
+    gchar *server_host;         // Server machine and port are both set with the
+    int server_port;            // "server" command-line option
 } globals_t;
 
 #endif
