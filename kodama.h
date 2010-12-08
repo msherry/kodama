@@ -2,18 +2,19 @@
 #define _KODAMA_H_
 
 #include <glib.h>
+#include <stdio.h>
 #include <stdint.h>
 
 #if DEBUG
 /* Yay C preprocessor */
-#include <stdio.h>              /* Just in case */
-
 #define DEBUG_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 #else
 #define DEBUG_LOG() {}
 #endif
 
 #define VERBOSE_LOG(...) {if (globals.verbose) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}}
+
+#define ERROR_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 
 #define NUM_CHANNELS (1)
 #define SAMPLE_RATE  (8000)

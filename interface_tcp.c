@@ -9,13 +9,46 @@
 #include "kodama.h"
 #include "protocol.h"
 
+static GInetAddr *host_addr;
+
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 
+/* NOTES: when our connection to wowza dies, we should just forget all
+ * information we have, and attempt to reconnect */
+
 void setup_tcp_connection(char *host, int port)
 {
+    GTcpSocket *sock;
+
     UNUSED(host);
     UNUSED(port);
+
+    host_addr = gnet_inetaddr_new(host, port);
+
+    /* This blocks until we connect */
+    sock = gnet_tcp_socket_new(host_addr);
+
+    if (sock == NULL)
+    {
+        g_error("There was an error connecting to %s:%d - aborting\n",
+                host, port);
+        exit(-1);
+    }
+
+    /* Connected to Wowza - set up a watch on the channel */
+    GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);
+    // Set NULL encoding so that NULL bytes are handled properly
+    g_io_channel_set_encoding(chan, NULL, NULL);
+    g_io_channel_set_buffered(chan, FALSE);
+    g_io_channel_set_flags(chan, G_IO_FLAG_NONBLOCK, NULL);
+
+    if (!g_io_add_watch(chan, (G_IO_IN | G_IO_HUP | G_IO_ERR),
+            handle_input, NULL))
+    {
+        g_warning("(%s:%d) Unable to add watch on channel", __FILE__, __LINE__);
+        exit(-1);
+    }
 }
 
 
@@ -27,17 +60,23 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     UNUSED(cond);
     UNUSED(data);
 
-    gchar *buf;
-    gsize num_bytes;
+    if (cond & G_IO_HUP || cond & G_IO_ERR) /* TODO: or we can't read any bytes */
+    {
+        if (cond & G_IO_HUP)
+        {
+            g_warning("(%s:%d) Socket hupped", __FILE__, __LINE__);
+        }
+        else if (cond & G_IO_ERR)
+        {
+            g_warning("(%s:%d) Error on socket", __FILE__, __LINE__);
+        }
+        /* TODO: else the other side closed the connection */
+        /* TODO: clean up any user data */
 
-    /* TODO: For now we're assuming that all data is present right away. We need
-     * to deal with partial messages */
-    g_io_channel_read_to_end(source, &buf, &num_bytes, NULL);
+        /* Remove this GIOFunc */
+        return FALSE;
+    }
 
-    SAMPLE_BLOCK *sb = message_to_samples(buf, num_bytes);
-
-    g_free(buf);
-    sample_block_destroy(sb);
-
+    /* Return TRUE to keep this handler intact (don't unregister it) */
     return TRUE;
 }
