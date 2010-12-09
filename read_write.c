@@ -5,6 +5,7 @@
 #include <sys/ioctl.h>
 #include <unistd.h>
 
+#include "imolist.h"
 #include "read_write.h"
 
 /* Map of fd to fd_buffer structs */
@@ -18,6 +19,38 @@ int register_fd(int fd)
 
 int extract_messages(fd_buffer *fd_buf)
 {
+    /* Messages will be prepended with their length as a 4-byte integer */
+
+    char *buf = fd_buf->buffer;
+    int buf_len = fd_buf->buffer_len;
+    int offset = 0;
+
+    while (buf_len - offset > (int)sizeof(int))
+    {
+        /* First int in the buffer at this offset should be a message length */
+        int msg_length;
+
+        memcpy(&msg_length, buf+offset, sizeof(int));
+        msg_length = ntohl(msg_length);
+
+        /* We know the size of the next message - do we have that many bytes? */
+        if (buf_len >= msg_length + offset + (int)sizeof(int))
+        {
+            char *temp = malloc(msg_length);
+            memcpy(temp, buf+offset+sizeof(int), msg_length);
+
+            /* Queue the message in the full message list */
+            slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), temp);
+
+            offset += sizeof(int) + msg_length;
+        }
+        else
+        {
+            /* This message is still incomplete */
+            break;
+        }
+    }
+
     
 }
 
