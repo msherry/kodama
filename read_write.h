@@ -16,6 +16,8 @@ typedef struct fd_buffer {
     GSList *read_tail;
 } fd_buffer;
 
+void register_fd(int fd);
+void unregister_fd(int fd);
 int read_data(int fd);
 
 #endif

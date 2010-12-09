@@ -11,7 +11,7 @@
 /* Map of fd to fd_buffer structs */
 GHashTable *fd_to_buffer;
 
-int register_fd(int fd)
+void register_fd(int fd)
 {
     /* Create an fd_buffer, insert it into the hashtable. Create the hashtable
      * if necessary */
@@ -20,7 +20,18 @@ int register_fd(int fd)
     {
         fd_to_buffer = g_hash_table_new(g_direct_hash, g_int_equal);
     }
-    /* TODO: finish this */
+
+    fd_buffer *fd_buf = malloc(sizeof(fd_buffer));
+
+    /* Init all fields */
+    fd_buf->buffer = NULL;
+    fd_buf->buffer_len = 0;
+
+    fd_buf->read_head = fd_buf->read_tail = NULL;
+
+    /* TODO: make sure this fd isn't already present as a key */
+
+    g_hash_table_insert(fd_to_buffer, GINT_TO_POINTER(fd), fd_buf);
 }
 
 int extract_messages(fd_buffer *fd_buf)

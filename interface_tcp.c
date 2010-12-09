@@ -44,10 +44,17 @@ void setup_tcp_connection(char *host, int port)
     g_io_channel_set_buffered(chan, FALSE);
     g_io_channel_set_flags(chan, G_IO_FLAG_NONBLOCK, NULL);
 
+    int fd = g_io_channel_unix_get_fd(chan);
+
+    register_fd(fd);
+
     if (!g_io_add_watch(chan, (G_IO_IN | G_IO_HUP | G_IO_ERR),
             handle_input, NULL))
     {
         g_warning("(%s:%d) Unable to add watch on channel", __FILE__, __LINE__);
+        g_io_channel_shutdown(chan, FALSE, NULL);
+        g_io_channel_unref(chan);
+        unregister_fd(fd);
         exit(-1);
     }
 }
@@ -80,6 +87,15 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
         /* Remove this GIOFunc */
         return FALSE;
+    }
+
+    while (n > 0)
+    {
+        n = extract_message(fd, &msg, &msg_length);
+
+        /* TODO: */
+
+        free(msg);
     }
 
     /* Return TRUE to keep this handler intact (don't unregister it) */
