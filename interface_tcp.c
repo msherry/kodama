@@ -72,6 +72,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         }
         /* TODO: else the other side closed the connection */
         /* TODO: clean up any user data */
+        /* TODO: attempt to reconnect periodically */
 
         /* Remove this GIOFunc */
         return FALSE;

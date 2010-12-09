@@ -20,6 +20,7 @@ static void usage(char *arg0);
 static void parse_command_line(int argc, char **argv);
 static void signal_handler(int signum);
 static void init_sig_handlers(void);
+static gboolean trigger(gpointer data);
 
 static void usage(char *arg0)
 {
@@ -173,6 +174,18 @@ static void signal_handler(int signum)
     }
 }
 
+static gboolean trigger(gpointer data)
+{
+    static unsigned int count = 0;
+
+    UNUSED(data);
+
+    count++;
+
+    /* Return FALSE if this function should be removed */
+    return TRUE;
+}
+
 int main(int argc, char *argv[])
 {
     parse_command_line(argc, argv);
@@ -223,6 +236,9 @@ int main(int argc, char *argv[])
 
     loop = g_main_loop_new(NULL, FALSE);
     g_main_loop_run(loop);
+
+    /* Set up a trigger function to run approximately every second */
+    g_timeout_add_seconds(1, trigger, NULL);
 
     return 0;
 }
