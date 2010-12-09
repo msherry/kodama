@@ -21,9 +21,11 @@ int extract_messages(fd_buffer *fd_buf)
 {
     /* Messages will be prepended with their length as a 4-byte integer */
 
-    char *buf = fd_buf->buffer;
     int buf_len = fd_buf->buffer_len;
     int offset = 0;
+    int num_msgs = 0;
+    char *buf = fd_buf->buffer;
+    char *temp;
 
     while (buf_len - offset > (int)sizeof(int))
     {
@@ -36,11 +38,14 @@ int extract_messages(fd_buffer *fd_buf)
         /* We know the size of the next message - do we have that many bytes? */
         if (buf_len >= msg_length + offset + (int)sizeof(int))
         {
-            char *temp = malloc(msg_length);
+            temp = malloc(msg_length);
             memcpy(temp, buf+offset+sizeof(int), msg_length);
 
-            /* Queue the message in the full message list */
+            /* Queue the message in the full message list. temp will have to be
+             * freed later */
             slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), temp);
+
+            num_msgs++;
 
             offset += sizeof(int) + msg_length;
         }
@@ -51,7 +56,29 @@ int extract_messages(fd_buffer *fd_buf)
         }
     }
 
-    
+    if (offset == 0)
+    {
+        /* We didn't get any new messages - there's at most 1 partial message in
+         * buffer */
+        return 0;
+    }
+
+    /* There may be data from a partial message left over in the buffer,
+     * starting at offset. Allocate a new buffer for it */
+    temp = NULL;
+    if (buf_len > offset)
+    {
+        int partial_len = buf_len - offset;
+        temp = malloc(partial_len);
+        memcpy(temp, buf+offset, partial_len);
+    }
+
+    /* Clean up old buffer info */
+    g_free(buf);
+    fd_buf->buffer = temp;
+    fd_buf->buffer_len = buf_len - offset;
+
+    return num_msgs;
 }
 
 int read_data(int fd)
