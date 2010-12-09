@@ -13,8 +13,14 @@ GHashTable *fd_to_buffer;
 
 int register_fd(int fd)
 {
-    /* TODO: create an fd_buffer, insert it into the hashtable. Create the
-     * hashtable if necessary */
+    /* Create an fd_buffer, insert it into the hashtable. Create the hashtable
+     * if necessary */
+
+    if (!fd_to_buffer)
+    {
+        fd_to_buffer = g_hash_table_new(g_direct_hash, g_int_equal);
+    }
+    /* TODO: finish this */
 }
 
 int extract_messages(fd_buffer *fd_buf)
