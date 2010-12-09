@@ -8,6 +8,7 @@
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
+#include "read_write.h"
 
 static GInetAddr *host_addr;
 
@@ -56,11 +57,14 @@ void setup_tcp_connection(char *host, int port)
 static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 {
-    /* TODO: check the condition */
+    int fd, n;
+
     UNUSED(cond);
     UNUSED(data);
 
-    if (cond & G_IO_HUP || cond & G_IO_ERR) /* TODO: or we can't read any bytes */
+    fd = g_io_channel_unix_get_fd(source);
+
+    if (cond & G_IO_HUP || cond & G_IO_ERR || ((n = read_data(fd)) == -9))
     {
         if (cond & G_IO_HUP)
         {
