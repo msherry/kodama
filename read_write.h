@@ -14,10 +14,12 @@ typedef struct fd_buffer {
 
     GSList *read_head;   /* Completely read messages */
     GSList *read_tail;
+    GArray *read_msg_size;
 } fd_buffer;
 
 void register_fd(int fd);
 void unregister_fd(int fd);
 int read_data(int fd);
+int get_next_message(int fd, char **msg, int *msg_length);
 
 #endif

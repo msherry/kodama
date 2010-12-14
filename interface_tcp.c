@@ -91,13 +91,27 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
     while (n > 0)
     {
-        n = extract_message(fd, &msg, &msg_length);
-
-        /* TODO: */
-
+        char *msg;
+        int msg_length;
+        n = get_next_message(fd, &msg, &msg_length);
+        handle_msg(msg, msg_length);
         free(msg);
     }
 
     /* Return TRUE to keep this handler intact (don't unregister it) */
     return TRUE;
+}
+
+static void handle_message(char *msg, int msg_length)
+{
+    /* Header format:
+       Message length (including header)      - 4 bytes
+       Type                                   - 1 byte
+       Stream name length                     - 1 byte
+       Stream name                            - variable length
+    */
+
+    /* TODO: we're going to need a conversation id of sorts, since both streams
+     * of a conversation need to go to the same hybrid. The hybrid can then be
+     * named with this conv_id */
 }

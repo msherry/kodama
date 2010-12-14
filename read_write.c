@@ -8,6 +8,8 @@
 #include "imolist.h"
 #include "read_write.h"
 
+static int extract_messages(fd_buffer *fd_buf);
+
 /* Map of fd to fd_buffer structs */
 GHashTable *fd_to_buffer;
 
@@ -28,13 +30,14 @@ void register_fd(int fd)
     fd_buf->buffer_len = 0;
 
     fd_buf->read_head = fd_buf->read_tail = NULL;
+    fd_buf->read_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
 
     /* TODO: make sure this fd isn't already present as a key */
 
     g_hash_table_insert(fd_to_buffer, GINT_TO_POINTER(fd), fd_buf);
 }
 
-int extract_messages(fd_buffer *fd_buf)
+static int extract_messages(fd_buffer *fd_buf)
 {
     /* Messages will be prepended with their length as a 4-byte integer */
 
@@ -46,6 +49,13 @@ int extract_messages(fd_buffer *fd_buf)
 
     while (buf_len - offset > (int)sizeof(int))
     {
+        /* Header format:
+           Message length (including header)      - 4 bytes
+           Type                                   - 1 byte
+           Stream name length                     - 1 byte
+           Stream name                            - variable length
+        */
+
         /* First int in the buffer at this offset should be a message length */
         int msg_length;
 
@@ -53,18 +63,19 @@ int extract_messages(fd_buffer *fd_buf)
         msg_length = ntohl(msg_length);
 
         /* We know the size of the next message - do we have that many bytes? */
-        if (buf_len >= msg_length + offset + (int)sizeof(int))
+        if (buf_len >= msg_length + offset)
         {
             temp = malloc(msg_length);
-            memcpy(temp, buf+offset+sizeof(int), msg_length);
+            memcpy(temp, buf+offset, msg_length);
 
             /* Queue the message in the full message list. temp will have to be
              * freed later */
             slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), temp);
+            g_array_append_val(fd_buf->read_msg_size, msg_length);
 
             num_msgs++;
 
-            offset += sizeof(int) + msg_length;
+            offset += msg_length;
         }
         else
         {
@@ -164,4 +175,28 @@ int read_data(int fd)
     num_msgs = extract_messages(fd_buf);
 
     return num_msgs;
+}
+
+int get_next_message(int fd, char **msg, int *msg_length)
+{
+
+    fd_buffer *fd_buf;
+
+    /* This existed in a call to read_data immediately prior to this, so should
+     * still be around */
+    fd_buf = g_hash_table_lookup(fd_to_buffer, GINT_TO_POINTER(fd));
+
+    /* If there are no messages in the sll, give up */
+    if (g_slist_length(fd_buf->read_head) <= 0)
+    {
+        return 0;
+    }
+
+    *msg = g_slist_nth_data(fd_buf->read_head, 0);
+    slist_delete_first(&(fd_buf->read_head), &(fd_buf->read_tail));
+
+    *msg_length = g_array_index(fd_buf->read_msg_size, int, 0);
+    g_array_remove_index(fd_buf->read_msg_size, 0);
+
+    return g_slist_length(fd_buf->read_head);
 }
