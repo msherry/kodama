@@ -33,10 +33,11 @@ void setup_tcp_connection(char *host, int port)
 
     if (sock == NULL)
     {
-        g_error("There was an error connecting to %s:%d - aborting\n",
-                host, port);
-        exit(-1);
+        g_warning("There was an error connecting to %s:%d - this service will be fairly useless\n", host, port);
+        return;
     }
+
+    DEBUG_LOG("Successfully connected to wowza on %s:%d\n", host, port);
 
     /* Connected to Wowza - set up a watch on the channel */
     GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);

@@ -1,4 +1,5 @@
 #include <execinfo.h>
+#include <fcntl.h>
 #include <getopt.h>
 #include <glib.h>
 #include <signal.h>
@@ -17,9 +18,11 @@ GMainLoop *loop;
 globals_t globals;
 
 static void usage(char *arg0);
+static void set_fullname(void);
 static void parse_command_line(int argc, char **argv);
 static void signal_handler(int signum);
 static void init_sig_handlers(void);
+static void init_log_handlers(void);
 static gboolean trigger(gpointer data);
 
 static void usage(char *arg0)
@@ -54,6 +57,24 @@ static void usage(char *arg0)
     fprintf(stderr, "-v:        verbose output\n");
 }
 
+static void set_fullname(void)
+{
+    if (globals.fullname)
+    {
+        /* Already set */
+        return;
+    }
+
+    if (globals.shardnum == -1 || !globals.basename)
+    {
+        /* Don't have required params yet */
+        return;
+    }
+
+    globals.fullname = g_strdup_printf("%s.%d", globals.basename, globals.shardnum);
+    g_debug("Set fullname to %s", globals.fullname);
+}
+
 static void parse_command_line(int argc, char *argv[])
 {
     globals.txhost = NULL;
@@ -69,6 +90,8 @@ static void parse_command_line(int argc, char *argv[])
 
     globals.echo_cancel = 0;
 
+    globals.basename = NULL;
+    globals.fullname = NULL;
     globals.shardnum = -1;
     globals.server_host = NULL;
     globals.server_port = -1;
@@ -101,6 +124,8 @@ static void parse_command_line(int argc, char *argv[])
             {
                 int shardnum = atoi(optarg);
                 globals.shardnum = shardnum;
+
+                set_fullname();
             }
             else if (!strcmp("server", long_options[option_index].name))
             {
@@ -115,7 +140,9 @@ static void parse_command_line(int argc, char *argv[])
             }
             else if (!strcmp("basename", long_options[option_index].name))
             {
-                /* Ignore this param for now */
+                globals.basename = g_strdup_printf("%s", optarg);
+
+                set_fullname();
             }
            break;
         case 'h':
@@ -174,10 +201,36 @@ static void signal_handler(int signum)
 {
     switch(signum)
     {
+    case SIGHUP:
+        g_debug("Got SIGHUP - rotating logs");
+        init_log_handlers();
+        signal(SIGHUP, signal_handler);
+        break;
     case SIGINT:
         g_main_loop_quit(loop);
         break;
     }
+}
+
+/* Redirect stdout and stderr to log file */
+static void init_log_handlers(void)
+{
+    char filename[256];
+    char *dir;
+
+    close(1);
+    memset(filename, 0, 256);
+    dir = getenv("IMO_LOG_DIR");
+    if (!dir)
+    {
+        dir = "/tmp";
+    }
+    strcat(filename, dir);
+    strcat(filename, "/");
+    strcat(filename, globals.fullname);
+    strcat(filename, ".log");
+    open(filename, O_CREAT|O_WRONLY|O_APPEND, 0644);
+    dup2(1, 2);
 }
 
 static gboolean trigger(gpointer data)
@@ -188,6 +241,8 @@ static gboolean trigger(gpointer data)
 
     count++;
 
+    DEBUG_LOG("We're in the trigger function");
+
     /* Return FALSE if this function should be removed */
     return TRUE;
 }
@@ -197,6 +252,7 @@ int main(int argc, char *argv[])
     parse_command_line(argc, argv);
 
     init_hybrids();
+    init_log_handlers();
     init_sig_handlers();
 
     /* If no shardnum is given, we're running in standalone mode */

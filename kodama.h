@@ -53,7 +53,9 @@ typedef struct globals_t {
     int verbose;
 
     /* Imo flags */
+    char *basename;
     int shardnum;
+    char *fullname;
     gchar *server_host;         // Server machine and port are both set with the
     int server_port;            // "server" command-line option
 } globals_t;
