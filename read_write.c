@@ -37,6 +37,11 @@ void register_fd(int fd)
     g_hash_table_insert(fd_to_buffer, GINT_TO_POINTER(fd), fd_buf);
 }
 
+void unregister_fd(int fd)
+{
+    /* TODO: implement */
+}
+
 static int extract_messages(fd_buffer *fd_buf)
 {
     /* Messages will be prepended with their length as a 4-byte integer */

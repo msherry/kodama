@@ -46,6 +46,7 @@ static void usage(char *arg0)
     fprintf(stderr, "IMO options:\n");
     fprintf(stderr, "--shard: shardnum of this shard (enables imo mode)\n");
     fprintf(stderr, "--server: <ip:port> Wowza server and port to connect to\n");
+    fprintf(stderr, "--basename: Name of the service\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "-e: set up rx-side echo cancellation\n");
@@ -82,6 +83,7 @@ static void parse_command_line(int argc, char *argv[])
             /* {name, has_arg, flag, val},  */
             {"shard", 1, 0, 0}, /* 0 */
             {"server", 1, 0, 0},
+            {"basename", 1, 0, 0},
             {0, 0, 0, 0}
         };
         c = getopt_long(argc, argv, "ehdt:r:p:l:q:a:m:n:v", long_options,
@@ -110,6 +112,10 @@ static void parse_command_line(int argc, char *argv[])
                 globals.server_port = atoi(host_and_port[1]);
 
                 g_strfreev(host_and_port);
+            }
+            else if (!strcmp("basename", long_options[option_index].name))
+            {
+                /* Ignore this param for now */
             }
            break;
         case 'h':

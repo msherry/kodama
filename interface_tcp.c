@@ -14,6 +14,7 @@ static GInetAddr *host_addr;
 
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
+static void handle_message(char *msg, int message_length);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -94,7 +95,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         char *msg;
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
-        handle_msg(msg, msg_length);
+        handle_message(msg, msg_length);
         free(msg);
     }
 
