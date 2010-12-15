@@ -90,10 +90,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     UNUSED(cond);
     UNUSED(data);
 
-    g_debug("in handle_input");
     fd = g_io_channel_unix_get_fd(source);
-
-    g_debug("fd = %d, cond = %d", fd, cond);
 
     if (cond & G_IO_HUP || cond & G_IO_ERR || ((n = read_data(fd)) == -9))
     {
@@ -123,8 +120,6 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         /* Remove this GIOFunc */
         return FALSE;
     }
-
-    g_debug("finished read_data - n = %d", n);
 
     while (n > 0)
     {
