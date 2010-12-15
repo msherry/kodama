@@ -42,6 +42,9 @@ void tcp_connect(void)
     GTcpSocket *sock;
     GInetAddr *host_addr;
 
+    /* Stop trying to reconnect */
+    attempt_reconnect = 0;
+
     host_addr = gnet_inetaddr_new(g_host, g_port);
 
     /* This blocks until we connect or fail to connect */
