@@ -10,7 +10,10 @@
 #include "protocol.h"
 #include "read_write.h"
 
-static GInetAddr *host_addr;
+static char *g_host;
+static int g_port;
+
+int attempt_reconnect;
 
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
@@ -21,23 +24,37 @@ static void handle_message(char *msg, int message_length);
 
 void setup_tcp_connection(char *host, int port)
 {
+    /* Don't try to reconnect before we've connected */
+    attempt_reconnect = 0;
+
+    /* Set up tables for read/write handlers */
+    init_read_write();
+
+    g_host = g_strdup_printf("%s", host);
+    g_port = port;
+
+    tcp_connect();
+}
+
+/* Uses the global g_host and g_port */
+void tcp_connect(void)
+{
     GTcpSocket *sock;
+    GInetAddr *host_addr;
 
-    UNUSED(host);
-    UNUSED(port);
+    host_addr = gnet_inetaddr_new(g_host, g_port);
 
-    host_addr = gnet_inetaddr_new(host, port);
-
-    /* This blocks until we connect */
+    /* This blocks until we connect or fail to connect */
     sock = gnet_tcp_socket_new(host_addr);
 
     if (sock == NULL)
     {
-        g_warning("There was an error connecting to %s:%d - this service will be fairly useless\n", host, port);
+        g_warning("There was an error connecting to %s:%d - this service will be fairly useless", g_host, g_port);
+        attempt_reconnect = 1;
         return;
     }
 
-    DEBUG_LOG("Successfully connected to wowza on %s:%d\n", host, port);
+    g_debug("Successfully connected to wowza on %s:%d", g_host, g_port);
 
     /* Connected to Wowza - set up a watch on the channel */
     GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);
@@ -61,7 +78,6 @@ void setup_tcp_connection(char *host, int port)
     }
 }
 
-
 /* Handle stream data input */
 static gboolean
 handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
@@ -71,7 +87,10 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     UNUSED(cond);
     UNUSED(data);
 
+    g_debug("in handle_input");
     fd = g_io_channel_unix_get_fd(source);
+
+    g_debug("fd = %d, cond = %d", fd, cond);
 
     if (cond & G_IO_HUP || cond & G_IO_ERR || ((n = read_data(fd)) == -9))
     {
@@ -83,13 +102,26 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         {
             g_warning("(%s:%d) Error on socket", __FILE__, __LINE__);
         }
-        /* TODO: else the other side closed the connection */
+        else
+        {
+            /* The other side closed the connection */
+            g_debug("Remote end closed connection");
+        }
         /* TODO: clean up any user data */
         /* TODO: attempt to reconnect periodically */
+
+        g_io_channel_shutdown(source, FALSE, NULL);
+        g_io_channel_unref(source);
+        unregister_fd(fd);
+
+        /* Try to reconnect every so often */
+        attempt_reconnect = 1;
 
         /* Remove this GIOFunc */
         return FALSE;
     }
+
+    g_debug("finished read_data - n = %d", n);
 
     while (n > 0)
     {

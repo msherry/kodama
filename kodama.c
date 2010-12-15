@@ -17,6 +17,9 @@
 GMainLoop *loop;
 globals_t globals;
 
+/* From interface_tcp */
+extern int attempt_reconnect;
+
 static void usage(char *arg0);
 static void set_fullname(void);
 static void parse_command_line(int argc, char **argv);
@@ -248,7 +251,11 @@ static gboolean trigger(gpointer data)
 
     count++;
 
-    DEBUG_LOG("We're in the trigger function");
+    if (attempt_reconnect && ((count % 3) == 0))
+    {
+        g_debug("Attempting to reconnect");
+        tcp_connect();
+    }
 
     /* Return FALSE if this function should be removed */
     return TRUE;
@@ -303,11 +310,11 @@ int main(int argc, char *argv[])
         setup_tcp_connection(globals.server_host, globals.server_port);
     }
 
-    loop = g_main_loop_new(NULL, FALSE);
-    g_main_loop_run(loop);
-
     /* Set up a trigger function to run approximately every second */
     g_timeout_add_seconds(1, trigger, NULL);
+
+    loop = g_main_loop_new(NULL, FALSE);
+    g_main_loop_run(loop);
 
     return 0;
 }

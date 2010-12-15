@@ -6,22 +6,26 @@
 #include <unistd.h>
 
 #include "imolist.h"
+#include "kodama.h"
 #include "read_write.h"
 
 static int extract_messages(fd_buffer *fd_buf);
 
 /* Map of fd to fd_buffer structs */
-GHashTable *fd_to_buffer;
+GHashTable *fd_to_buffer = NULL;
+
+void init_read_write(void)
+{
+    if (!fd_to_buffer)
+    {
+        fd_to_buffer = g_hash_table_new(g_direct_hash, NULL);
+    }
+}
 
 void register_fd(int fd)
 {
     /* Create an fd_buffer, insert it into the hashtable. Create the hashtable
      * if necessary */
-
-    if (!fd_to_buffer)
-    {
-        fd_to_buffer = g_hash_table_new(g_direct_hash, g_int_equal);
-    }
 
     fd_buffer *fd_buf = malloc(sizeof(fd_buffer));
 
@@ -40,6 +44,7 @@ void register_fd(int fd)
 void unregister_fd(int fd)
 {
     /* TODO: implement */
+    UNUSED(fd);
 }
 
 static int extract_messages(fd_buffer *fd_buf)
@@ -125,6 +130,7 @@ int read_data(int fd)
     fd_buf = g_hash_table_lookup(fd_to_buffer, GINT_TO_POINTER(fd));
     if (fd_buf == NULL)
     {
+        g_debug("(%s:%d) fd not found: %d", __FILE__, __LINE__, fd);
         return FD_NOT_FOUND;
     }
 
@@ -132,6 +138,8 @@ int read_data(int fd)
     if (ioctl(fd, FIONREAD, &bytes))
     {
         /* TODO: check errno here and do something appropriate */
+        g_debug("(%s:%d) error performing ioctl on fd: %d",
+                __FILE__, __LINE__, fd);
         return READ_ERROR;
     }
 
@@ -146,6 +154,8 @@ int read_data(int fd)
                 return 0;
             }
 
+            g_debug("(%s:%d) Error other than EINTR or "
+                    "EAGAIN when reading from fd: %d", __FILE__, __LINE__, fd);
             /* TODO: if we were building up a partial message, I guess it's dead
              * now */
             free(tbuf);
@@ -168,12 +178,14 @@ int read_data(int fd)
     }
     else if (bytes == 0)
     {
-        /* fd closed - other end closed it? */
-        /* TODO: clean up this fd_buf */
+        /* Other end closed the fd. Returning this signals caller to tell us to
+         * clean up fd_buf, among other things */
         return REMOTE_CLOSED;
     }
     else {
         /* TODO: how does this happen? Does this even happen? */
+        g_debug("(%s:%d) Entering this clause was a complete surprise to me",
+                __FILE__, __LINE__);
         return 0;
     }
 

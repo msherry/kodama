@@ -17,6 +17,7 @@ typedef struct fd_buffer {
     GArray *read_msg_size;
 } fd_buffer;
 
+void init_read_write(void);
 void register_fd(int fd);
 void unregister_fd(int fd);
 int read_data(int fd);
