@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "cbuffer.h"
+#include "imo_message.h"
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
@@ -148,4 +149,14 @@ static void handle_message(char *msg, int msg_length)
      * named with this conv_id */
 
     g_debug("Got a packet");
+
+    char type;
+    char *stream_name, *packet_data;
+
+    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data);
+
+    g_debug("Type: %c", type);
+    g_debug("Stream name: %s\n\n", stream_name);
+    /* g_free(stream_name); */
+    /* g_free(packet_data); */
 }

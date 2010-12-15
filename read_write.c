@@ -58,7 +58,10 @@ static int extract_messages(fd_buffer *fd_buf)
     char *buf = fd_buf->buffer;
     char *temp;
 
-    while (buf_len - offset > (int)sizeof(int))
+    /* We use 4, not sizeof(int), since these come from java, where an int is
+     * always 4 bytes */
+
+    while (buf_len - offset > 4)
     {
         /* Header format:
            Message length (including header)      - 4 bytes
@@ -70,7 +73,7 @@ static int extract_messages(fd_buffer *fd_buf)
         /* First int in the buffer at this offset should be a message length */
         int msg_length;
 
-        memcpy(&msg_length, buf+offset, sizeof(int));
+        memcpy(&msg_length, buf+offset, 4);
         msg_length = ntohl(msg_length);
 
         /* We know the size of the next message - do we have that many bytes? */
