@@ -116,4 +116,6 @@ static void handle_message(char *msg, int msg_length)
     /* TODO: we're going to need a conversation id of sorts, since both streams
      * of a conversation need to go to the same hybrid. The hybrid can then be
      * named with this conv_id */
+
+    g_debug("Got a packet");
 }

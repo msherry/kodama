@@ -195,6 +195,8 @@ static void parse_command_line(int argc, char *argv[])
 static void init_sig_handlers(void)
 {
     signal(SIGINT, signal_handler);
+    signal(SIGHUP, signal_handler);
+    signal(SIGTERM, signal_handler);
 }
 
 static void signal_handler(int signum)
@@ -202,9 +204,14 @@ static void signal_handler(int signum)
     switch(signum)
     {
     case SIGHUP:
-        g_debug("Got SIGHUP - rotating logs");
+        g_message("Got SIGHUP - rotating logs");
         init_log_handlers();
         signal(SIGHUP, signal_handler);
+        break;
+    case SIGTERM:
+        g_message("Got SIGTERM - shutting down");
+        /* TODO: make this more graceful */
+        g_main_loop_quit(loop);
         break;
     case SIGINT:
         g_main_loop_quit(loop);
