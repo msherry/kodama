@@ -155,8 +155,10 @@ static void handle_message(char *msg, int msg_length)
 
     decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data);
 
+    g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
     g_debug("Stream name: %s\n\n", stream_name);
-    /* g_free(stream_name); */
+
+    g_free(stream_name);
     /* g_free(packet_data); */
 }
