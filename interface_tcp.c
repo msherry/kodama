@@ -153,7 +153,7 @@ static void handle_message(const unsigned char *msg, int msg_length)
      * of a conversation need to go to the same hybrid. The hybrid can then be
      * named with this conv_id */
 
-    g_debug("Got a packet");
+    g_debug("Got an imo packet");
 
     char type;
     unsigned char *stream_name, *packet_data;
@@ -170,7 +170,7 @@ static void handle_message(const unsigned char *msg, int msg_length)
     if (data_len > 0)
     {
         char *hex = hexify(packet_data, data_len);
-        g_debug("Packet data: %s", hex);
+        g_debug("FLV packet data: %s", hex);
         flv_parse(packet_data, data_len);
         free(hex);
     }
