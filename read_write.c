@@ -198,7 +198,7 @@ int read_data(int fd)
     return num_msgs;
 }
 
-int get_next_message(int fd, char **msg, int *msg_length)
+int get_next_message(int fd, unsigned char **msg, int *msg_length)
 {
 
     fd_buffer *fd_buf;

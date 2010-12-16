@@ -21,6 +21,6 @@ void init_read_write(void);
 void register_fd(int fd);
 void unregister_fd(int fd);
 int read_data(int fd);
-int get_next_message(int fd, char **msg, int *msg_length);
+int get_next_message(int fd, unsigned char **msg, int *msg_length);
 
 #endif

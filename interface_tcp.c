@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <errno.h>
 #include <glib.h>
 #include <gnet.h>
@@ -19,8 +20,8 @@ int attempt_reconnect;
 
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
-static void handle_message(char *msg, int message_length);
-static void flv_parse(const char *packet_data, const int packet_len);
+static void handle_message(const unsigned char *msg, int message_length);
+static void flv_parse(const unsigned char *packet_data, const int packet_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -128,7 +129,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
     while (n > 0)
     {
-        char *msg;
+        unsigned char *msg;
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
         handle_message(msg, msg_length);
@@ -139,7 +140,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
-static void handle_message(char *msg, int msg_length)
+static void handle_message(const unsigned char *msg, int msg_length)
 {
     /* Header format:
        Message length (including header)      - 4 bytes
@@ -155,7 +156,7 @@ static void handle_message(char *msg, int msg_length)
     g_debug("Got a packet");
 
     char type;
-    char *stream_name, *packet_data;
+    unsigned char *stream_name, *packet_data;
     int data_len;
 
     decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
@@ -182,52 +183,67 @@ static void handle_message(char *msg, int msg_length)
 
 /* TODO: this is most likely a temporary function */
 /* Parses an FLV tag, not the stream header */
-static void flv_parse(const char *packet_data, const int packet_len)
+static void flv_parse(const unsigned char *packet_data, const int packet_len)
 {
     /* For details of this format, see:
        http://osflash.org/flv
     */
 
-    char type_code, type;
+    unsigned char type_code, type;
     int offset = 0;
 
-    /* Type - audio, video, meta */
+    g_debug("Packet length: %d", packet_len);
+
     type_code = packet_data[offset++];
     switch(type_code)
     {
     case 0x08:
+        /* Audio */
         type = 'A';
         break;
     case 0x09:
+        /* Video */
         type = 'V';
         break;
     case 0x12:
+        /* Meta */
         type = 'M';
         break;
     default:
-        g_debug("Unknown packet type: %c", type_code);
+        /* Unknown */
         type = 'U';
+        g_debug("Unknown packet type: %c", type_code);
         break;
     }
     g_debug("Type: %c", type);
 
     /* 3 bytes, big-endian */
-    int bodyLength = 0;
-    bodyLength |= ((packet_data[offset++] << 16) & 0x00ff0000);
-    bodyLength |= ((packet_data[offset++] << 8)  & 0x0000ff00);
-    bodyLength |= ((packet_data[offset++] << 0)  & 0x000000ff);
+    unsigned int bodyLength = 0;
+    bodyLength |= (packet_data[offset++] << 16);
+    bodyLength |= (packet_data[offset++] << 8);
+    bodyLength |= (packet_data[offset++] << 0);
     g_debug("BodyLength: %d", bodyLength);
 
     /* Timestamp - 4 bytes, crazy order */
     unsigned int timestamp = 0;
-    timestamp |= ((packet_data[offset++] << 16) & 0x00ff0000);
-    timestamp |= ((packet_data[offset++] << 8)  & 0x0000ff00);
-    timestamp |= ((packet_data[offset++] << 0)  & 0x000000ff);
-    timestamp |= ((packet_data[offset++] << 24) & 0xff000000);
+    timestamp |= (packet_data[offset++] << 16);
+    timestamp |= (packet_data[offset++] << 8);
+    timestamp |= (packet_data[offset++] << 0);
+    timestamp |= (packet_data[offset++] << 24);
     g_debug("Timestamp: %u  (%#.8x)", timestamp, timestamp);
 
     /* stream id is 3 bytes, and always zero - skip it */
     offset += 3;
 
-    /* I guess the rest is samples? */
+    /* The rest is packet data, except the last 4 bytes, which should contain
+     * the size of this packet */
+    offset = (packet_len - 4);
+    /* A full 4-byte integer, big-endian. Read it the hard way since ints are
+     * probably 8 bytes for us */
+    unsigned int prev_tag_size = 0;
+    prev_tag_size |= (packet_data[offset++] << 24);
+    prev_tag_size |= (packet_data[offset++] << 16);
+    prev_tag_size |= (packet_data[offset++] << 8);
+    prev_tag_size |= (packet_data[offset++] << 0);
+    g_debug("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
 }

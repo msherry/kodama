@@ -4,7 +4,7 @@
 
 #include "util.h"
 
-char *hexify(const char *buf, const int data_len)
+char *hexify(const unsigned char *buf, const int data_len)
 {
     char *ret = malloc(data_len*2 + 1);
     char *ret_off = ret;
