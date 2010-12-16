@@ -20,6 +20,7 @@ int attempt_reconnect;
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static void handle_message(char *msg, int message_length);
+static void flv_parse(const char *packet_data, const int packet_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -163,11 +164,70 @@ static void handle_message(char *msg, int msg_length)
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
     g_debug("Stream name: %s", stream_name);
-    char *hex = hexify(packet_data, data_len);
-    g_debug("Packet data: %s\n\n", hex);
 
-    free(hex);
+
+    if (data_len > 0)
+    {
+        char *hex = hexify(packet_data, data_len);
+        g_debug("Packet data: %s", hex);
+        flv_parse(packet_data, data_len);
+        free(hex);
+    }
+
+    g_debug("\n\n");
 
     free(stream_name);
     free(packet_data);
+}
+
+/* TODO: this is most likely a temporary function */
+/* Parses an FLV tag, not the stream header */
+static void flv_parse(const char *packet_data, const int packet_len)
+{
+    /* For details of this format, see:
+       http://osflash.org/flv
+    */
+
+    char type_code, type;
+    int offset = 0;
+
+    /* Type - audio, video, meta */
+    type_code = packet_data[offset++];
+    switch(type_code)
+    {
+    case 0x08:
+        type = 'A';
+        break;
+    case 0x09:
+        type = 'V';
+        break;
+    case 0x12:
+        type = 'M';
+        break;
+    default:
+        g_debug("Unknown packet type: %c", type_code);
+        type = 'U';
+        break;
+    }
+    g_debug("Type: %c", type);
+
+    /* 3 bytes, big-endian */
+    int bodyLength = 0;
+    bodyLength |= ((packet_data[offset++] << 16) & 0x00ff0000);
+    bodyLength |= ((packet_data[offset++] << 8)  & 0x0000ff00);
+    bodyLength |= ((packet_data[offset++] << 0)  & 0x000000ff);
+    g_debug("BodyLength: %d", bodyLength);
+
+    /* Timestamp - 4 bytes, crazy order */
+    unsigned int timestamp = 0;
+    timestamp |= ((packet_data[offset++] << 16) & 0x00ff0000);
+    timestamp |= ((packet_data[offset++] << 8)  & 0x0000ff00);
+    timestamp |= ((packet_data[offset++] << 0)  & 0x000000ff);
+    timestamp |= ((packet_data[offset++] << 24) & 0xff000000);
+    g_debug("Timestamp: %u  (%#.8x)", timestamp, timestamp);
+
+    /* stream id is 3 bytes, and always zero - skip it */
+    offset += 3;
+
+    /* I guess the rest is samples? */
 }
