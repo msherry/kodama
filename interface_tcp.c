@@ -21,7 +21,7 @@ int attempt_reconnect;
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static void handle_message(const unsigned char *msg, int message_length);
-static void flv_parse(const unsigned char *packet_data, const int packet_len);
+static void flv_parse_tag(const unsigned char *packet_data, const int packet_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -171,7 +171,7 @@ static void handle_message(const unsigned char *msg, int msg_length)
     {
         char *hex = hexify(packet_data, data_len);
         g_debug("FLV packet data: %s", hex);
-        flv_parse(packet_data, data_len);
+        flv_parse_tag(packet_data, data_len);
         free(hex);
     }
 
@@ -182,8 +182,8 @@ static void handle_message(const unsigned char *msg, int msg_length)
 }
 
 /* TODO: this is most likely a temporary function */
-/* Parses an FLV tag, not the stream header */
-static void flv_parse(const unsigned char *packet_data, const int packet_len)
+/* Parses an FLV tag (not the stream header) */
+static void flv_parse_tag(const unsigned char *packet_data, const int packet_len)
 {
     /* For details of this format, see:
        http://osflash.org/flv
