@@ -14,7 +14,7 @@
 
 /* Caller must free stream_name and packet_data */
 void decode_imo_message(const char *msg, const int msg_length, char *type,
-        char **stream_name, char **packet_data)
+        char **stream_name, char **packet_data, int *data_len)
 {
     UNUSED(msg_length);
     UNUSED(packet_data);
@@ -30,4 +30,12 @@ void decode_imo_message(const char *msg, const int msg_length, char *type,
     (*stream_name)[stream_name_length] = '\0';
 
     offset += stream_name_length;
+
+    /* account for header */
+    int packet_length = msg_length - (6+stream_name_length);
+    *packet_data = malloc(packet_length+1); /* trailing '\0' */
+    memcpy(*packet_data, msg+offset, packet_length);
+    (*packet_data)[packet_length] = '\0';
+
+    *data_len = packet_length;
 }

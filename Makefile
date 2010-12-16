@@ -30,7 +30,7 @@ endif
 
 OBJS = cbuffer.o echo.o hybrid.o iir.o imolist.o imo_message.o \
 	interface_hardware.o interface_tcp.o interface_udp.o \
-	kodama.o protocol.o read_write.o
+	kodama.o protocol.o read_write.o util.o
 
 ALL: kodama
 

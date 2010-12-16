@@ -10,6 +10,7 @@
 #include "kodama.h"
 #include "protocol.h"
 #include "read_write.h"
+#include "util.h"
 
 static char *g_host;
 static int g_port;
@@ -50,6 +51,8 @@ void tcp_connect(void)
 
     /* This blocks until we connect or fail to connect */
     sock = gnet_tcp_socket_new(host_addr);
+
+    g_free(host_addr);
 
     if (sock == NULL)
     {
@@ -152,13 +155,19 @@ static void handle_message(char *msg, int msg_length)
 
     char type;
     char *stream_name, *packet_data;
+    int data_len;
 
-    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data);
+    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
+            &data_len);
 
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
-    g_debug("Stream name: %s\n\n", stream_name);
+    g_debug("Stream name: %s", stream_name);
+    char *hex = hexify(packet_data, data_len);
+    g_debug("Packet data: %s\n\n", hex);
 
-    g_free(stream_name);
-    /* g_free(packet_data); */
+    free(hex);
+
+    free(stream_name);
+    free(packet_data);
 }
