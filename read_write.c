@@ -37,6 +37,9 @@ void register_fd(int fd)
     fd_buf->read_head = fd_buf->read_tail = NULL;
     fd_buf->read_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
 
+    fd_buf->write_head = fd_buf->write_tail = NULL;
+    fd_buf->write_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
+
     /* TODO: make sure this fd isn't already present as a key */
 
     g_hash_table_insert(fd_to_buffer, GINT_TO_POINTER(fd), fd_buf);
@@ -55,8 +58,8 @@ static int extract_messages(fd_buffer *fd_buf)
     int buf_len = fd_buf->buffer_len;
     int offset = 0;
     int num_msgs = 0;
-    char *buf = fd_buf->buffer;
-    char *temp;
+    unsigned char *buf = fd_buf->buffer;
+    unsigned char *temp;
 
     /* We use 4, not sizeof(int), since these come from java, where an int is
      * always 4 bytes */
@@ -196,6 +199,52 @@ int read_data(int fd)
     num_msgs = extract_messages(fd_buf);
 
     return num_msgs;
+}
+
+/* Sends the message at the head of the write list for a given fd. Returns the
+ * number of messages remaining in the write queue. */
+int write_data(int fd)
+{
+    fd_buffer *fd_buf;
+    unsigned char *msg = NULL;
+    int written = 0, total;
+
+    fd_buf = g_hash_table_lookup(fd_to_buffer, GINT_TO_POINTER(fd));
+    if (fd_buf == NULL)
+    {
+        return FD_NOT_FOUND;
+    }
+
+    if (g_slist_length(fd_buf->write_head) <= 0)
+    {
+        return 0;
+    }
+
+    msg = g_slist_nth_data(fd_buf->write_head, 0);
+    slist_delete_first(&(fd_buf->write_head), &(fd_buf->write_tail));
+
+    total = g_array_index(fd_buf->write_msg_size, int, 0);
+    g_array_remove_index(fd_buf->write_msg_size, 0);
+
+    while (written < total)
+    {
+        int length;
+        if((length = write(fd, msg+written, total-written)) < 0)
+        {
+            if (errno == EAGAIN || errno == EINTR)
+            {
+                continue;
+            }
+            /* Some other error */
+            free(msg);
+            return WRITE_ERROR;
+        }
+        written += length;
+    }
+
+    free(msg);
+
+    return g_slist_length(fd_buf->write_head);
 }
 
 int get_next_message(int fd, unsigned char **msg, int *msg_length)

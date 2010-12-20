@@ -20,7 +20,10 @@ int attempt_reconnect;
 
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
-static void handle_message(const unsigned char *msg, int message_length);
+static gboolean
+    handle_output(GIOChannel *source, GIOCondition cond, gpointer data);
+static void handle_imo_message(const unsigned char *msg, int msg_len);
+static void send_imo_message(const unsigned char *msg, int msg_len);
 static void flv_parse_tag(const unsigned char *packet_data, const int packet_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
@@ -58,7 +61,7 @@ void tcp_connect(void)
 
     if (sock == NULL)
     {
-        g_warning("There was an error connecting to %s:%d - this service will be fairly useless", g_host, g_port);
+        g_warning("There was an error connecting to wowza on %s:%d - this service will be fairly useless", g_host, g_port);
         attempt_reconnect = 1;
         return;
     }
@@ -93,7 +96,6 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 {
     int fd, n;
 
-    UNUSED(cond);
     UNUSED(data);
 
     fd = g_io_channel_unix_get_fd(source);
@@ -132,7 +134,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         unsigned char *msg;
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
-        handle_message(msg, msg_length);
+        handle_imo_message(msg, msg_length);
         free(msg);
     }
 
@@ -140,7 +142,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
-static void handle_message(const unsigned char *msg, int msg_length)
+static void handle_imo_message(const unsigned char *msg, int msg_length)
 {
     /* Header format:
        Message length (including header)      - 4 bytes
@@ -177,8 +179,44 @@ static void handle_message(const unsigned char *msg, int msg_length)
 
     g_debug("\n\n");
 
+
+    /* TODO: TEMPORARY. We're just going to send the packets right back to where
+     * they came from, for now. If we don't do that, we should free msg here */
+    send_imo_message(msg, msg_length);
+
     free(stream_name);
     free(packet_data);
+}
+
+static void send_imo_message(const unsigned char *msg, int msg_len)
+{
+    if (!msg || msg_len == 0)
+    {
+        return;
+    }
+
+    /* TODO: Who do we send data to? We probably only have one wowza
+     * connection */
+}
+
+static gboolean
+handle_output(GIOChannel *source, GIOCondition cond, gpointer data)
+{
+    UNUSED(cond);
+    UNUSED(data);
+
+    /* Presumably we'll have at least one message queued at this point */
+    int fd, n;
+
+    fd = g_io_channel_unix_get_fd(source);
+
+    do
+    {
+        n = write_data(fd);
+    } while (n > 0);
+
+    /* We're written everything we had - remove this watch */
+    return FALSE;
 }
 
 /* TODO: this is most likely a temporary function */
