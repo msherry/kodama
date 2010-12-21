@@ -73,8 +73,9 @@ static int extract_messages(fd_buffer *fd_buf)
            Stream name                            - variable length
         */
 
-        /* First int in the buffer at this offset should be a message length */
-        int msg_length;
+        /* First int (4 bytes only) in the buffer at this offset should be a
+         * message length */
+        int32_t msg_length;
 
         memcpy(&msg_length, buf+offset, 4);
         msg_length = ntohl(msg_length);
@@ -269,4 +270,44 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     g_array_remove_index(fd_buf->read_msg_size, 0);
 
     return g_slist_length(fd_buf->read_head);
+}
+
+int queue_message(int fd, const unsigned char *msg, int length)
+{
+    fd_buffer *fd_buf;
+    char *new_msg;
+
+    if (!msg || length <= 0)
+    {
+        return 0;
+    }
+
+    fd_buf = g_hash_table_lookup(fd_to_buffer, GINT_TO_POINTER(fd));
+    if (fd_buf == NULL)
+    {
+        g_warning("(%s:%d) No fd_buffer found for fd %d", __FILE__, __LINE__,
+                fd);
+        return -2;
+    }
+
+    /* The message should have 4 bytes free at the beginning for us to place a
+     * network-order 4-byte int giving the length. */
+    /* TODO: is this the right place to do this? Should it be done at a higher
+     * level? */
+    /* TODO: do we want to just queue the original message object (with suitable
+     * modification for the length header), or a copy? */
+
+    /* length includes the extra 4 bytes for the message size */
+    uint32_t length_net_order;
+
+    new_msg = malloc(length);
+    length_net_order = htonl(length);
+    memcpy(new_msg, &length_net_order, 4); /* not sizeof(int) */
+    memcpy(new_msg+4, msg+4, length-4);
+
+    /* Queue the new message in the write list */
+    slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), new_msg);
+    g_array_append_val(fd_buf->write_msg_size, length);
+
+    return 0;
 }

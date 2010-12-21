@@ -17,6 +17,8 @@ static char *g_host;
 static int g_port;
 
 int attempt_reconnect;
+int wowza_fd = -1;      /* TODO: we probably want something more flexible */
+GIOChannel *wowza_channel = NULL;
 
 static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
@@ -86,8 +88,13 @@ void tcp_connect(void)
         g_io_channel_shutdown(chan, FALSE, NULL);
         g_io_channel_unref(chan);
         unregister_fd(fd);
+
+        wowza_fd = -1;
+        wowza_channel = NULL;
         exit(-1);
     }
+    wowza_fd = fd;
+    wowza_channel = chan;
 }
 
 /* Handle stream data input */
@@ -121,6 +128,8 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         g_io_channel_shutdown(source, FALSE, NULL);
         g_io_channel_unref(source);
         unregister_fd(fd);
+        wowza_fd = -1;
+        wowza_channel = NULL;
 
         /* Try to reconnect every so often */
         attempt_reconnect = 1;
@@ -181,7 +190,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
 
 
     /* TODO: TEMPORARY. We're just going to send the packets right back to where
-     * they came from, for now. If we don't do that, we should free msg here */
+     * they came from, for now. */
     send_imo_message(msg, msg_length);
 
     free(stream_name);
@@ -196,7 +205,24 @@ static void send_imo_message(const unsigned char *msg, int msg_len)
     }
 
     /* TODO: Who do we send data to? We probably only have one wowza
-     * connection */
+     * connection, but it would be good to make this more general */
+    if (wowza_fd == -1)
+    {
+        /* I guess wowza is down. */
+        /* TODO: If wowza is smart enough to remember streams across restarts,
+         * we should queue data for wowza here */
+        return;
+    }
+
+    queue_message(wowza_fd, msg, msg_len);
+
+    /* Add a watch on the channel so we write data once the channel is
+     * writable*/
+    if (!g_io_add_watch(wowza_channel, G_IO_OUT, handle_output, NULL))
+    {
+        g_warning("(%s:%d) Cannot add watch on GIOChannel for write",
+                __FILE__, __LINE__);
+    }
 }
 
 static gboolean

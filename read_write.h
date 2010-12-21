@@ -10,7 +10,7 @@ typedef enum read_result {
 
 typedef struct fd_buffer {
     unsigned char *buffer;
-    int buffer_len;
+    unsigned int buffer_len;
 
     GSList *read_head;   /* Completely read messages */
     GSList *read_tail;
@@ -27,5 +27,6 @@ void unregister_fd(int fd);
 int read_data(int fd);
 int write_data(int fd);
 int get_next_message(int fd, unsigned char **msg, int *msg_length);
+int queue_message(int fd, const unsigned char *msg, int length);
 
 #endif
