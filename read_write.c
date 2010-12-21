@@ -245,6 +245,8 @@ int write_data(int fd)
 
     free(msg);
 
+    g_debug("Sent an imo packet");
+
     return g_slist_length(fd_buf->write_head);
 }
 

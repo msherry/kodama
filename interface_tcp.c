@@ -72,6 +72,9 @@ void tcp_connect(void)
 
     /* Connected to Wowza - set up a watch on the channel */
     GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);
+    /* Has to be set to buffered when setting the encoding, even with NULL
+     * encoding, because glib is stupid */
+    g_io_channel_set_buffered(chan, TRUE);
     // Set NULL encoding so that NULL bytes are handled properly
     g_io_channel_set_encoding(chan, NULL, NULL);
     g_io_channel_set_buffered(chan, FALSE);
