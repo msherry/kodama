@@ -4,6 +4,7 @@
 #include "util.h"
 
 static void parse_flv_body(const unsigned char *buf, int len);
+static int get_sample_rate(const unsigned char formatbyte);
 
 void flv_parse_header(void)
 {
@@ -85,7 +86,7 @@ static void parse_flv_body(const unsigned char *buf, int len)
 
     /* Find the codec */
     int codecid = formatByte & FLV_AUDIO_CODECID_MASK;
-    char *codec_name = "Unknown";
+    char *codec_name;
     switch(codecid)
     {
     case FLV_CODECID_PCM:
@@ -112,7 +113,60 @@ static void parse_flv_body(const unsigned char *buf, int len)
     case FLV_CODECID_SPEEX:
         codec_name = "FLV_CODECID_SPEEX";
         break;
+    default:
+        codec_name = "UNKNOWN";
+        break;
     }
     g_debug("Format byte & FLV_AUDIO_CODECID_MASK (codec id): %#.2x", codecid);
     g_debug("Codec: %s", codec_name);
+
+    /* Audio sample rate */
+    int sampleRate = get_sample_rate(formatByte);
+    g_debug("Sample rate: %d", sampleRate);
+
+    /* Number of audio channels */
+    int channels = (formatByte & FLV_AUDIO_CHANNEL_MASK) == FLV_STEREO ? 2 : 1;
+    g_debug("Number of channels: %d", channels);
+
+    /* Bits per coded sample */
+    int sampleSize = (formatByte & FLV_AUDIO_SAMPLESIZE_MASK) ? 16 : 8;
+    g_debug("Bits per sample: %d", sampleSize);
+}
+
+static int get_sample_rate(const unsigned char formatByte)
+{
+    int samplerate_code = formatByte & FLV_AUDIO_SAMPLERATE_MASK;
+    int codecid;                /* Some special cases need this */
+    int rate;
+    switch (samplerate_code)
+    {
+    case FLV_SAMPLERATE_SPECIAL:
+        codecid = formatByte & FLV_AUDIO_CODECID_MASK;
+        if (codecid == FLV_CODECID_SPEEX)
+        {
+            rate = 16000;
+        }
+        else if (codecid == FLV_CODECID_NELLYMOSER_8KHZ_MONO)
+        {
+            rate = 8000;
+        }
+        else
+        {
+            rate = 5512;
+        }
+        break;
+    case FLV_SAMPLERATE_11025HZ:
+        rate = 11025;
+        break;
+    case FLV_SAMPLERATE_22050HZ:
+        rate = 22050;
+        break;
+    case FLV_SAMPLERATE_44100HZ:
+        rate = 44100;
+        break;
+    default:
+        rate = -1;
+        break;
+    }
+    return rate;
 }
