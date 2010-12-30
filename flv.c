@@ -66,7 +66,14 @@ void flv_parse_tag(const unsigned char *packet_data, const int packet_len)
      * the size of this packet */
 
     /* Figure out what we can from the body */
-    parse_flv_body(packet_data+offset, packet_len - 4 - offset);
+    if (type == 'A')
+    {
+        parse_flv_body(packet_data+offset, packet_len - 4 - offset);
+    }
+    else if (type == 'V')
+    {
+        g_warning("Got video frame - I don't know how to handle those yet");
+    }
 
     offset = (packet_len - 4);
     /* A full 4-byte integer, big-endian. Read it the hard way since ints are
