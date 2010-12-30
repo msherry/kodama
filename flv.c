@@ -82,4 +82,37 @@ static void parse_flv_body(const unsigned char *buf, int len)
     unsigned char formatByte = buf[0];
 
     g_debug("Format byte: %#.2x", formatByte);
+
+    /* Find the codec */
+    int codecid = formatByte & FLV_AUDIO_CODECID_MASK;
+    char *codec_name = "Unknown";
+    switch(codecid)
+    {
+    case FLV_CODECID_PCM:
+        codec_name = "FLV_CODECID_PCM";
+        break;
+    case FLV_CODECID_ADPCM:
+        codec_name = "FLV_CODECID_ADPCM";
+        break;
+    case FLV_CODECID_MP3:
+        codec_name = "FLV_CODECID_MP3";
+        break;
+    case FLV_CODECID_PCM_LE:
+        codec_name = "FLV_CODECID_PCM_LE";
+        break;
+    case FLV_CODECID_NELLYMOSER_8KHZ_MONO:
+        codec_name = "FLV_CODECID_NELLYMOSER_8KHZ_MONO";
+        break;
+    case FLV_CODECID_NELLYMOSER:
+        codec_name = "FLV_CODECID_NELLYMOSER";
+        break;
+    case FLV_CODECID_AAC:
+        codec_name = "FLV_CODECID_AAC";
+        break;
+    case FLV_CODECID_SPEEX:
+        codec_name = "FLV_CODECID_SPEEX";
+        break;
+    }
+    g_debug("Format byte & FLV_AUDIO_CODECID_MASK (codec id): %#.2x", codecid);
+    g_debug("Codec: %s", codec_name);
 }
