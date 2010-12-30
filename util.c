@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -18,6 +19,22 @@ char *hexify(const unsigned char *buf, const int data_len)
     }
 
     ret[data_len*2] = '\0';
+
+    return ret;
+}
+
+unsigned int read_uint24_be(uint8_t *buf)
+{
+    unsigned int ret;
+    ret = (buf[0] << 16) | (buf[1] << 8) | (buf[2]);
+
+    return ret;
+}
+
+unsigned int read_uint32_be(uint8_t *buf)
+{
+    unsigned int ret;
+    ret = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
 
     return ret;
 }

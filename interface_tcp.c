@@ -294,17 +294,15 @@ static void flv_parse_tag(const unsigned char *packet_data, const int packet_len
     g_debug("Type: %c", type);
 
     /* 3 bytes, big-endian */
-    unsigned int bodyLength = 0;
-    bodyLength |= (packet_data[offset++] << 16);
-    bodyLength |= (packet_data[offset++] << 8);
-    bodyLength |= (packet_data[offset++] << 0);
+    unsigned int bodyLength;
+    bodyLength = read_uint24_be(packet_data+offset);
+    offset += 3;
     g_debug("BodyLength: %d", bodyLength);
 
     /* Timestamp - 4 bytes, crazy order */
-    unsigned int timestamp = 0;
-    timestamp |= (packet_data[offset++] << 16);
-    timestamp |= (packet_data[offset++] << 8);
-    timestamp |= (packet_data[offset++] << 0);
+    unsigned int timestamp;
+    timestamp = read_uint24_be(packet_data+offset);
+    offset += 3;
     timestamp |= (packet_data[offset++] << 24);
     g_debug("Timestamp: %u  (%#.8x)", timestamp, timestamp);
 
@@ -316,10 +314,8 @@ static void flv_parse_tag(const unsigned char *packet_data, const int packet_len
     offset = (packet_len - 4);
     /* A full 4-byte integer, big-endian. Read it the hard way since ints are
      * probably 8 bytes for us */
-    unsigned int prev_tag_size = 0;
-    prev_tag_size |= (packet_data[offset++] << 24);
-    prev_tag_size |= (packet_data[offset++] << 16);
-    prev_tag_size |= (packet_data[offset++] << 8);
-    prev_tag_size |= (packet_data[offset++] << 0);
+    unsigned int prev_tag_size;
+    prev_tag_size = read_uint32_be(packet_data + offset);
+    offset += 4;
     g_debug("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
 }
