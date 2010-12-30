@@ -172,6 +172,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     char type;
     unsigned char *stream_name, *packet_data;
     int data_len;
+    char *hex;
 
     decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
             &data_len);
@@ -179,12 +180,15 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
     g_debug("Stream name: %s", stream_name);
-
+    /* Hexify past length, type, streamNameLength, and streamName fields */
+    hex = hexify(msg, msg_length);
+    g_debug("Hex: %s", hex);
+    free(hex);
 
     if (data_len > 0)
     {
-        char *hex = hexify(packet_data, data_len);
-        g_debug("FLV packet data: %s", hex);
+        hex = hexify(packet_data, data_len);
+        g_debug("FLV tag data: %s", hex);
         flv_parse_tag(packet_data, data_len);
         free(hex);
     }
@@ -246,6 +250,11 @@ handle_output(GIOChannel *source, GIOCondition cond, gpointer data)
 
     /* We're written everything we had - remove this watch */
     return FALSE;
+}
+
+static void flv_parse_header()
+{
+
 }
 
 /* TODO: this is most likely a temporary function */
