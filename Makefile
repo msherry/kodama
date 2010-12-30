@@ -32,10 +32,12 @@ OBJS = cbuffer.o echo.o hybrid.o flv.o iir.o imolist.o imo_message.o \
 	interface_hardware.o interface_tcp.o interface_udp.o \
 	kodama.o protocol.o read_write.o util.o
 
-ALL: kodama
+PROG = kodama
 
-kodama: ${OBJS}
-	${LD} -o kodama ${LDFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
+ALL: ${PROG}
+
+${PROG}: ${OBJS}
+	${LD} -o ${PROG} ${LDFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
 
 -include ${OBJS:.o=.d}
 
@@ -44,7 +46,7 @@ kodama: ${OBJS}
 	${CC} ${CFLAGS} -MM $< > $*.d
 
 clean:
-	rm -f *.o *.s *.i *.out *.d *flymake* kodama
+	rm -f *.o *.s *.i *.out *.d *flymake* ${PROG}
 
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
