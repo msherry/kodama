@@ -23,7 +23,7 @@ char *hexify(const unsigned char *buf, const int data_len)
     return ret;
 }
 
-unsigned int read_uint24_be(uint8_t *buf)
+unsigned int read_uint24_be(const unsigned char *buf)
 {
     unsigned int ret;
     ret = (buf[0] << 16) | (buf[1] << 8) | (buf[2]);
@@ -31,7 +31,7 @@ unsigned int read_uint24_be(uint8_t *buf)
     return ret;
 }
 
-unsigned int read_uint32_be(uint8_t *buf)
+unsigned int read_uint32_be(const unsigned char *buf)
 {
     unsigned int ret;
     ret = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | (buf[3]);
