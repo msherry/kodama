@@ -3,7 +3,7 @@
 #include "flv.h"
 #include "util.h"
 
-static void parse_flv_body(const unsigned char *buf, int len);
+static int parse_flv_body(const unsigned char *buf, int len);
 static int get_sample_rate(const unsigned char formatbyte);
 
 void flv_parse_header(void)
@@ -12,7 +12,7 @@ void flv_parse_header(void)
 }
 
 /* Parses an FLV tag (not the stream header) */
-void flv_parse_tag(const unsigned char *packet_data, const int packet_len)
+int flv_parse_tag(const unsigned char *packet_data, const int packet_len)
 {
     /* For details of this format, see:
        http://osflash.org/flv
@@ -68,7 +68,15 @@ void flv_parse_tag(const unsigned char *packet_data, const int packet_len)
     /* Figure out what we can from the body */
     if (type == 'A')
     {
-        parse_flv_body(packet_data+offset, packet_len - 4 - offset);
+        int ret = parse_flv_body(packet_data+offset, packet_len - 4 - offset);
+        if (ret)
+        {
+            /* Something went wrong - we shouldn't attempt to process this
+             * tag. (Somecould could be maliciously sending us a bad codec id,
+             * for example). Send the data back to wowza untouched and let
+             * someone else deal with it */
+            return ret;
+        }
     }
     else if (type == 'V')
     {
@@ -82,9 +90,11 @@ void flv_parse_tag(const unsigned char *packet_data, const int packet_len)
     prev_tag_size = read_uint32_be(packet_data + offset);
     offset += 4;
     g_debug("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
+
+    return 0;
 }
 
-static void parse_flv_body(const unsigned char *buf, int len)
+static int parse_flv_body(const unsigned char *buf, int len)
 {
     /* First byte should be the format byte */
     unsigned char formatByte = buf[0];
@@ -122,14 +132,25 @@ static void parse_flv_body(const unsigned char *buf, int len)
         break;
     default:
         codec_name = "UNKNOWN";
+        codecid = -1;
         break;
     }
     g_debug("Format byte & FLV_AUDIO_CODECID_MASK (codec id): %#.2x", codecid);
     g_debug("Codec: %s", codec_name);
 
+    if (codecid == -1)
+    {
+        return -1;
+    }
+
     /* Audio sample rate */
     int sampleRate = get_sample_rate(formatByte);
     g_debug("Sample rate: %d", sampleRate);
+
+    if (sampleRate == -1)
+    {
+        return -1;
+    }
 
     /* Number of audio channels */
     int channels = (formatByte & FLV_AUDIO_CHANNEL_MASK) == FLV_STEREO ? 2 : 1;
@@ -138,6 +159,8 @@ static void parse_flv_body(const unsigned char *buf, int len)
     /* Bits per coded sample */
     int sampleSize = (formatByte & FLV_AUDIO_SAMPLESIZE_MASK) ? 16 : 8;
     g_debug("Bits per sample: %d", sampleSize);
+
+    return 0;
 }
 
 static int get_sample_rate(const unsigned char formatByte)

@@ -180,7 +180,6 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
     g_debug("Stream name: %s", stream_name);
-    /* Hexify past length, type, streamNameLength, and streamName fields */
     hex = hexify(msg, msg_length);
     g_debug("Hex: %s", hex);
     free(hex);
@@ -189,7 +188,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     {
         hex = hexify(packet_data, data_len);
         g_debug("FLV tag data: %s", hex);
-        flv_parse_tag(packet_data, data_len);
+        int ret = flv_parse_tag(packet_data, data_len);
         free(hex);
     }
 
