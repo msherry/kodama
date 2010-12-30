@@ -74,11 +74,9 @@ static int extract_messages(fd_buffer *fd_buf)
         */
 
         /* First int (4 bytes only) in the buffer at this offset should be a
-         * message length */
+         * (big-endian) message length */
         int32_t msg_length;
-
-        memcpy(&msg_length, buf+offset, 4);
-        msg_length = ntohl(msg_length);
+        msg_length = ntohl(*((int32_t *)(buf+offset)));
 
         /* We know the size of the next message - do we have that many bytes? */
         if (buf_len >= msg_length + offset)
