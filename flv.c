@@ -135,7 +135,6 @@ static int parse_flv_body(const unsigned char *buf, int len)
         codecid = -1;
         break;
     }
-    g_debug("Format byte & FLV_AUDIO_CODECID_MASK (codec id): %#.2x", codecid);
     g_debug("Codec: %s", codec_name);
 
     if (codecid == -1)
