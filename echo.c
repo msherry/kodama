@@ -297,7 +297,7 @@ void hp_fir_destroy(hp_fir *hp)
 float update_fir(hp_fir * restrict hp, float in)
 {
     /* Shift the samples down to make room for the new one */
-    memmove(hp->z+1, hp->z, HP_FIR_SIZE*sizeof(float));
+    memmove(hp->z+1, hp->z, (HP_FIR_SIZE-1)*sizeof(float));
 
     hp->z[0] = in;
 
