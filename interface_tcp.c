@@ -196,7 +196,9 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
 
 
     /* TODO: TEMPORARY. We're just going to send the packets right back to where
-     * they came from, for now. */
+     * they came from, for now. In the future, we can do this if there was an
+     * error processing anything - it may cause someone else like wowza to
+     * crash, but we can try to avoid crashing ourselves, at least*/
     send_imo_message(msg, msg_length);
 
     free(stream_name);
