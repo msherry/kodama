@@ -14,8 +14,8 @@ AVOutputFormat *flv_ofmt;
 
 struct AVCodec *codec_nellymoser_decode;
 struct AVCodec *codec_mp3_encode;
-struct AVCodec *codec_flv1_encode;
 struct AVCodec *codec_flv1_decode;
+struct AVCodec *codec_flv1_encode;
 struct AVCodec *codec_pcm_s16le_decode;
 struct AVCodec *codec_pcm_s16le_encode;
 
