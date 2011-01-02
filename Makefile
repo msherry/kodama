@@ -8,10 +8,11 @@ LD = gcc
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers
 OPTFLAGS = #-O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
 
-CFLAGS = -g ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -DDEBUG=1 -std=gnu99 -save-temps
+CFLAGS = -g ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 -save-temps \
+	-DDEBUG=1 -D_FILE_OFFSET_BITS=64
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
-LIBRARIES = -lportaudio -lm
+LIBRARIES = -lportaudio -lm -lavcodec -lavformat -lavutil
 
 OS := $(shell uname)
 ifeq ($(OS), Linux)
@@ -28,7 +29,7 @@ else
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0
 endif
 
-OBJS = cbuffer.o echo.o hybrid.o flv.o iir.o imolist.o imo_message.o \
+OBJS = av.o cbuffer.o echo.o hybrid.o flv.o iir.o imolist.o imo_message.o \
 	interface_hardware.o interface_tcp.o interface_udp.o \
 	kodama.o protocol.o read_write.o util.o
 

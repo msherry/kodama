@@ -8,6 +8,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "av.h"
 #include "hybrid.h"
 #include "interface_hardware.h"
 #include "interface_tcp.h"
@@ -268,6 +269,7 @@ int main(int argc, char *argv[])
     init_hybrids();
     init_log_handlers();
     init_sig_handlers();
+    init_av();
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)
