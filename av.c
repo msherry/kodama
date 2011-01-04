@@ -44,7 +44,7 @@ void prep_codecs_and_formats(void)
 AVInputFormat *find_input_format(char *name)
 {
     AVInputFormat *ifmt = NULL, *ret = NULL;
-    while ((ifmt=av_iformat_next(ifmt))!=NULL)
+    while ((ifmt = av_iformat_next(ifmt)) != NULL)
     {
         if (!strcmp(ifmt->name, name))
         {
@@ -58,7 +58,7 @@ AVInputFormat *find_input_format(char *name)
 AVOutputFormat *find_output_format(char *name)
 {
     AVOutputFormat *ofmt = NULL, *ret = NULL;
-    while ((ofmt=av_oformat_next(ofmt))!=NULL)
+    while ((ofmt = av_oformat_next(ofmt)) != NULL)
     {
         if (!strcmp(ofmt->name, name))
         {
@@ -68,12 +68,13 @@ AVOutputFormat *find_output_format(char *name)
     }
     return ret;
 }
+
 AVCodec *find_codec(enum CodecID id, char isdecode)
 {
     /* Courtesy of Patrick */
 
     AVCodec *codec = NULL;
-    while ((codec = av_codec_next(codec))!=NULL)
+    while ((codec = av_codec_next(codec)) != NULL)
     {
         if (codec->id == id)
         {
