@@ -162,20 +162,23 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     char *stream_name;
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
+    /* TODO: who is responsible for freeing msg? */
     if (sb)
     {
         char *samples_text = samples_to_text(sb->s, sb->count);
         g_debug("Audio samples: %s", samples_text);
         free(samples_text);
+        sample_block_destroy(sb);
     }
-
-    sample_block_destroy(sb);
-    /* TODO: TEMPORARY. We're just going to send the packets right back to where
-     * they came from, for now. In the future, we can do this if there was an
-     * error processing anything - it may cause someone else like wowza to
-     * crash, but we can try to avoid crashing ourselves, at least */
-    send_imo_message(msg, msg_length);
-
+    else
+    {
+        /* If we didn't get any samples out of the imo message, for whatever
+         * reason, send the message untouched back to wowza. The message could
+         * have been a sample-less header, a close packet, or corrupt
+         * somehow. If it's corrupt, let wowza deal with it - we don't want it
+         * to crash us */
+        send_imo_message(msg, msg_length);
+    }
 
     free(stream_name);
 }
