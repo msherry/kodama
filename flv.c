@@ -1,3 +1,5 @@
+// http://cekirdek.uludag.org.tr/~ismail/ffmpeg-docs/libavcodec_2utils_8c.html
+
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 #include <glib.h>

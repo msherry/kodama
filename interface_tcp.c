@@ -184,9 +184,9 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     g_debug("Type: %c", type);
     /* Stream name is convName:[01] */
     g_debug("Stream name: %s", stream_name);
-    hex = hexify(msg, msg_length);
-    g_debug("Hex: %s", hex);
-    free(hex);
+    /* hex = hexify(msg, msg_length); */
+    /* g_debug("Hex: %s", hex); */
+    /* free(hex); */
 
     if (data_len > 0)
     {
