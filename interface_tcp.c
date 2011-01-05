@@ -151,6 +151,8 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
+/* TODO: if we decide to thread this, this function is a good candidate to be
+ * run in multiple threads */
 static void handle_imo_message(const unsigned char *msg, int msg_length)
 {
     g_debug("Got an imo packet");
