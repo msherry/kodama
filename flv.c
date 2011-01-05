@@ -187,7 +187,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 &frame_size, &avpkt);
 
         g_debug("Bytes decoded: %d", bytesDecoded);
-        g_debug("Samples decoded: %u", frame_size / sizeof(SAMPLE));
+        g_debug("Samples decoded: %lu", frame_size / sizeof(SAMPLE));
 
         if (bytesDecoded >= 0)
         {
