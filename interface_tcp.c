@@ -9,6 +9,7 @@
 #include "interface_tcp.h"
 #include "protocol.h"
 #include "read_write.h"
+#include "util.h"
 
 static char *g_host;
 static int g_port;
@@ -161,7 +162,12 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     char *stream_name;
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
-
+    if (sb)
+    {
+        char *samples_text = samples_to_text(sb->s, sb->count);
+        g_debug("Audio samples: %s", samples_text);
+        free(samples_text);
+    }
 
     sample_block_destroy(sb);
     /* TODO: TEMPORARY. We're just going to send the packets right back to where

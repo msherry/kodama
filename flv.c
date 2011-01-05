@@ -61,6 +61,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
     unsigned char type_code, type;
     int offset = 0;
+    int ret;
 
     g_debug("Packet length: %d", packet_len);
 
@@ -111,13 +112,13 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     {
         unsigned char formatByte = *(packet_data+offset);
         int codecid, sampleRate, channels, sampleSize, flags_size;
-        int ret = decode_format_byte(formatByte, &codecid, &sampleRate,
+        ret = decode_format_byte(formatByte, &codecid, &sampleRate,
                 &channels, &sampleSize, &flags_size);
         if (ret)
         {
             /* Something went wrong - we shouldn't attempt to process this
-             * tag. (Somecould could be maliciously sending us a bad codec id,
-             * for example). Send the data back to wowza untouched and let
+             * tag. (Someone could could be maliciously sending us a bad codec
+             * id, for example). Send the data back to wowza untouched and let
              * someone else deal with it */
             return ret;
         }
@@ -193,12 +194,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
         if (bytesDecoded > 0)
         {
-            char *samples_text = samples_to_text(sample_array, *numSamples);
-            g_debug("Audio samples: %s", samples_text);
-            free(samples_text);
-
             *samples = malloc(*numSamples * sizeof(SAMPLE));
             memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
+            ret = 0;
         }
     }
     else if (type == 'V')
@@ -214,7 +212,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     offset += 4;
     g_debug("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
 
-    return 0;
+    return ret;
 }
 
 static int decode_format_byte(const unsigned char formatByte, int *codecid,

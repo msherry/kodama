@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "kodama.h"
 #include "util.h"
 
 char *hexify(const unsigned char *buf, const int data_len)
@@ -45,7 +46,7 @@ char *hexify_16(const short *buf, const int num_shorts)
 
 /* This just assumes that samples are 16 bits - we seem unlikely to change
  * this */
-char *samples_to_text(const short *samples, const int num_samples)
+char *samples_to_text(const SAMPLE *samples, const int num_samples)
 {
     char *ret;
     gchar **sample_strings = malloc((num_samples+1) * sizeof(gchar *));
