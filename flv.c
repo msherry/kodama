@@ -192,7 +192,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         if (bytesDecoded >= 0)
         {
             char *samples_text = samples_to_text(samples, frame_size/sizeof(SAMPLE));
-            g_debug("Audio hex: %s", samples_text);
+            g_debug("Audio samples: %s", samples_text);
             free(samples_text);
         }
     }
