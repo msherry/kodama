@@ -41,8 +41,9 @@ void flv_parse_header(void)
 }
 
 /* Parses an FLV tag (not the stream header) */
+/* Caller must free samples */
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
-        const char *stream_name)
+    const char *stream_name, SAMPLE **samples, int *numSamples)
 {
     /* For details of this format, see:
        http://osflash.org/flv
@@ -160,7 +161,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         avpkt.dts = timestamp;
         avpkt.stream_index = 1;
 
-        SAMPLE samples[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+        SAMPLE sample_array[AVCODEC_MAX_AUDIO_FRAME_SIZE];
         int frame_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
 
         /*
@@ -183,17 +184,21 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
           and on others it will work but it will have an impact on performance.
         */
 
-        int bytesDecoded = avcodec_decode_audio3(flv->codec_ctx, samples,
+        int bytesDecoded = avcodec_decode_audio3(flv->codec_ctx, sample_array,
                 &frame_size, &avpkt);
 
+        *numSamples = frame_size / sizeof(SAMPLE);
         g_debug("Bytes decoded: %d", bytesDecoded);
-        g_debug("Samples decoded: %lu", frame_size / sizeof(SAMPLE));
+        g_debug("Samples decoded: %d", *numSamples);
 
-        if (bytesDecoded >= 0)
+        if (bytesDecoded > 0)
         {
-            char *samples_text = samples_to_text(samples, frame_size/sizeof(SAMPLE));
+            char *samples_text = samples_to_text(sample_array, *numSamples);
             g_debug("Audio samples: %s", samples_text);
             free(samples_text);
+
+            *samples = malloc(*numSamples * sizeof(SAMPLE));
+            memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
         }
     }
     else if (type == 'V')

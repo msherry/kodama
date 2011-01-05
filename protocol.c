@@ -66,7 +66,8 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 /* PROTOCOL 2 - TCP (WOWZA) */
 /* Caller must free stream_name as well as the returned SAMPLE_BLOCK */
-SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length, char **stream_name)
+SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
+        char **stream_name)
 {
     char type;
     unsigned char *packet_data;
@@ -85,17 +86,29 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length, c
     /* g_debug("Hex: %s", hex); */
     /* free(hex); */
 
+    SAMPLE *samples = NULL;
+    SAMPLE_BLOCK *sb = NULL;
+    int numSamples;
     if (data_len > 0)
     {
         hex = hexify(packet_data, data_len);
         g_debug("FLV tag data: %s", hex);
-        int ret = flv_parse_tag(packet_data, data_len, *stream_name);
+        int ret = flv_parse_tag(packet_data, data_len, *stream_name, &samples,
+                &numSamples);
         free(hex);
+
+        if (ret == 0)
+        {
+            /* TODO: we're doing a lot of memcpy's here */
+            /* samples will contain audio samples - create a SAMPLE_BLOCK to
+             * hold them and return to the caller */
+            sb = sample_block_create(numSamples);
+            memcpy(sb->s, samples, numSamples * sizeof(SAMPLE));
+        }
     }
 
     g_debug("\n\n");
 
-    /* TODO: */
     free(packet_data);
-    return NULL;
+    return sb;
 }

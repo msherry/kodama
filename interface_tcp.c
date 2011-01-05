@@ -152,13 +152,15 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
 
 /* TODO: if we decide to thread this, this function is a good candidate to be
- * run in multiple threads */
+ * run in multiple threads. Since it will probably deal at a conversation level,
+ * perhaps it should be moved to a conversation-specific file */
 static void handle_imo_message(const unsigned char *msg, int msg_length)
 {
     g_debug("Got an imo packet");
 
     char *stream_name;
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
+
 
 
     sample_block_destroy(sb);
