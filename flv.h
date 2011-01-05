@@ -81,8 +81,9 @@ typedef struct FLVStream {
     struct AVCodecContext *codec_ctx;
 } FLVStream;
 
+void flv_init(void);
 void flv_parse_header(void);
-int flv_parse_tag(const unsigned char *packet_data,
-        const int packet_len);
+int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
+        const char *stream_name);
 
 #endif

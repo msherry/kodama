@@ -170,7 +170,8 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     g_debug("Got an imo packet");
 
     char type;
-    unsigned char *stream_name, *packet_data;
+    char *stream_name;
+    unsigned char *packet_data;
     int data_len;
     char *hex;
 
@@ -179,6 +180,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
 
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
+    /* Stream name is convName:[01] */
     g_debug("Stream name: %s", stream_name);
     hex = hexify(msg, msg_length);
     g_debug("Hex: %s", hex);
@@ -188,7 +190,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     {
         hex = hexify(packet_data, data_len);
         g_debug("FLV tag data: %s", hex);
-        int ret = flv_parse_tag(packet_data, data_len);
+        int ret = flv_parse_tag(packet_data, data_len, stream_name);
         free(hex);
     }
 

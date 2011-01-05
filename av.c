@@ -23,6 +23,7 @@ void init_av(void)
 {
     av_register_all();
     prep_codecs_and_formats();
+    flv_init();
 }
 
 void prep_codecs_and_formats(void)

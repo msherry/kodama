@@ -6,7 +6,7 @@
 #include "hybrid.h"
 
 /* Globals */
-GHashTable *id_to_hybrid;
+static GHashTable *id_to_hybrid;
 
 /* Static prototypes */
 static hybrid *hybrid_new(void);
@@ -24,7 +24,7 @@ hybrid *get_hybrid(char *hid)
     if (!h)
     {
         h = hybrid_new();
-        g_hash_table_insert(id_to_hybrid, (gpointer)hid, h);
+        g_hash_table_insert(id_to_hybrid, g_strdup(hid), h);
     }
     return h;
 }
