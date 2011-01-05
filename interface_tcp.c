@@ -123,7 +123,6 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
             g_debug("Remote end closed connection");
         }
         /* TODO: clean up any user data */
-        /* TODO: attempt to reconnect periodically */
 
         g_io_channel_shutdown(source, FALSE, NULL);
         g_io_channel_unref(source);
@@ -151,15 +150,16 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
+
+
 /* TODO: if we decide to thread this, this function is a good candidate to be
  * run in multiple threads */
 static void handle_imo_message(const unsigned char *msg, int msg_length)
 {
     g_debug("Got an imo packet");
 
-
-    SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length);
-
+    char *stream_name;
+    SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
 
     sample_block_destroy(sb);
@@ -169,6 +169,8 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
      * crash, but we can try to avoid crashing ourselves, at least*/
     send_imo_message(msg, msg_length);
 
+
+    free(stream_name);
 }
 
 static void send_imo_message(const unsigned char *msg, int msg_len)

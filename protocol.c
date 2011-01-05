@@ -65,22 +65,22 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 
 /* PROTOCOL 2 - TCP (WOWZA) */
-SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length)
+/* Caller must free stream_name as well as the returned SAMPLE_BLOCK */
+SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length, char **stream_name)
 {
     char type;
-    char *stream_name;
     unsigned char *packet_data;
     int data_len;
 
     char *hex;
 
-    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
+    decode_imo_message(msg, msg_length, &type, stream_name, &packet_data,
             &data_len);
 
     g_debug("Size: %d", msg_length);
     g_debug("Type: %c", type);
     /* Stream name is convName:[01] */
-    g_debug("Stream name: %s", stream_name);
+    g_debug("Stream name: %s", *stream_name);
     /* hex = hexify(msg, msg_length); */
     /* g_debug("Hex: %s", hex); */
     /* free(hex); */
@@ -89,12 +89,13 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length)
     {
         hex = hexify(packet_data, data_len);
         g_debug("FLV tag data: %s", hex);
-        int ret = flv_parse_tag(packet_data, data_len, stream_name);
+        int ret = flv_parse_tag(packet_data, data_len, *stream_name);
         free(hex);
     }
 
     g_debug("\n\n");
 
     /* TODO: */
+    free(packet_data);
     return NULL;
 }
