@@ -3,7 +3,12 @@
 #include <string.h>
 
 #include "cbuffer.h"
+#include "flv.h"
+#include "imo_message.h"
 #include "protocol.h"
+#include "util.h"
+
+/* PROTOCOL 1 - UDP */
 
 /* Convert a buffer of bytes (gchars) from the network into a SAMPLE_BLOCK,
  * according to the proto in the message. Caller must free SAMPLE_BLOCK */
@@ -58,3 +63,38 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
     return buf;
 }
 
+
+/* PROTOCOL 2 - TCP (WOWZA) */
+SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length)
+{
+    char type;
+    char *stream_name;
+    unsigned char *packet_data;
+    int data_len;
+
+    char *hex;
+
+    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
+            &data_len);
+
+    g_debug("Size: %d", msg_length);
+    g_debug("Type: %c", type);
+    /* Stream name is convName:[01] */
+    g_debug("Stream name: %s", stream_name);
+    /* hex = hexify(msg, msg_length); */
+    /* g_debug("Hex: %s", hex); */
+    /* free(hex); */
+
+    if (data_len > 0)
+    {
+        hex = hexify(packet_data, data_len);
+        g_debug("FLV tag data: %s", hex);
+        int ret = flv_parse_tag(packet_data, data_len, stream_name);
+        free(hex);
+    }
+
+    g_debug("\n\n");
+
+    /* TODO: */
+    return NULL;
+}

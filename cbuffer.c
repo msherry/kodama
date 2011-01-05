@@ -148,6 +148,10 @@ SAMPLE_BLOCK *sample_block_create(size_t count)
 
 void sample_block_destroy(SAMPLE_BLOCK *sb)
 {
+    if (!sb)
+    {
+        return;
+    }
     free(sb->s);
     free(sb);
 }

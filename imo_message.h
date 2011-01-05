@@ -2,7 +2,7 @@
 #define _IMO_MESSAGE_H_
 
 void decode_imo_message(const unsigned char *msg, const int length, char *type,
-        unsigned char **stream_name, unsigned char **packet_data, int *data_len);
+        char **stream_name, unsigned char **packet_data, int *data_len);
 
 
 #endif

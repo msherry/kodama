@@ -6,13 +6,10 @@
 #include <string.h>
 
 #include "cbuffer.h"
-#include "imo_message.h"
-#include "flv.h"
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
 #include "read_write.h"
-#include "util.h"
 
 static char *g_host;
 static int g_port;
@@ -156,57 +153,20 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
 static void handle_imo_message(const unsigned char *msg, int msg_length)
 {
-    /* Header format:
-       Message length (including header)      - 4 bytes
-       Type                                   - 1 byte
-       Stream name length                     - 1 byte
-       Stream name                            - variable length
-    */
-
-    /* TODO: we're going to need a conversation id of sorts, since both streams
-     * of a conversation need to go to the same hybrid. The hybrid can then be
-     * named with this conv_id */
-
     g_debug("Got an imo packet");
 
-    char type;
-    char *stream_name;
-    unsigned char *packet_data;
-    int data_len;
-    char *hex;
 
-    /* TODO: another message_to_samples call here? */
-
-    decode_imo_message(msg, msg_length, &type, &stream_name, &packet_data,
-            &data_len);
-
-    g_debug("Size: %d", msg_length);
-    g_debug("Type: %c", type);
-    /* Stream name is convName:[01] */
-    g_debug("Stream name: %s", stream_name);
-    /* hex = hexify(msg, msg_length); */
-    /* g_debug("Hex: %s", hex); */
-    /* free(hex); */
-
-    if (data_len > 0)
-    {
-        hex = hexify(packet_data, data_len);
-        g_debug("FLV tag data: %s", hex);
-        int ret = flv_parse_tag(packet_data, data_len, stream_name);
-        free(hex);
-    }
-
-    g_debug("\n\n");
+    SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length);
 
 
+
+    sample_block_destroy(sb);
     /* TODO: TEMPORARY. We're just going to send the packets right back to where
      * they came from, for now. In the future, we can do this if there was an
      * error processing anything - it may cause someone else like wowza to
      * crash, but we can try to avoid crashing ourselves, at least*/
     send_imo_message(msg, msg_length);
 
-    free(stream_name);
-    free(packet_data);
 }
 
 static void send_imo_message(const unsigned char *msg, int msg_len)

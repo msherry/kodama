@@ -289,6 +289,10 @@ static hp_fir *hp_fir_create(void)
 
 void hp_fir_destroy(hp_fir *hp)
 {
+    if (!hp)
+    {
+        return;
+    }
     free(hp->z);
     free(hp);
 }
