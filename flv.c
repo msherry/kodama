@@ -188,12 +188,13 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         int bytesDecoded = avcodec_decode_audio3(flv->codec_ctx, sample_array,
                 &frame_size, &avpkt);
 
-        *numSamples = frame_size / sizeof(SAMPLE);
         g_debug("Bytes decoded: %d", bytesDecoded);
-        g_debug("Samples decoded: %d", *numSamples);
 
         if (bytesDecoded > 0)
         {
+            *numSamples = frame_size / sizeof(SAMPLE);
+            g_debug("Samples decoded: %d", *numSamples);
+
             *samples = malloc(*numSamples * sizeof(SAMPLE));
             memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
             ret = 0;

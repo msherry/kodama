@@ -88,7 +88,7 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
 
     SAMPLE *samples = NULL;
     SAMPLE_BLOCK *sb = NULL;
-    int numSamples;
+    int numSamples = 0;
     if (data_len > 0)
     {
         hex = hexify(packet_data, data_len);
@@ -97,7 +97,7 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
                 &numSamples);
         free(hex);
 
-        if (ret == 0)
+        if (numSamples)
         {
             /* TODO: we're doing a lot of memcpy's here */
             /* samples will contain audio samples - create a SAMPLE_BLOCK to
