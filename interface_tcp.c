@@ -7,7 +7,6 @@
 
 #include "cbuffer.h"
 #include "interface_tcp.h"
-#include "kodama.h"
 #include "protocol.h"
 #include "read_write.h"
 
@@ -166,7 +165,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     /* TODO: TEMPORARY. We're just going to send the packets right back to where
      * they came from, for now. In the future, we can do this if there was an
      * error processing anything - it may cause someone else like wowza to
-     * crash, but we can try to avoid crashing ourselves, at least*/
+     * crash, but we can try to avoid crashing ourselves, at least */
     send_imo_message(msg, msg_length);
 
 
@@ -193,7 +192,7 @@ static void send_imo_message(const unsigned char *msg, int msg_len)
     queue_message(wowza_fd, msg, msg_len);
 
     /* Add a watch on the channel so we write data once the channel is
-     * writable*/
+     * writable */
     if (!g_io_add_watch(wowza_channel, G_IO_OUT, handle_output, NULL))
     {
         g_warning("(%s:%d) Cannot add watch on GIOChannel for write",
