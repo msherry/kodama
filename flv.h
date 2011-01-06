@@ -80,7 +80,7 @@ enum {
 
 
 typedef struct FLVStream {
-    struct AVCodecContext *codec_ctx;
+    struct AVCodecContext *d_codec_ctx;
 } FLVStream;
 
 

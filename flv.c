@@ -28,9 +28,9 @@ static FLVStream *create_flv_stream(void)
     FLVStream *flv = malloc(sizeof(FLVStream));
 
     /* libavcodec context */
-    flv->codec_ctx = avcodec_alloc_context();
-    flv->codec_ctx->codec_type = CODEC_TYPE_AUDIO;
-    flv->codec_ctx->codec_id = CODEC_ID_NONE;
+    flv->d_codec_ctx = avcodec_alloc_context();
+    flv->d_codec_ctx->codec_type = CODEC_TYPE_AUDIO;
+    flv->d_codec_ctx->codec_id = CODEC_ID_NONE;
 
     return flv;
 }
@@ -126,28 +126,28 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         /* TODO: track the format byte, see if it ever changes */
 
         /* Format byte was parsed successfully. Try to decode the audio data */
-        if (flv->codec_ctx->codec_id == CODEC_ID_NONE)
+        if (flv->d_codec_ctx->codec_id == CODEC_ID_NONE)
         {
             /* Finish initting codec context */
-            flv->codec_ctx->sample_rate = sampleRate;
-            flv->codec_ctx->bits_per_coded_sample = sampleSize;
-            local_flv_set_audio_codec(flv->codec_ctx, codecid);
-            flv->codec_ctx->channels = channels;
+            flv->d_codec_ctx->sample_rate = sampleRate;
+            flv->d_codec_ctx->bits_per_coded_sample = sampleSize;
+            local_flv_set_audio_codec(flv->d_codec_ctx, codecid);
+            flv->d_codec_ctx->channels = channels;
 
             /* Load the codec */
             AVCodec *codec;
-            g_debug("Loading codec id %d", flv->codec_ctx->codec_id);
-            codec = avcodec_find_decoder(flv->codec_ctx->codec_id);
+            g_debug("Loading codec id %d", flv->d_codec_ctx->codec_id);
+            codec = avcodec_find_decoder(flv->d_codec_ctx->codec_id);
             if (!codec)
             {
                 g_warning("Failed to load codec id %d",
-                        flv->codec_ctx->codec_id);
+                        flv->d_codec_ctx->codec_id);
                 return -1;
             }
-            if (avcodec_open(flv->codec_ctx, codec) < 0)
+            if (avcodec_open(flv->d_codec_ctx, codec) < 0)
             {
                 g_warning("Failed to open codec id %d",
-                        flv->codec_ctx->codec_id);
+                        flv->d_codec_ctx->codec_id);
                 return -1;
             }
         }
@@ -185,7 +185,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
           and on others it will work but it will have an impact on performance.
         */
 
-        int bytesDecoded = avcodec_decode_audio3(flv->codec_ctx, sample_array,
+        int bytesDecoded = avcodec_decode_audio3(flv->d_codec_ctx, sample_array,
                 &frame_size, &avpkt);
 
         g_debug("Bytes decoded: %d", bytesDecoded);
