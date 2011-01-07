@@ -27,10 +27,14 @@ static FLVStream *create_flv_stream(void)
 {
     FLVStream *flv = malloc(sizeof(FLVStream));
 
+    flv->d_format_byte = '\0';
+
     /* libavcodec context */
     flv->d_codec_ctx = avcodec_alloc_context();
     flv->d_codec_ctx->codec_type = CODEC_TYPE_AUDIO;
     flv->d_codec_ctx->codec_id = CODEC_ID_NONE;
+
+    flv->d_resample_ctx = NULL;
 
     return flv;
 }
@@ -123,11 +127,16 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             return ret;
         }
 
-        /* TODO: track the format byte, see if it ever changes */
-
-        /* Format byte was parsed successfully. Try to decode the audio data */
-        if (flv->d_codec_ctx->codec_id == CODEC_ID_NONE)
+        if (!flv->d_format_byte || flv->d_format_byte != formatByte)
         {
+            if (flv->d_format_byte)
+            {
+                g_debug("Format byte changed. Old: %#.2x   New: %#.2x",
+                    flv->d_format_byte, formatByte);
+            }
+
+            flv->d_format_byte = formatByte;
+
             /* Finish initting codec context */
             flv->d_codec_ctx->sample_rate = sampleRate;
             flv->d_codec_ctx->bits_per_coded_sample = sampleSize;

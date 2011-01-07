@@ -80,9 +80,11 @@ enum {
 
 
 typedef struct FLVStream {
+    /* Decode */
+    unsigned char d_format_byte;
     struct AVCodecContext *d_codec_ctx;
+    struct ReSampleContext *d_resample_ctx; // NULL if not needed
 } FLVStream;
-
 
 void flv_init(void);
 void flv_parse_header(void);
