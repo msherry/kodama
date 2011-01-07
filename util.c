@@ -46,15 +46,17 @@ char *hexify_16(const short *buf, const int num_shorts)
 
 /* This just assumes that samples are 16 bits - we seem unlikely to change
  * this */
+/* Returns a string of the format "(num samples) s1 s2 ... */
 char *samples_to_text(const SAMPLE *samples, const int num_samples)
 {
     char *ret;
-    gchar **sample_strings = malloc((num_samples+1) * sizeof(gchar *));
+    gchar **sample_strings = malloc((num_samples+2) * sizeof(gchar *));
 
+    sample_strings[0] = g_strdup_printf("(%d)", num_samples);
     sample_strings[num_samples] = 0;
 
     int i;
-    for(i = 0; i < num_samples; i++)
+    for(i = 1; i < num_samples; i++)
     {
         sample_strings[i] = g_strdup_printf("%d", samples[i]);
     }
