@@ -8,7 +8,7 @@ LD = gcc
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers
 OPTFLAGS = #-O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
 
-CFLAGS = -g ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \ #-save-temps
+CFLAGS = -g ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = -L${PORTAUDIODIR}/lib/.libs
