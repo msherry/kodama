@@ -145,6 +145,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
             /* Load the codec */
             AVCodec *codec;
+
+            /* TODO: if our format byte has changed, we have an old codec (and
+             * possible resample context) lying around. Free everything that we
+             * reallocate */
             g_debug("Loading codec id %d", flv->d_codec_ctx->codec_id);
             codec = avcodec_find_decoder(flv->d_codec_ctx->codec_id);
             if (!codec)
@@ -158,6 +162,20 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 g_warning("Failed to open codec id %d",
                         flv->d_codec_ctx->codec_id);
                 return -1;
+            }
+
+            /* Determine if we need to resample */
+            if (sampleRate != SAMPLE_RATE)
+            {
+                flv->d_resample_ctx = av_audio_resample_init(1, channels,
+                        SAMPLE_RATE, sampleRate, SAMPLE_FMT_S16, SAMPLE_FMT_S16,
+                    16, //TODO: How many taps do we need?
+                    10, 0, .8); /* TODO: fix these */
+            }
+            else
+            {
+                /* TODO: free old one, if it existed */
+                flv->d_resample_ctx = NULL;
             }
         }
 
@@ -204,8 +222,27 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             *numSamples = frame_size / sizeof(SAMPLE);
             g_debug("Samples decoded: %d", *numSamples);
 
-            *samples = malloc(*numSamples * sizeof(SAMPLE));
-            memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
+            if (flv->d_resample_ctx)
+            {
+                /* Need to resample */
+                g_debug("Resampling from %d to %d Hz", sampleRate, SAMPLE_RATE);
+
+                /* TODO: this doesn't need to be this large */
+                SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+                int newrate_num_samples;
+
+                newrate_num_samples = audio_resample(flv->d_resample_ctx,
+                    resampled, sample_array, *numSamples);
+
+                *numSamples = newrate_num_samples;
+                *samples = malloc(newrate_num_samples * sizeof(SAMPLE));
+                memcpy(*samples, resampled, newrate_num_samples*sizeof(SAMPLE));
+            }
+            else
+            {
+                *samples = malloc(*numSamples * sizeof(SAMPLE));
+                memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
+            }
             ret = 0;
         }
     }
