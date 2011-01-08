@@ -6,7 +6,6 @@
 #include "flv.h"
 #include "imo_message.h"
 #include "protocol.h"
-#include "util.h"
 
 /* PROTOCOL 1 - UDP */
 
@@ -73,8 +72,6 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
     unsigned char *packet_data;
     int data_len;
 
-    char *hex;
-
     /* TODO: if there are any problems decoding/encoding, just reflect the
      * original message back(?) */
 
@@ -85,16 +82,10 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
     g_debug("Type: %c", type);
     /* Stream name is convName:[01] */
     g_debug("Stream name: %s", *stream_name);
-    /* hex = hexify(msg, msg_length); */
-    /* g_debug("Hex: %s", hex); */
-    /* free(hex); */
 
     SAMPLE_BLOCK *sb = NULL;
     if (data_len > 0)
     {
-        hex = hexify(packet_data, data_len);
-        g_debug("FLV tag data: %s", hex);
-        free(hex);
         int ret = flv_parse_tag(packet_data, data_len, *stream_name, &sb);
     }
 
