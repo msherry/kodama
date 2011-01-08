@@ -31,7 +31,7 @@ void r(const unsigned char *msg, int msg_length)
         if (!id_to_conv)
         {
             id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
-                g_free, NULL);
+                g_free, NULL);  /* TODO: conversation_destroy */
         }
         c = conversation_new();
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
