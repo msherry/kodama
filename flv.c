@@ -90,6 +90,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         /* Unknown */
         type = 'U';
         g_debug("Unknown packet type: %c", type_code);
+        return -1;
         break;
     }
     g_debug("Type: %c", type);
