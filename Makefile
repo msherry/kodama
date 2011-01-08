@@ -29,8 +29,8 @@ else
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0
 endif
 
-OBJS = av.o cbuffer.o echo.o hybrid.o flv.o iir.o imolist.o imo_message.o \
-	interface_hardware.o interface_tcp.o interface_udp.o \
+OBJS = av.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o imolist.o \
+	imo_message.o interface_hardware.o interface_tcp.o interface_udp.o \
 	kodama.o protocol.o read_write.o util.o
 
 PROG = kodama
