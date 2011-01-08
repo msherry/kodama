@@ -313,6 +313,9 @@ int main(int argc, char *argv[])
         setup_tcp_connection(globals.server_host, globals.server_port);
     }
 
+    /* Needed for thread/mutex support */
+    g_thread_init();
+
     /* Set up a trigger function to run approximately every second */
     g_timeout_add_seconds(1, trigger, NULL);
 
