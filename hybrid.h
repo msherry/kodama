@@ -1,6 +1,8 @@
 #ifndef _HYBRID_H_
 #define _HYBRID_H_
 
+#include <stdlib.h>
+
 /*
 
          client (rx) side                            network (tx) side
