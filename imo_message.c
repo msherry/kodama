@@ -16,13 +16,6 @@
 void decode_imo_message(const unsigned char *msg, const int msg_length, char *type,
         char **stream_name, unsigned char **packet_data, int *data_len)
 {
-    /* Header format:
-       Message length (including header)      - 4 bytes
-       Type                                   - 1 byte
-       Stream name length                     - 1 byte
-       Stream name                            - variable length
-    */
-
     int offset = 4;             /* sizeof(int) on java */
     *type = msg[offset++];
 
