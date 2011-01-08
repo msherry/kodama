@@ -115,20 +115,21 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     if (type == 'A')
     {
         unsigned char formatByte = *(packet_data+offset);
-        int codecid, sampleRate, channels, sampleSize, flags_size;
-        ret = decode_format_byte(formatByte, &codecid, &sampleRate,
-                &channels, &sampleSize, &flags_size);
-        if (ret)
-        {
-            /* Something went wrong - we shouldn't attempt to process this
-             * tag. (Someone could could be maliciously sending us a bad codec
-             * id, for example). Send the data back to wowza untouched and let
-             * someone else deal with it */
-            return ret;
-        }
 
         if (!flv->d_format_byte || flv->d_format_byte != formatByte)
         {
+            int codecid, sampleRate, channels, sampleSize, flags_size;
+            ret = decode_format_byte(formatByte, &codecid, &sampleRate,
+                    &channels, &sampleSize, &flags_size);
+            if (ret)
+            {
+                /* Something went wrong - we shouldn't attempt to process this
+                 * tag. (Someone could could be maliciously sending us a bad
+                 * codec id, for example). Send the data back to wowza untouched
+                 * and let someone else deal with it */
+                return ret;
+            }
+
             if (flv->d_format_byte)
             {
                 g_debug("Format byte changed. Old: %#.2x   New: %#.2x",
@@ -136,6 +137,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             }
 
             flv->d_format_byte = formatByte;
+            flv->d_flags_size = flags_size;
 
             /* Finish initting codec context */
             flv->d_codec_ctx->sample_rate = sampleRate;
@@ -180,12 +182,11 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         }
 
         /* The codec context should be set at this point. Convert data */
-        /* TODO: handle resampling if necessary */
 
         AVPacket avpkt;
         av_init_packet(&avpkt);
-        avpkt.data = packet_data+offset+flags_size;
-        avpkt.size = bodyLength-flags_size;
+        avpkt.data = packet_data+offset+flv->d_flags_size;
+        avpkt.size = bodyLength-flv->d_flags_size;
         avpkt.dts = timestamp;
         avpkt.stream_index = 1;
 
@@ -225,7 +226,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             if (flv->d_resample_ctx)
             {
                 /* Need to resample */
-                g_debug("Resampling from %d to %d Hz", sampleRate, SAMPLE_RATE);
+                g_debug("Resampling from %d to %d Hz",
+                    flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
 
                 /* TODO: this doesn't need to be this large */
                 SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];

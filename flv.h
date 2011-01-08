@@ -82,6 +82,7 @@ enum {
 typedef struct FLVStream {
     /* Decode */
     unsigned char d_format_byte;
+    int d_flags_size;             /* contained in format byte */
     struct AVCodecContext *d_codec_ctx;
     struct ReSampleContext *d_resample_ctx; // NULL if not needed
 } FLVStream;
