@@ -223,6 +223,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         if (bytesDecoded > 0)
         {
             int numSamples;
+            /* TODO: this doesn't need to be this large */
+            SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+            SAMPLE *sample_buf = sample_array;
+
             numSamples = frame_size / sizeof(SAMPLE);
             g_debug("Samples decoded: %d", numSamples);
 
@@ -232,23 +236,18 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 g_debug("Resampling from %d to %d Hz",
                     flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
 
-                /* TODO: this doesn't need to be this large */
-                SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
                 int newrate_num_samples;
 
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
                     resampled, sample_array, numSamples);
 
                 numSamples = newrate_num_samples;
-                *sb = sample_block_create(numSamples);
-                memcpy((*sb)->s, resampled, numSamples*sizeof(SAMPLE));
+                sample_buf = resampled;
+            }
 
-            }
-            else
-            {
-                *sb = sample_block_create(numSamples);
-                memcpy((*sb)->s, sample_array, numSamples*sizeof(SAMPLE));
-            }
+            *sb = sample_block_create(numSamples);
+            memcpy((*sb)->s, resampled, numSamples*sizeof(SAMPLE));
+
             ret = 0;
         }
     }
