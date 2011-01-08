@@ -19,6 +19,8 @@ typedef struct fd_buffer {
     GSList *write_head;         /* Messages queued to send */
     GSList *write_tail;
     GArray *write_msg_size;
+
+    GMutex *mutex;              /* per-fd mutex */
 } fd_buffer;
 
 void init_read_write(void);

@@ -40,6 +40,8 @@ void register_fd(int fd)
     fd_buf->write_head = fd_buf->write_tail = NULL;
     fd_buf->write_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
 
+    fd_buf->mutex = g_mutex_new();
+
     /* TODO: make sure this fd isn't already present as a key */
 
     g_hash_table_insert(fd_to_buffer, GINT_TO_POINTER(fd), fd_buf);
@@ -305,9 +307,12 @@ int queue_message(int fd, const unsigned char *msg, int length)
     memcpy(new_msg, &length_net_order, 4); /* not sizeof(int) */
     memcpy(new_msg+4, msg+4, length-4);
 
+
     /* Queue the new message in the write list */
+    g_mutex_lock(fd_buf->mutex);
     slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), new_msg);
     g_array_append_val(fd_buf->write_msg_size, length);
+    g_mutex_unlock(fd_buf->mutex);
 
     return 0;
 }
