@@ -265,6 +265,9 @@ static gboolean trigger(gpointer data)
 
 int main(int argc, char *argv[])
 {
+    /* Needed for thread/mutex support */
+    g_thread_init(NULL);
+
     parse_command_line(argc, argv);
 
     init_hybrids();
@@ -312,9 +315,6 @@ int main(int argc, char *argv[])
          * it */
         setup_tcp_connection(globals.server_host, globals.server_port);
     }
-
-    /* Needed for thread/mutex support */
-    g_thread_init(NULL);
 
     /* Set up a trigger function to run approximately every second */
     g_timeout_add_seconds(1, trigger, NULL);
