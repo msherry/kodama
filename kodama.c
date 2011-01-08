@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
     }
 
     /* Needed for thread/mutex support */
-    g_thread_init();
+    g_thread_init(NULL);
 
     /* Set up a trigger function to run approximately every second */
     g_timeout_add_seconds(1, trigger, NULL);
