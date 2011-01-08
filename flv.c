@@ -142,6 +142,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             flv->d_flags_size = flags_size;
 
             /* Finish initting codec context */
+            // Speex seems to always use 16000, but report 11025
             flv->d_codec_ctx->sample_rate = sampleRate;
             flv->d_codec_ctx->bits_per_coded_sample = sampleSize;
             local_flv_set_audio_codec(flv->d_codec_ctx, codecid);
@@ -168,11 +169,15 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 return -1;
             }
 
-            /* Determine if we need to resample */
-            if (sampleRate != SAMPLE_RATE)
+            /* Determine if we need to resample. Base it off the codec context's
+             * sample rate, since the format byte often lies */
+            if (flv->d_codec_ctx->sample_rate != SAMPLE_RATE)
             {
+                g_debug("Creating resample context: %d -> %d",
+                        flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
                 flv->d_resample_ctx = av_audio_resample_init(1, channels,
-                        SAMPLE_RATE, sampleRate, SAMPLE_FMT_S16, SAMPLE_FMT_S16,
+                        SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
+                    SAMPLE_FMT_S16, SAMPLE_FMT_S16,
                     16, //TODO: How many taps do we need?
                     10, 0, .8); /* TODO: fix these */
             }
@@ -315,7 +320,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
 
     /* Audio sample rate */
     *sampleRate = get_sample_rate(formatByte);
-    g_debug("Sample rate: %d", *sampleRate);
+    g_debug("(Reported) sample rate: %d", *sampleRate);
 
     if (*sampleRate == -1)
     {
