@@ -67,7 +67,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
     unsigned char type_code, type;
     int offset = 0;
-    int ret;
+    int ret=-1;
 
     g_debug("Packet length: %d", packet_len);
 
@@ -176,7 +176,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 g_debug("Creating resample context: %d -> %d",
                         flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
                 flv->d_resample_ctx = av_audio_resample_init(1, channels,
-                        SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
+                    SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
                     SAMPLE_FMT_S16, SAMPLE_FMT_S16,
                     16, //TODO: How many taps do we need?
                     10, 0, .8); /* TODO: fix these */
@@ -259,6 +259,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     else if (type == 'V')
     {
         g_warning("Got video frame - I don't know how to handle those yet");
+        ret = -1;
     }
 
     offset = (packet_len - 4);
