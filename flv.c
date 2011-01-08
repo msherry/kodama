@@ -251,7 +251,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             }
 
             *sb = sample_block_create(numSamples);
-            memcpy((*sb)->s, resampled, numSamples*sizeof(SAMPLE));
+            memcpy((*sb)->s, sample_buf, numSamples*sizeof(SAMPLE));
 
             ret = 0;
         }
