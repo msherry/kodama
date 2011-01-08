@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "cbuffer.h"
+#include "conversation.h"
 #include "interface_tcp.h"
 #include "protocol.h"
 #include "read_write.h"
@@ -160,6 +161,8 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     g_debug("Got an imo packet");
 
     char *stream_name;
+    /* TODO: the first imo message is an FLV header, not an FLV tag. We keep
+     * forgetting that and expecting audio data in every imo message */
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
     /* TODO: who is responsible for freeing msg? */
@@ -169,6 +172,9 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         g_debug("Audio samples: %s", samples_text);
         free(samples_text);
         sample_block_destroy(sb);
+
+        /* Just for profiling purposes */
+        /* r(msg, msg_length); */
 
         /* TODO: this reflection is temporary - the one below is not */
         send_imo_message(msg, msg_length);

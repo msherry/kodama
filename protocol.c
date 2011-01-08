@@ -96,7 +96,6 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
         g_debug("FLV tag data: %s", hex);
         free(hex);
         int ret = flv_parse_tag(packet_data, data_len, *stream_name, &sb);
-
     }
 
     g_debug("\n\n");

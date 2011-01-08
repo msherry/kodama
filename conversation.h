@@ -6,5 +6,6 @@ typedef struct Conversation {
 
 } Conversation;
 
+void r(const unsigned char *msg, int msg_length);
 
 #endif

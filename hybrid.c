@@ -9,7 +9,6 @@
 static GHashTable *id_to_hybrid;
 
 /* Static prototypes */
-static hybrid *hybrid_new(void);
 static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side);
 
 void init_hybrids(void)
@@ -29,7 +28,7 @@ hybrid *get_hybrid(char *hid)
     return h;
 }
 
-static hybrid *hybrid_new(void)
+hybrid *hybrid_new(void)
 {
     hybrid *h = malloc(sizeof(hybrid));
 

@@ -7,13 +7,18 @@
 
 GHashTable *id_to_conv = NULL;
 
-static Conversation *conversation_new(void);
+static Conversation *conversation_create(void);
 static void conversation_process_samples(Conversation *c, int conv_side,
     SAMPLE_BLOCK *sb);
 
-static Conversation *conversation_new(void)
+static Conversation *conversation_create(void)
 {
+    Conversation *c = malloc(sizeof(Conversation));
 
+    c->h0 = hybrid_new();
+    c->h1 = hybrid_new();
+
+    return c;
 }
 
 void r(const unsigned char *msg, int msg_length)
@@ -33,10 +38,11 @@ void r(const unsigned char *msg, int msg_length)
             id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
                 g_free, NULL);  /* TODO: conversation_destroy */
         }
-        c = conversation_new();
+        c = conversation_create();
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
     }
 
+    /* TODO: check for sb == NULL */
     conversation_process_samples(c, conv_side, sb);
 
     /* sb has echo-canceled samples. Send them back under the same stream
