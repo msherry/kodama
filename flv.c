@@ -4,6 +4,7 @@
 #include <libavutil/avutil.h>
 #include <glib.h>
 
+#include "cbuffer.h"
 #include "flv.h"
 #include "kodama.h"
 #include "util.h"
@@ -429,4 +430,10 @@ static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
       acodec->codec_tag = flv_codecid >> FLV_AUDIO_CODECID_OFFSET;
       g_debug("local_flv_set_audio_codec: default");
   }
+}
+
+int flv_create_tag(unsigned char **flv_packet, int *packet_len,
+    char *stream_name, SAMPLE_BLOCK *sb)
+{
+
 }

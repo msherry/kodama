@@ -75,6 +75,9 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
 
     char *hex;
 
+    /* TODO: if there are any problems decoding/encoding, just reflect the
+     * original message back(?) */
+
     decode_imo_message(msg, msg_length, &type, stream_name, &packet_data,
             &data_len);
 
@@ -111,4 +114,12 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
 
     free(packet_data);
     return sb;
+}
+
+char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length, char *stream_name)
+{
+    unsigned char *flv_packet;
+    int flv_packet_len;
+
+    int ret = flv_create_tag(&flv_packet, &flv_packet_len, stream_name, sb);
 }
