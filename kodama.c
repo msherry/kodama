@@ -218,6 +218,7 @@ static void signal_handler(int signum)
         g_main_loop_quit(loop);
         break;
     case SIGINT:
+        g_message("Got SIGINT - shutting down");
         g_main_loop_quit(loop);
         break;
     }
