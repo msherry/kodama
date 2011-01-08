@@ -169,6 +169,9 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         g_debug("Audio samples: %s", samples_text);
         free(samples_text);
         sample_block_destroy(sb);
+
+        /* TODO: this reflection is temporary - the one below is not */
+        send_imo_message(msg, msg_length);
     }
     else
     {
