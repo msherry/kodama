@@ -46,6 +46,7 @@ void flv_parse_header(void)
 
 /* Parses an FLV tag (not the stream header) */
 /* Caller must free samples */
+/* TODO: create a SAMPLE_BLOCK, not an array of SAMPLEs. We can save a memcpy */
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     const char *stream_name, SAMPLE **samples, int *numSamples)
 {
