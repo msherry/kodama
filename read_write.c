@@ -69,7 +69,7 @@ static int extract_messages(fd_buffer *fd_buf)
     while (buf_len - offset > 4)
     {
         /* Header format:
-           Message length (including header)      - 4 bytes
+           Message length (including header)      - 4 bytes (big-endian)
            Type                                   - 1 byte
            Stream name length                     - 1 byte
            Stream name                            - variable length

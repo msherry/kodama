@@ -95,12 +95,27 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
     return sb;
 }
 
-char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length, char *stream_name)
+unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
+        char *stream_name)
 {
-    unsigned char *flv_packet;
+    unsigned char *flv_packet = NULL;
     int flv_packet_len;
+    unsigned char *msg;
+
+    *msg_length = -1;
 
     int ret = flv_create_tag(&flv_packet, &flv_packet_len, stream_name, sb);
+    if (ret < 0)
+    {
+        goto exit;
+    }
 
+    /* TODO: make sure we're always creating 'D' messages */
+    create_imo_message(&msg, msg_length, 'D', stream_name, flv_packet,
+            flv_packet_len);
+
+exit:
     free(flv_packet);
+
+    return msg;
 }

@@ -16,4 +16,5 @@ gchar *samples_to_message(struct SAMPLE_BLOCK *sb, gint *num_bytes, protocol pro
 /* Protocol 2 -TCP (Wowza) */
 SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
         char **stream_name);
-char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length, char *stream_name);
+unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
+        char *stream_name);

@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <glib.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,7 +7,7 @@
 #include "kodama.h"
 
 /* Header format:
-   Message length (including header)      - 4 bytes
+   Message length (including header)      - 4 bytes (big-endian)
    Type                                   - 1 byte
    Stream name length                     - 1 byte
    Stream name                            - variable length
@@ -14,7 +15,7 @@
 
 /* Caller must free stream_name and packet_data */
 void decode_imo_message(const unsigned char *msg, const int msg_length, char *type,
-        char **stream_name, unsigned char **packet_data, int *data_len)
+        char **stream_name, unsigned char **packet_data, int *packet_len)
 {
     int offset = 4;             /* sizeof(int) on java */
     *type = msg[offset++];
@@ -33,5 +34,30 @@ void decode_imo_message(const unsigned char *msg, const int msg_length, char *ty
     *packet_data = malloc(packet_length);
     memcpy(*packet_data, msg+offset, packet_length);
 
-    *data_len = packet_length;
+    *packet_len = packet_length;
+}
+
+/* msg must eventually be freed */
+void create_imo_message(unsigned char **msg, int *msg_length, char type,
+        char *stream_name, unsigned char *packet_data, int packet_len)
+{
+    int stream_name_len = strlen(stream_name); // Hope this fits in a byte
+    int total_len = 4 + 1 + 1 + stream_name_len + packet_len;
+    int offset;
+    uint32_t msg_len_be = htonl(total_len);
+
+    *msg = malloc(total_len);
+    memcpy(*msg, &msg_len_be, 4); /* 4 bytes exactly, not sizeof(int) */
+    offset = 4;
+
+    *(*msg+offset++) = type;
+
+    *(*msg+offset++) = stream_name_len;
+
+    memcpy(*msg+offset, stream_name, stream_name_len);
+    offset += stream_name_len;
+
+    memcpy(msg+offset, packet_data, packet_len);
+
+    *msg_length = total_len;
 }
