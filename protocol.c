@@ -110,4 +110,6 @@ char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length, char *stream_nam
     int flv_packet_len;
 
     int ret = flv_create_tag(&flv_packet, &flv_packet_len, stream_name, sb);
+
+    free(flv_packet);
 }
