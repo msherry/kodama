@@ -49,7 +49,7 @@ void flv_parse_header(void)
 /* Caller must free samples */
 /* TODO: create a SAMPLE_BLOCK, not an array of SAMPLEs. We can save a memcpy */
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
-    const char *stream_name, SAMPLE **samples, int *numSamples)
+    const char *stream_name, SAMPLE_BLOCK **sb)
 {
     /* For details of this format, see:
        http://osflash.org/flv
@@ -222,8 +222,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
         if (bytesDecoded > 0)
         {
-            *numSamples = frame_size / sizeof(SAMPLE);
-            g_debug("Samples decoded: %d", *numSamples);
+            int numSamples;
+            numSamples = frame_size / sizeof(SAMPLE);
+            g_debug("Samples decoded: %d", numSamples);
 
             if (flv->d_resample_ctx)
             {
@@ -236,16 +237,17 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 int newrate_num_samples;
 
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
-                    resampled, sample_array, *numSamples);
+                    resampled, sample_array, numSamples);
 
-                *numSamples = newrate_num_samples;
-                *samples = malloc(newrate_num_samples * sizeof(SAMPLE));
-                memcpy(*samples, resampled, newrate_num_samples*sizeof(SAMPLE));
+                numSamples = newrate_num_samples;
+                *sb = sample_block_create(numSamples);
+                memcpy((*sb)->s, resampled, numSamples*sizeof(SAMPLE));
+
             }
             else
             {
-                *samples = malloc(*numSamples * sizeof(SAMPLE));
-                memcpy(*samples, sample_array, *numSamples*sizeof(SAMPLE));
+                *sb = sample_block_create(numSamples);
+                memcpy((*sb)->s, sample_array, numSamples*sizeof(SAMPLE));
             }
             ret = 0;
         }

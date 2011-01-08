@@ -90,7 +90,7 @@ typedef struct FLVStream {
 void flv_init(void);
 void flv_parse_header(void);
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
-    const char *stream_name, SAMPLE **samples, int *numSamples);
+    const char *stream_name, SAMPLE_BLOCK **sb);
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, SAMPLE_BLOCK *sb);
 
