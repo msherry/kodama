@@ -54,11 +54,15 @@ void r(const unsigned char *msg, int msg_length)
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
 
+    unsigned char *return_msg;
+    int return_msg_length;
+    return_msg = samples_to_imo_message(sb, &return_msg_length, stream_name);
+
+    /* send_imo_message(return_msg, return_msg_length); */
+
     G_LOCK(stats);
     stats.samples_processed += sb->count;
     G_UNLOCK(stats);
-
-    /* TODO: send the echo-canceled samples back to wowza */
 
     sample_block_destroy(sb);
     g_strfreev(conv_and_num);

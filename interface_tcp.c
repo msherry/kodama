@@ -178,6 +178,10 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
 
         /* TODO: this reflection is temporary - the one below is not */
         send_imo_message(msg, msg_length);
+
+        /* Done with original message - uncomment once we stop reflecting the
+         * original here*/
+        //free(msg);
     }
     else
     {
@@ -199,8 +203,9 @@ static void send_imo_message(const unsigned char *msg, int msg_len)
         return;
     }
 
-    /* TODO: Who do we send data to? We probably only have one wowza
-     * connection, but it would be good to make this more general */
+    /* TODO: Who do we send data to? We probably only have one wowza connection,
+     * but it would be good to make this more general. We should map stream
+     * names to the wowza fd they came in on */
     if (wowza_fd == -1)
     {
         /* I guess wowza is down. */
