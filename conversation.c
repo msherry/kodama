@@ -58,6 +58,9 @@ void r(const unsigned char *msg, int msg_length)
     stats.samples_processed += sb->count;
     G_UNLOCK(stats);
 
+    /* TODO: send the echo-canceled samples back to wowza */
+
+    sample_block_destroy(sb);
     g_strfreev(conv_and_num);
 }
 
@@ -74,6 +77,4 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     /* Now that the samples have been echo-canceled, let the right-side hybrid
      * see them */
     hybrid_put_rx_samples(hr, sb);
-
-    /* TODO: send the echo-canceled samples back to wowza */
 }
