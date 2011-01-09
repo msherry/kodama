@@ -17,6 +17,9 @@
 
 GMainLoop *loop;
 globals_t globals;
+stats_t stats;
+
+G_LOCK_DEFINE(stats);
 
 /* From interface_tcp */
 extern int attempt_reconnect;
@@ -27,6 +30,8 @@ static void parse_command_line(int argc, char **argv);
 static void signal_handler(int signum);
 static void init_sig_handlers(void);
 static void init_log_handlers(void);
+static void init_stats(void);
+static void report_stats(void);
 static gboolean trigger(gpointer data);
 
 static void usage(char *arg0)
@@ -245,6 +250,28 @@ static void init_log_handlers(void)
     dup2(1, 2);
 }
 
+static void init_stats(void)
+{
+    G_LOCK(stats);
+
+    stats.samples_processed = 0;
+
+    G_UNLOCK(stats);
+}
+
+static void report_stats(void)
+{
+    g_debug("*** Stats dump ***");
+
+    G_LOCK(stats);
+
+    g_debug("Samples processed: %d", stats.samples_processed);
+
+
+    stats.samples_processed = 0;
+    G_UNLOCK(stats);
+}
+
 static gboolean trigger(gpointer data)
 {
     static unsigned int count = 0;
@@ -259,6 +286,11 @@ static gboolean trigger(gpointer data)
         tcp_connect();
     }
 
+    if ((count % 60) == 0)
+    {
+        report_stats();
+    }
+
     /* Return FALSE if this function should be removed */
     return TRUE;
 }
@@ -270,6 +302,7 @@ int main(int argc, char *argv[])
 
     parse_command_line(argc, argv);
 
+    init_stats();
     init_hybrids();
     init_log_handlers();
     init_sig_handlers();

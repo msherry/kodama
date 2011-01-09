@@ -60,4 +60,8 @@ typedef struct globals_t {
     int server_port;            // "server" command-line option
 } globals_t;
 
+typedef struct stats_t {
+    int samples_processed;
+} stats_t;
+
 #endif

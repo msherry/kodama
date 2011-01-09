@@ -174,7 +174,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         sample_block_destroy(sb);
 
         /* Just for profiling purposes */
-        /* r(msg, msg_length); */
+        r(msg, msg_length);
 
         /* TODO: this reflection is temporary - the one below is not */
         send_imo_message(msg, msg_length);

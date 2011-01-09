@@ -3,9 +3,15 @@
 #include "cbuffer.h"
 #include "conversation.h"
 #include "hybrid.h"
+#include "kodama.h"
 #include "protocol.h"
 
+
 GHashTable *id_to_conv = NULL;
+extern stats_t stats;
+
+
+G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
 static void conversation_process_samples(Conversation *c, int conv_side,
@@ -47,6 +53,10 @@ void r(const unsigned char *msg, int msg_length)
 
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
+
+    G_LOCK(stats);
+    stats.samples_processed += sb->count;
+    G_UNLOCK(stats);
 
     g_strfreev(conv_and_num);
 }
