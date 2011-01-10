@@ -12,6 +12,7 @@
 static int decode_format_byte(const unsigned char formatByte, int *codecid,
         int *sampleRate, int *channels, int *sampleSize, int *flags_size);
 static int setup_decode_context(FLVStream *flv, unsigned char formatByte);
+static int setup_encode_context(FLVStream *flv);
 static int get_sample_rate(const unsigned char formatbyte);
 static FLVStream *create_flv_stream(void);
 static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid);
@@ -127,6 +128,12 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             if (ret != 0)
             {
                 g_debug("Error setting up decode context: %d", ret);
+                return ret;
+            }
+            ret = setup_encode_context(flv);
+            if (ret != 0)
+            {
+                g_debug("Error setting up encode context: %d", ret);
                 return ret;
             }
         }
@@ -285,6 +292,12 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
         /* TODO: free old one, if it existed */
         flv->d_resample_ctx = NULL;
     }
+    return 0;
+}
+
+static int setup_encode_context(FLVStream *flv)
+{
+    return 0;
 }
 
 static int decode_format_byte(const unsigned char formatByte, int *codecid,
