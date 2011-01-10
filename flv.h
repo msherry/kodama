@@ -1,8 +1,6 @@
 #ifndef _FLV_H_
 #define _FLV_H_
 
-#include "kodama.h"
-
 /*************************CONSTANTS FROM FFMEG******************/
 /* offsets for packed values */
 #define FLV_AUDIO_SAMPLESSIZE_OFFSET 1
@@ -94,8 +92,8 @@ typedef struct FLVStream {
 void flv_init(void);
 void flv_parse_header(void);
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
-    const char *stream_name, SAMPLE_BLOCK **sb);
+    const char *stream_name, struct SAMPLE_BLOCK **sb);
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
-    char *stream_name, SAMPLE_BLOCK *sb);
+    char *stream_name, struct SAMPLE_BLOCK *sb);
 
 #endif
