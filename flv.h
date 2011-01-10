@@ -85,6 +85,10 @@ typedef struct FLVStream {
     int d_flags_size;             /* contained in format byte */
     struct AVCodecContext *d_codec_ctx;
     struct ReSampleContext *d_resample_ctx; // NULL if not needed
+
+    /* Encode */
+    struct AVCodecContext *e_codec_ctx;
+    struct ReSampleContext *e_resample_ctx;
 } FLVStream;
 
 void flv_init(void);
