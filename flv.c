@@ -284,7 +284,7 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
      * sample rate, since the format byte often lies */
     if (flv->d_codec_ctx->sample_rate != SAMPLE_RATE)
     {
-        g_debug("Creating resample context: %d -> %d",
+        g_debug("Creating decode resample context: %d -> %d",
             flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
         flv->d_resample_ctx = av_audio_resample_init(1, channels,
             SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
@@ -349,6 +349,20 @@ static int setup_encode_context(FLVStream *flv)
 
     /* TODO: resampling back to the original sample rate, if we downsampled for
      * echo cancellation */
+    if (flv->e_codec_ctx->sample_rate != SAMPLE_RATE)
+    {
+        g_debug("Creating encode resample context: %d -> %d",
+                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
+        flv->e_resample_ctx = av_audio_resample_init(1, channels,
+            flv->e_codec_ctx->sample_rate, SAMPLE_RATE,
+            SAMPLE_FMT_S16, SAMPLE_FMT_S16,
+            16,  // TODO: again, how many taps do we need?
+            10, 0, .8);
+    }
+    else
+    {
+        flv->e_resample_ctx = NULL;
+    }
 
     return 0;
 }
@@ -415,6 +429,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
     if (*channels != 1)
     {
         g_warning("********* Channels != 1 ************");
+        return -1;
     }
 
     /* Bits per coded sample */
