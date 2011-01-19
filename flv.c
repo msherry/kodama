@@ -52,7 +52,6 @@ void flv_parse_header(void)
 
 /* Parses an FLV tag (not the stream header) */
 /* Caller must free samples */
-/* TODO: create a SAMPLE_BLOCK, not an array of SAMPLEs. We can save a memcpy */
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     const char *stream_name, SAMPLE_BLOCK **sb)
 {
@@ -65,7 +64,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     if (!flv)
     {
-        g_debug("FLVStream not found for stream %s", stream_name);
+        g_debug("FLVStream not found for stream %s - creating it", stream_name);
         flv = create_flv_stream();
         g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
     }
@@ -126,12 +125,15 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
         if (!flv->d_format_byte || flv->d_format_byte != formatByte)
         {
+            g_debug("Setting up decode context");
             ret = setup_decode_context(flv, formatByte);
             if (ret != 0)
             {
                 g_debug("Error setting up decode context: %d", ret);
                 return ret;
             }
+
+            g_debug("Setting up encode context");
             ret = setup_encode_context(flv);
             if (ret != 0)
             {
@@ -237,6 +239,7 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
          * tag. (Someone could could be maliciously sending us a bad
          * codec id, for example). Send the data back to wowza untouched
          * and let someone else deal with it */
+        g_warning("Error decoding format byte %.02x for decoding", formatByte);
         return ret;
     }
 
@@ -266,13 +269,13 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
     codec = avcodec_find_decoder(flv->d_codec_ctx->codec_id);
     if (!codec)
     {
-        g_warning("Failed to load codec id %d",
+        g_warning("Failed to load codec id %d for decoding",
             flv->d_codec_ctx->codec_id);
         return -1;
     }
     if (avcodec_open(flv->d_codec_ctx, codec) < 0)
     {
-        g_warning("Failed to open codec id %d",
+        g_warning("Failed to open codec id %d for decoding",
             flv->d_codec_ctx->codec_id);
         return -1;
     }
@@ -299,10 +302,53 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
 
 static int setup_encode_context(FLVStream *flv)
 {
-    /* This should match the decode context as closely as possible */
+    /* This should match the decode context as closely as possible - use the
+     * format byte that we cached */
 
-    /* TODO: what do we report for th speex sample rate? The correct one, or the
+    /* TODO: what do we report for the speex sample rate? The correct one, or the
      * lie that FLV tells us */
+
+    /* TODO: We probably need to prepend the format byte to all audio data */
+
+    int codecid, sampleRate, channels, sampleSize, flags_size;
+    int ret;
+    ret = decode_format_byte(flv->d_format_byte, &codecid, &sampleRate,
+        &channels, &sampleSize, &flags_size);
+    if (ret)
+    {
+        g_warning("Error decoding format byte %.02x for encoding",
+                flv->d_format_byte);
+        return ret;
+    }
+
+    flv->e_codec_ctx->sample_rate = sampleRate;
+    flv->e_codec_ctx->codec_id = codecid;
+    local_flv_set_audio_codec(flv->e_codec_ctx, codecid);
+    flv->e_codec_ctx->channels = channels;
+
+    /* Load the codec */
+    AVCodec *codec;
+
+    /* TODO: if our format byte has changed, we have an old codec (and
+     * possible resample context) lying around. Free everything that we
+     * reallocate */
+    g_debug("Loading codec id %d", flv->e_codec_ctx->codec_id);
+    codec = avcodec_find_encoder(flv->e_codec_ctx->codec_id);
+    if (!codec)
+    {
+        g_warning("Failed to load codec id %d for encoding",
+            flv->e_codec_ctx->codec_id);
+        return -1;
+    }
+    if (avcodec_open(flv->e_codec_ctx, codec) < 0)
+    {
+        g_warning("Failed to open codec id %d for encoding",
+            flv->e_codec_ctx->codec_id);
+        return -1;
+    }
+
+    /* TODO: resampling back to the original sample rate, if we downsampled for
+     * echo cancellation */
 
     return 0;
 }
@@ -314,6 +360,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
 
     /* Find the codec */
     *codecid = formatByte & FLV_AUDIO_CODECID_MASK;
+    g_debug("codec id: %d", *codecid);
     char *codec_name;
     switch(*codecid)
     {
@@ -365,6 +412,10 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
     /* Number of audio channels */
     *channels = (formatByte & FLV_AUDIO_CHANNEL_MASK) == FLV_STEREO ? 2 : 1;
     g_debug("Number of channels: %d", *channels);
+    if (*channels != 1)
+    {
+        g_warning("********* Channels != 1 ************");
+    }
 
     /* Bits per coded sample */
     *sampleSize = (formatByte & FLV_AUDIO_SAMPLESIZE_MASK) ? 16 : 8;

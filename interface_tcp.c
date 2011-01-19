@@ -173,7 +173,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         free(samples_text);
         sample_block_destroy(sb);
 
-        /* Just for profiling purposes */
+        /* Just for profiling purposes for now */
         r(msg, msg_length);
 
         /* TODO: this reflection is temporary - the one below is not */
