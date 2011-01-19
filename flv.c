@@ -32,6 +32,8 @@ static FLVStream *create_flv_stream(void)
 
     flv->d_format_byte = '\0';
 
+    /* TODO: would this be better in the separate setup_encode/decode_context
+     * functions */
     flv->d_codec_ctx = avcodec_alloc_context2(CODEC_TYPE_AUDIO);
     flv->d_codec_ctx->codec_id = CODEC_ID_NONE;
     flv->d_resample_ctx = NULL;
@@ -297,6 +299,11 @@ static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
 
 static int setup_encode_context(FLVStream *flv)
 {
+    /* This should match the decode context as closely as possible */
+
+    /* TODO: what do we report for th speex sample rate? The correct one, or the
+     * lie that FLV tells us */
+
     return 0;
 }
 
