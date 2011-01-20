@@ -60,24 +60,21 @@ typedef struct echo {
     CBuffer *rx_buf;
 
     /* TODO: is this the same as rx_buf? */
-    float *x;                   /* tap delayed speaker signal */
-    float *xf;                  /* pre-whitened tap delayed speaker signal */
-    float *w;                   /* tap weights */
+    float *x;                   /**< tap delayed speaker signal */
+    float *xf;                  /**< pre-whitened tap delayed speaker signal */
+    float *w;                   /**< tap weights */
 
-    /* offset into x and xf */
-    int j;
+    int j;                      /**< offset into x and xf */
 
-    /* DTD */
-    int holdover;
+    int holdover;               /**< DTD hangover */
 
-    /* FIR filter */
-    hp_fir *hp;
+    hp_fir *hp;                 /**< >300Hz filter */
 
     /* IIR filters */
     struct IIR_DC *iir_dc;
     struct IIR *Fx, *Fe;
 
-    double dotp_xf_xf;
+    double dotp_xf_xf;          /**< rolling dot product of xf */
 
     struct hybrid *h;
 } echo;

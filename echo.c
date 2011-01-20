@@ -7,20 +7,19 @@
 #include "iir.h"
 #include "kodama.h"
 
-/*
-source:
-http://www.dsptutor.freeuk.com/KaiserFilterDesign/KaiserFilterDesign.html
-Kaiser Window FIR Filter
-
-Filter type: High pass
-Passband: 300.0 - 4000.0 Hz
-Order: 12
-Transition band: 100.0 Hz
-Stopband attenuation: 10.0 dB
-*/
-
 extern globals_t globals;
 
+/**
+source:
+http://www.dsptutor.freeuk.com/KaiserFilterDesign/KaiserFilterDesign.html \n
+Kaiser Window FIR Filter\n
+
+Filter type: High pass\n
+Passband: 300.0 - 4000.0 Hz\n
+Order: 12\n
+Transition band: 100.0 Hz\n
+Stopband attenuation: 10.0 dB
+*/
 const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
                   -0.053661242, -0.054712527, 0.82598513, -0.054712527,
                   -0.053661242, -0.051936015, -0.049576525, -0.046636667,

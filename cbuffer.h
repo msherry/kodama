@@ -17,9 +17,7 @@ typedef struct CBuffer
 } CBuffer;
 
 
-/**
- * Holds a block of samples and associated context information.
- */
+/// Holds a block of samples and associated context information.
 typedef struct SAMPLE_BLOCK
 {
     SAMPLE *s;
