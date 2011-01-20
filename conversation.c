@@ -3,9 +3,9 @@
 #include "cbuffer.h"
 #include "conversation.h"
 #include "hybrid.h"
+#include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
-
 
 GHashTable *id_to_conv = NULL;
 extern stats_t stats;
@@ -54,11 +54,21 @@ void r(const unsigned char *msg, int msg_length)
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
 
+    /* char *samples_text = samples_to_text(sb->s, sb->count); */
+    /* g_debug("Echo-cancelled audio samples: %s", samples_text); */
+    /* free(samples_text); */
+
     unsigned char *return_msg;
     int return_msg_length;
     return_msg = samples_to_imo_message(sb, &return_msg_length, stream_name);
 
-    /* send_imo_message(return_msg, return_msg_length); */
+    char *hex = hexify(return_msg, return_msg_length);
+    g_debug("Return message: %s", hex);
+    free(hex);
+
+    /* TODO: send_imo_message was originally static to interface_tcp. Calling it
+     * here as a hack, but it should be designed properly */
+    send_imo_message(return_msg, return_msg_length);
 
     G_LOCK(stats);
     stats.samples_processed += sb->count;

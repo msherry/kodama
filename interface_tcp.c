@@ -24,7 +24,6 @@ static gboolean
 static gboolean
     handle_output(GIOChannel *source, GIOCondition cond, gpointer data);
 static void handle_imo_message(const unsigned char *msg, int msg_len);
-static void send_imo_message(const unsigned char *msg, int msg_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -168,16 +167,17 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     /* TODO: who is responsible for freeing msg? */
     if (sb)
     {
-        char *samples_text = samples_to_text(sb->s, sb->count);
-        g_debug("Audio samples: %s", samples_text);
-        free(samples_text);
+        /* char *samples_text = samples_to_text(sb->s, sb->count); */
+        /* g_debug("Audio samples: %s", samples_text); */
+        /* free(samples_text); */
+
         sample_block_destroy(sb);
 
         /* Just for profiling purposes for now */
         r(msg, msg_length);
 
         /* TODO: this reflection is temporary - the one below is not */
-        send_imo_message(msg, msg_length);
+        /* send_imo_message(msg, msg_length); */
 
         /* Done with original message - uncomment once we stop reflecting the
          * original here*/
@@ -196,7 +196,7 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
     free(stream_name);
 }
 
-static void send_imo_message(const unsigned char *msg, int msg_len)
+void send_imo_message(const unsigned char *msg, int msg_len)
 {
     if (!msg || msg_len == 0)
     {

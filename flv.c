@@ -262,6 +262,10 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         sample_buf = sb->s;
     }
 
+    char *samples_text = samples_to_text(sample_buf, numSamples);
+    g_debug("Echo-cancelled audio samples: %s", samples_text);
+    free(samples_text);
+
     uint8_t encoded_audio[AVCODEC_MAX_AUDIO_FRAME_SIZE];
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
                 AVCODEC_MAX_AUDIO_FRAME_SIZE, sample_buf);

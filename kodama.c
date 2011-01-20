@@ -261,12 +261,13 @@ static void init_stats(void)
 
 static void report_stats(void)
 {
-    g_debug("*** Stats dump ***");
-
     G_LOCK(stats);
 
-    g_debug("Samples processed: %d", stats.samples_processed);
-
+    if (stats.samples_processed)
+    {
+        g_debug("*** Stats dump ***");
+        g_debug("Samples processed: %d", stats.samples_processed);
+    }
 
     stats.samples_processed = 0;
     G_UNLOCK(stats);
