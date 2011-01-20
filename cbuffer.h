@@ -21,6 +21,7 @@ typedef struct SAMPLE_BLOCK
 {
     SAMPLE *s;
     size_t count;
+    int64_t pts;
 } SAMPLE_BLOCK;
 
 

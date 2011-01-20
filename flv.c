@@ -7,11 +7,8 @@
 #include "av.h"
 #include "cbuffer.h"
 #include "flv.h"
-#include "kodama.h"
 #include "util.h"
 
-static int setup_decode_context(FLVStream *flv, unsigned char formatByte);
-static int setup_encode_context(FLVStream *flv);
 static FLVStream *create_flv_stream(void);
 
 /* TODO: this is all temporary - just need to get code in place. Clean it up
@@ -203,6 +200,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
             *sb = sample_block_create(numSamples);
             memcpy((*sb)->s, sample_buf, numSamples*sizeof(SAMPLE));
+            (*sb)->pts = timestamp; /* We're just going to pass this back to the
+                                  * encoder */
 
             ret = 0;
         }
@@ -222,162 +221,6 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     g_debug("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
 
     return ret;
-}
-
-static int setup_decode_context(FLVStream *flv, unsigned char formatByte)
-{
-    int ret;
-    int codecid, sampleRate, channels, sampleSize, flags_size;
-    ret = decode_format_byte(formatByte, &codecid, &sampleRate,
-        &channels, &sampleSize, &flags_size);
-    if (ret)
-    {
-        /* Something went wrong - we shouldn't attempt to process this
-         * tag. (Someone could could be maliciously sending us a bad
-         * codec id, for example). Send the data back to wowza untouched
-         * and let someone else deal with it */
-        g_warning("Error decoding format byte %.02x for decoding", formatByte);
-        return ret;
-    }
-
-    if (flv->d_format_byte)
-    {
-        g_debug("Format byte changed. Old: %#.2x   New: %#.2x",
-            flv->d_format_byte, formatByte);
-    }
-
-    flv->d_format_byte = formatByte;
-    flv->d_flags_size = flags_size;
-
-    /* Finish initting codec context */
-    // Speex seems to always use 16000, but report 11025
-    flv->d_codec_ctx->sample_rate = sampleRate;
-    flv->d_codec_ctx->bits_per_coded_sample = sampleSize;
-    local_flv_set_audio_codec(flv->d_codec_ctx, codecid);
-    flv->d_codec_ctx->channels = channels;
-
-    /* Load the codec */
-    AVCodec *codec;
-
-    /* TODO: if our format byte has changed, we have an old codec (and
-     * possible resample context) lying around. Free everything that we
-     * reallocate */
-    g_debug("Loading codec id %d", flv->d_codec_ctx->codec_id);
-    codec = avcodec_find_decoder(flv->d_codec_ctx->codec_id);
-    if (!codec)
-    {
-        g_warning("Failed to load codec id %d for decoding",
-            flv->d_codec_ctx->codec_id);
-        return -1;
-    }
-    if (avcodec_open(flv->d_codec_ctx, codec) < 0)
-    {
-        g_warning("Failed to open codec id %d for decoding",
-            flv->d_codec_ctx->codec_id);
-        return -1;
-    }
-
-    /* Determine if we need to resample. Base it off the codec context's
-     * sample rate, since the format byte often lies */
-    if (flv->d_codec_ctx->sample_rate != SAMPLE_RATE)
-    {
-        g_debug("Creating decode resample context: %d -> %d",
-            flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
-        flv->d_resample_ctx = av_audio_resample_init(1, channels,
-            SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
-            SAMPLE_FMT_S16, SAMPLE_FMT_S16,
-            16, //TODO: How many taps do we need?
-            10, 0, .8); /* TODO: fix these */
-    }
-    else
-    {
-        /* TODO: free old one, if it existed */
-        flv->d_resample_ctx = NULL;
-    }
-    return 0;
-}
-
-static int setup_encode_context(FLVStream *flv)
-{
-    /* This should match the decode context as closely as possible - use the
-     * format byte that we cached */
-
-    /* TODO: what do we report for the speex sample rate? The correct one, or the
-     * lie that FLV tells us */
-
-    /* TODO: We probably need to prepend the format byte to all audio data */
-
-    int flv_codecid, sampleRate, channels, sampleSize, flags_size;
-    int ret;
-    ret = decode_format_byte(flv->d_format_byte, &flv_codecid, &sampleRate,
-        &channels, &sampleSize, &flags_size);
-    if (ret)
-    {
-        g_warning("Error decoding format byte %.02x for encoding",
-                flv->d_format_byte);
-        return ret;
-    }
-
-    flv->e_codec_ctx->sample_rate = sampleRate;
-    flv->e_codec_ctx->codec_id = flv_codecid;
-    local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
-    flv->e_codec_ctx->channels = channels;
-
-    if (flv_codecid == FLV_CODECID_SPEEX)
-    {
-        g_debug("Setting QSCALE flag");
-        flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;
-        /* TODO: This is defaulted to 6/10, CBR in actionscript. This should
-         * probably be roughly equivalent, which might mean not using VBR at
-         * all */
-        flv->e_codec_ctx->global_quality = 120; /* TODO: find the right value */
-    }
-    else
-    {
-        /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
-        g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
-    }
-
-
-    /* Load the codec */
-    AVCodec *codec;
-
-    /* TODO: if our format byte has changed, we have an old codec (and
-     * possible resample context) lying around. Free everything that we
-     * reallocate */
-    g_debug("Loading codec id %d", flv->e_codec_ctx->codec_id);
-    codec = avcodec_find_encoder(flv->e_codec_ctx->codec_id);
-    if (!codec)
-    {
-        g_warning("Failed to load codec id %d for encoding",
-            flv->e_codec_ctx->codec_id);
-        return -1;
-    }
-    if (avcodec_open(flv->e_codec_ctx, codec) < 0)
-    {
-        g_warning("Failed to open codec id %d for encoding",
-            flv->e_codec_ctx->codec_id);
-        return -1;
-    }
-
-    /* TODO: resampling back to the original sample rate, if we downsampled for
-     * echo cancellation */
-    if (flv->e_codec_ctx->sample_rate != SAMPLE_RATE)
-    {
-        g_debug("Creating encode resample context: %d -> %d",
-                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
-        flv->e_resample_ctx = av_audio_resample_init(1, channels,
-            flv->e_codec_ctx->sample_rate, SAMPLE_RATE,
-            SAMPLE_FMT_S16, SAMPLE_FMT_S16,
-            16,  // TODO: again, how many taps do we need?
-            10, 0, .8);
-    }
-    else
-    {
-        flv->e_resample_ctx = NULL;
-    }
-
-    return 0;
 }
 
 /* Caller must free flv_packet */
