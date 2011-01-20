@@ -310,9 +310,9 @@ static int setup_encode_context(FLVStream *flv)
 
     /* TODO: We probably need to prepend the format byte to all audio data */
 
-    int codecid, sampleRate, channels, sampleSize, flags_size;
+    int flv_codecid, sampleRate, channels, sampleSize, flags_size;
     int ret;
-    ret = decode_format_byte(flv->d_format_byte, &codecid, &sampleRate,
+    ret = decode_format_byte(flv->d_format_byte, &flv_codecid, &sampleRate,
         &channels, &sampleSize, &flags_size);
     if (ret)
     {
@@ -322,9 +322,20 @@ static int setup_encode_context(FLVStream *flv)
     }
 
     flv->e_codec_ctx->sample_rate = sampleRate;
-    flv->e_codec_ctx->codec_id = codecid;
-    local_flv_set_audio_codec(flv->e_codec_ctx, codecid);
+    flv->e_codec_ctx->codec_id = flv_codecid;
+    local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
     flv->e_codec_ctx->channels = channels;
+
+    if (flv_codecid == FLV_CODECID_SPEEX)
+    {
+        g_debug("Setting QSCALE flag");
+        flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;
+    }
+    else
+    {
+        g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
+    }
+
 
     /* Load the codec */
     AVCodec *codec;
@@ -539,8 +550,50 @@ static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
   }
 }
 
+/* Caller must free flv_packet */
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, SAMPLE_BLOCK *sb)
 {
+    /* This should always only create FLV tags of type 'A' */
 
+    FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+    if (!flv)
+    {
+        g_warning("FLVStream not found for stream %s for encoding - aborting",
+            stream_name);
+        return -1;
+    }
+
+    /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
+     * client was originally transmitting */
+    SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+    SAMPLE *sample_buf;
+    int numSamples = sb->count;
+
+    if (flv->e_resample_ctx)
+    {
+        g_debug("Resampling from %d to %d Hz",
+                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
+
+        int newrate_num_samples = audio_resample(flv->e_resample_ctx,
+                resampled, sb->s, sb->count);
+
+        g_debug("Resampled from %d to %d samples", (int)sb->count,
+            newrate_num_samples);
+
+        sample_buf = resampled;
+        numSamples = newrate_num_samples;
+    }
+    else
+    {
+        sample_buf = sb->s;
+    }
+
+    uint8_t encoded_audio[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+    int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
+                AVCODEC_MAX_AUDIO_FRAME_SIZE, sample_buf);
+
+    g_debug("Bytes encoded: %d", bytesEncoded);
+
+    return 0;
 }

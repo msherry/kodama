@@ -105,7 +105,7 @@ unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
     *msg_length = -1;
 
     int ret = flv_create_tag(&flv_packet, &flv_packet_len, stream_name, sb);
-    if (ret < 0)
+    if (ret)
     {
         goto exit;
     }
