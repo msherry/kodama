@@ -271,12 +271,38 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /* We have our audio data (Body part of an FLV tag). Time to create the
      * tag. TODO: extra +1 for format byte - is this correct? */
     *packet_len = 1 + 3 + 3 + 1 + 3 + 1 + bytesEncoded + 4;
-    *flv_packet = malloc(*packet_len);
+    *flv_packet = calloc(*packet_len, 1);
+
+    g_debug("Return flv packet len: %d", *packet_len);
 
     int offset = 0;
 
     *(*flv_packet + offset++) = 0x08; /* Audio packet */
-    
+
+    int bodyLength = numSamples * sizeof(SAMPLE) + 1; /* TODO: +1 for format byte? */
+    write_uint24_be((*flv_packet + offset), bodyLength);
+    offset += 3;
+
+    int timestamp = sb->pts;
+    unsigned char timestamp_upper = timestamp >> 24;
+    timestamp &= 0x00ffffff;
+    write_uint24_be((*flv_packet + offset), timestamp);
+    offset += 3;
+    *(*flv_packet + offset++) = timestamp_upper;
+
+    /* Stream id */
+    offset += 3;
+
+    /* Format byte */
+    *(*flv_packet + offset++) = flv->d_format_byte; /* TODO: ? */
+
+    /* Body */
+    memcpy((*flv_packet + offset), sample_buf, bytesEncoded);
+    offset += bytesEncoded;
+
+    /* Previous tag size */
+    write_uint32_be((*flv_packet + offset), *packet_len - 4);
+    offset += 4;
 
     return 0;
 }
