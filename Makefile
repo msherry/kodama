@@ -50,7 +50,7 @@ ${PROG}: ${OBJS}
 	${CC} ${CFLAGS} -MM $< > $*.d
 
 documentation:
-	doxygen Doxyfile
+	doxygen Doxyfile || true # don't let this kill us
 
 clean:
 	rm -f *.o *.s *.i *.out *.d *flymake* ${PROG}
