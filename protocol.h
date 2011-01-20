@@ -1,3 +1,6 @@
+#ifndef _PROTOCOL_H_
+#define _PROTOCOL_H_
+
 #include <stdint.h>
 
 typedef enum protocol {
@@ -18,3 +21,5 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
         char **stream_name);
 unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
         char *stream_name);
+
+#endif
