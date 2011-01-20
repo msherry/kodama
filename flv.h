@@ -89,6 +89,8 @@ typedef struct FLVStream {
     struct ReSampleContext *e_resample_ctx;
 } FLVStream;
 
+struct SAMPLE_BLOCK;
+
 void flv_init(void);
 void flv_parse_header(void);
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
