@@ -33,7 +33,8 @@ static Conversation *conversation_create(void)
  *
  * @param msg The incoming message
  * @param msg_length The length of the incoming message
- */void r(const unsigned char *msg, int msg_length)
+ */
+void r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
