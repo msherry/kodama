@@ -57,7 +57,7 @@ void create_imo_message(unsigned char **msg, int *msg_length, char type,
     memcpy(*msg+offset, stream_name, stream_name_len);
     offset += stream_name_len;
 
-    memcpy(msg+offset, packet_data, packet_len);
+    memcpy(*msg+offset, packet_data, packet_len);
 
     *msg_length = total_len;
 }
