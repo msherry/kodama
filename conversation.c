@@ -27,7 +27,13 @@ static Conversation *conversation_create(void)
     return c;
 }
 
-void r(const unsigned char *msg, int msg_length)
+/**
+ * Handles processing incoming imo messages - extracts audio data, echo cancels,
+ * creates a return message, and sends it back over the network.
+ *
+ * @param msg The incoming message
+ * @param msg_length The length of the incoming message
+ */void r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);

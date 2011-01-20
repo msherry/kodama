@@ -93,7 +93,17 @@ struct SAMPLE_BLOCK;
 
 void flv_init(void);
 void flv_parse_header(void);
-int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
+/**
+ * Given an FLV tag, decode it and create a SAMPLE_BLOCK if possible, possibly
+ * resampling in the process.
+ *
+ * @param packet_data The FLV packet data.
+ * @param packet_len The length of the FLV packet data in bytes.
+ * @param stream_name The name of the stream this packet is associated with.
+ * @param sb The address of a SAMPLE_BLOCK pointer to allocate.
+ *
+ * @return zero on success, nonzero on failure.
+ */int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     const char *stream_name, struct SAMPLE_BLOCK **sb);
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, struct SAMPLE_BLOCK *sb);

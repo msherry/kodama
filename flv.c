@@ -11,8 +11,6 @@
 
 static FLVStream *create_flv_stream(void);
 
-/* TODO: this is all temporary - just need to get code in place. Clean it up
- * later */
 static GHashTable *id_to_flvstream;
 
 void flv_init(void)

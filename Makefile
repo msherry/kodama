@@ -27,7 +27,8 @@ else
 	-I/opt/local/include/gnet-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
 	-I/opt/local/lib/gnet-2.0/include
-	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0
+        # need to bring in lgthread specifically on the Mac
+	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0 -lgthread-2.0
 endif
 
 OBJS = av.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o imolist.o \
@@ -36,7 +37,7 @@ OBJS = av.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o imolist.o \
 
 PROG = kodama
 
-ALL: ${PROG}
+ALL: ${PROG} documentation
 
 ${PROG}: ${OBJS}
 	${LD} -o ${PROG} ${LDFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
@@ -47,6 +48,9 @@ ${PROG}: ${OBJS}
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
 	# ${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -S $<
 	${CC} ${CFLAGS} -MM $< > $*.d
+
+documentation:
+	doxygen Doxyfile
 
 clean:
 	rm -f *.o *.s *.i *.out *.d *flymake* ${PROG}

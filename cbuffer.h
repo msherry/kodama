@@ -17,10 +17,15 @@ typedef struct CBuffer
 } CBuffer;
 
 
+/**
+ * Holds a block of samples and associated context information.
+ */
 typedef struct SAMPLE_BLOCK
 {
     SAMPLE *s;
+    /// number of samples in s
     size_t count;
+    /// timestamp for this sample block
     int64_t pts;
 } SAMPLE_BLOCK;
 
