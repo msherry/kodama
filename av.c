@@ -6,20 +6,6 @@
 #include "flv.h"
 #include "kodama.h"
 
-AVCodec *find_codec(enum CodecID id, char isdecode);
-AVInputFormat *find_input_format(char *name);
-AVOutputFormat *find_output_format(char *name);
-
-AVInputFormat *flv_ifmt;
-AVOutputFormat *flv_ofmt;
-
-struct AVCodec *codec_nellymoser_decode;
-struct AVCodec *codec_mp3_encode;
-struct AVCodec *codec_flv1_decode;
-struct AVCodec *codec_flv1_encode;
-struct AVCodec *codec_pcm_s16le_decode;
-struct AVCodec *codec_pcm_s16le_encode;
-
 void init_av(void)
 {
     av_register_all();
