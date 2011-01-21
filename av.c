@@ -6,6 +6,11 @@
 #include "flv.h"
 #include "kodama.h"
 
+static int decode_format_byte(const unsigned char formatByte, int *codecid,
+        int *sampleRate, int *channels, int *sampleSize, int *flags_size);
+static int get_sample_rate(const unsigned char formatbyte);
+static void local_flv_set_audio_codec(struct AVCodecContext *acodec, int flv_codecid);
+
 void init_av(void)
 {
     av_register_all();
@@ -169,7 +174,7 @@ int setup_encode_context(FLVStream *flv)
     return 0;
 }
 
-int decode_format_byte(const unsigned char formatByte, int *codecid,
+static int decode_format_byte(const unsigned char formatByte, int *codecid,
         int *sampleRate, int *channels, int *sampleSize, int *flags_size)
 {
     g_debug("Format byte: %#.2x", formatByte);
@@ -255,7 +260,7 @@ int decode_format_byte(const unsigned char formatByte, int *codecid,
     return 0;
 }
 
-int get_sample_rate(const unsigned char formatByte)
+static int get_sample_rate(const unsigned char formatByte)
 {
     int samplerate_code = formatByte & FLV_AUDIO_SAMPLERATE_MASK;
     int codecid;                /* Some special cases need this */
@@ -293,7 +298,7 @@ int get_sample_rate(const unsigned char formatByte)
     return rate;
 }
 
-void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
+static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
 {
   switch(flv_codecid) {
     //no distinction between S16 and S8 PCM codec flags
