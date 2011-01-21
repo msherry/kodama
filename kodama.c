@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "av.h"
+#include "conversation.h"
 #include "hybrid.h"
 #include "interface_hardware.h"
 #include "interface_tcp.h"
@@ -64,6 +65,7 @@ static void usage(char *arg0)
     fprintf(stderr, "-e: set up rx-side echo cancellation\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "-v:        verbose output\n");
+    fprintf(stderr, "--flv:     FLV debugging output \n");
 }
 
 static void set_fullname(void)
@@ -105,6 +107,9 @@ static void parse_command_line(int argc, char *argv[])
     globals.server_host = NULL;
     globals.server_port = -1;
 
+    globals.verbose = 0;
+    globals.flv_debug = 0;
+
     int c;
 
     opterr = 0;
@@ -116,6 +121,7 @@ static void parse_command_line(int argc, char *argv[])
             {"shard", 1, 0, 0}, /* 0 */
             {"server", 1, 0, 0},
             {"basename", 1, 0, 0},
+            {"flv", 1, 0, 0},
             {"help", 0, 0, 'h'},
             {0, 0, 0, 0}
         };
@@ -153,6 +159,10 @@ static void parse_command_line(int argc, char *argv[])
                 globals.basename = g_strdup_printf("%s", optarg);
 
                 set_fullname();
+            }
+            else if (!strcmp("flv", long_options[option_index].name))
+            {
+                globals.flv_debug = 1;
             }
            break;
         case 'h':
@@ -245,6 +255,11 @@ static void init_log_handlers(void)
     }
     strcat(filename, dir);
     strcat(filename, "/");
+    /* Hack - if we don't have a fullname at this point, make one up */
+    if (!globals.fullname)
+    {
+        globals.fullname = g_strdup_printf("%s.%d", "Kodama", 0);
+    }
     strcat(filename, globals.fullname);
     strcat(filename, ".log");
     open(filename, O_CREAT|O_WRONLY|O_APPEND, 0644);
@@ -309,6 +324,7 @@ int main(int argc, char *argv[])
     init_log_handlers();
     init_sig_handlers();
     init_av();
+    init_conversations();
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)

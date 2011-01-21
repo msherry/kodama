@@ -14,6 +14,8 @@
 
 #define VERBOSE_LOG(...) {if (globals.verbose) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}}
 
+#define FLV_LOG(...) {if (globals.flv_debug) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}}
+
 #define ERROR_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 
 #define NUM_CHANNELS (1)
@@ -49,8 +51,9 @@ typedef struct globals_t {
     /* rx-side echo cancellation */
     int echo_cancel;
 
-    /* Verbose mode */
+    /* Logging options */
     int verbose;
+    int flv_debug;
 
     /* Imo flags */
     char *basename;

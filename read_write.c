@@ -243,6 +243,7 @@ int write_data(int fd)
         written += length;
     }
 
+    /* We're done with msg at this point */
     free(msg);
 
     g_debug("Sent an imo packet");

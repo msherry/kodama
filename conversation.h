@@ -6,6 +6,7 @@ typedef struct Conversation {
     struct hybrid *h0, *h1;
 } Conversation;
 
+void init_conversations(void);
 void r(const unsigned char *msg, int msg_length);
 
 #endif

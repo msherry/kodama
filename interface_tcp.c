@@ -23,7 +23,7 @@ static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static gboolean
     handle_output(GIOChannel *source, GIOCondition cond, gpointer data);
-static void handle_imo_message(const unsigned char *msg, int msg_len);
+static void handle_imo_message(unsigned char *msg, int msg_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -65,7 +65,7 @@ void tcp_connect(void)
         return;
     }
 
-    g_debug("Successfully connected to wowza on %s:%d", g_host, g_port);
+    g_message("Successfully connected to wowza on %s:%d", g_host, g_port);
 
     /* Connected to Wowza - set up a watch on the channel */
     GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);
@@ -120,7 +120,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         else
         {
             /* The other side closed the connection */
-            g_debug("Remote end closed connection");
+            g_warning("Remote end closed connection");
         }
         /* TODO: clean up any user data */
 
@@ -139,11 +139,12 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
     while (n > 0)
     {
+        /* Handler must handle freeing this message (or keeping it around, in
+         * case we're reflecting it back to wowza untouched) */
         unsigned char *msg;
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
         handle_imo_message(msg, msg_length);
-        free(msg);
     }
 
     /* Return TRUE to keep this handler intact (don't unregister it) */
@@ -155,7 +156,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 /* TODO: if we decide to thread this, this function is a good candidate to be
  * run in multiple threads. Since it will probably deal at a conversation level,
  * perhaps it should be moved to a conversation-specific file */
-static void handle_imo_message(const unsigned char *msg, int msg_length)
+static void handle_imo_message(unsigned char *msg, int msg_length)
 {
     g_debug("Got an imo packet");
 
@@ -171,6 +172,9 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         /* g_debug("Audio samples: %s", samples_text); */
         /* free(samples_text); */
 
+        /* TODO: calling r() calls imo_message_to_samples, which we had to call
+         * to get here. Avoid this duplication */
+
         sample_block_destroy(sb);
 
         /* Just for profiling purposes for now */
@@ -179,9 +183,8 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         /* TODO: this reflection is temporary - the one below is not */
         /* send_imo_message(msg, msg_length); */
 
-        /* Done with original message - uncomment once we stop reflecting the
-         * original here*/
-        //free(msg);
+        /* Done with original message */
+        free(msg);
     }
     else
     {

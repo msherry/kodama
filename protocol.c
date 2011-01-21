@@ -78,10 +78,11 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
     decode_imo_message(msg, msg_length, &type, stream_name, &packet_data,
             &data_len);
 
-    g_debug("Size: %d", msg_length);
-    g_debug("Type: %c", type);
     /* Stream name is convName:[01] */
-    g_debug("Stream name: %s", *stream_name);
+
+    /* g_debug("Size: %d", msg_length); */
+    /* g_debug("Type: %c", type); */
+    /* g_debug("Stream name: %s", *stream_name); */
 
     SAMPLE_BLOCK *sb = NULL;
     if (data_len > 0)

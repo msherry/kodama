@@ -11,12 +11,17 @@
 GHashTable *id_to_conv = NULL;
 extern stats_t stats;
 
-
 G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
 static void conversation_process_samples(Conversation *c, int conv_side,
     SAMPLE_BLOCK *sb);
+
+void init_conversations(void)
+{
+    id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
+            g_free, NULL);  /* TODO: conversation_destroy */
+}
 
 static Conversation *conversation_create(void)
 {
@@ -56,11 +61,6 @@ void r(const unsigned char *msg, int msg_length)
 
     if (!c)
     {
-        if (!id_to_conv)
-        {
-            id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
-                g_free, NULL);  /* TODO: conversation_destroy */
-        }
         c = conversation_create();
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
     }
@@ -78,11 +78,11 @@ void r(const unsigned char *msg, int msg_length)
 
     char *hex;
     hex = hexify(msg, msg_length);
-    g_debug("Original message: %s", hex);
+    /* g_debug("Original message: %s", hex); */
     free(hex);
 
     hex = hexify(return_msg, return_msg_length);
-    g_debug("Return message: %s", hex);
+    /* g_debug("Return message: %s", hex); */
     free(hex);
 
     /* TODO: send_imo_message was originally static to interface_tcp. Calling it
