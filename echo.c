@@ -10,9 +10,9 @@
 extern globals_t globals;
 
 /**
+Kaiser Window FIR Filter.\n
 source:
 http://www.dsptutor.freeuk.com/KaiserFilterDesign/KaiserFilterDesign.html \n
-Kaiser Window FIR Filter\n
 
 Filter type: High pass\n
 Passband: 300.0 - 4000.0 Hz\n
@@ -25,7 +25,7 @@ const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
                   -0.053661242, -0.051936015, -0.049576525, -0.046636667,
                   -0.043183226};
 
-/* Number of taps for high-pass (300Hz+) filter */
+/** Number of taps for high-pass (300Hz+) filter */
 #define HP_FIR_SIZE (13)
 
 /********* Static functions *********/
