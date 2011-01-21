@@ -42,8 +42,6 @@ void flv_parse_header(void)
     /* TODO: */
 }
 
-/* Parses an FLV tag (not the stream header) */
-/* Caller must free samples */
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     const char *stream_name, SAMPLE_BLOCK **sb)
 {

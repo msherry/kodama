@@ -91,20 +91,38 @@ typedef struct FLVStream {
 
 struct SAMPLE_BLOCK;
 
+/**
+ * Must be called before using any of the functions in flv.c.
+ *
+ */
 void flv_init(void);
+
 void flv_parse_header(void);
 /**
  * Given an FLV tag, decode it and create a SAMPLE_BLOCK if possible, possibly
- * resampling in the process.
+ * resampling in the process. Caller must free sb.
  *
  * @param packet_data The FLV packet data.
  * @param packet_len The length of the FLV packet data in bytes.
  * @param stream_name The name of the stream this packet is associated with.
- * @param sb The address of a SAMPLE_BLOCK pointer to allocate.
+ * @param sb The address of a SAMPLE_BLOCK pointer to allocate to contain the
+ * decoded samples.
  *
  * @return zero on success, nonzero on failure.
  */int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     const char *stream_name, struct SAMPLE_BLOCK **sb);
+
+/**
+ * Given a SAMPLE_BLOCK and stream name, create an FLV packet ready to be packed
+ * into an imo message. Caller must free flv_packet.
+ *
+ * @param flv_packet Address of the packet to create.
+ * @param packet_len Will contain the length of the created packet.
+ * @param stream_name Used to look up the encoding context.
+ * @param sb The samples to include in this packet.
+ *
+ * @return Zero on success, non-zero on failure.
+ */
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, struct SAMPLE_BLOCK *sb);
 
