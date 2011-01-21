@@ -80,7 +80,7 @@ enum {
 typedef struct FLVStream {
     /* Decode */
     unsigned char d_format_byte;
-    int d_flags_size;             /* contained in format byte */
+    int d_flags_size;             /**< contained in format byte */
     struct AVCodecContext *d_codec_ctx;
     struct ReSampleContext *d_resample_ctx; // NULL if not needed
 
@@ -98,6 +98,7 @@ struct SAMPLE_BLOCK;
 void flv_init(void);
 
 void flv_parse_header(void);
+
 /**
  * Given an FLV tag, decode it and create a SAMPLE_BLOCK if possible, possibly
  * resampling in the process. Caller must free sb.
