@@ -32,6 +32,7 @@ typedef enum hybrid_side {
 
 typedef void (*hybrid_callback_fn) (struct hybrid *, hybrid_side side);
 
+/// Holds context for one side of a conversation.
 typedef struct hybrid {
     struct CBuffer *tx_buf;
     struct CBuffer *rx_buf;
