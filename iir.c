@@ -2,20 +2,19 @@
 
 #include "iir.h"
 
-/*
-Chebyshev IIR filter
+/**
+ * Chebyshev IIR filter.
+ *
+ * Filter type: HP\n
+ * Passband: 3700 - 4000 Hz\n
+ * Passband ripple: 1.5 dB\n
+ * Order: 1\n
 
-Filter type: HP
-Passband: 3700 - 4000 Hz
-Passband ripple: 1.5 dB
-Order: 1
+ * Coefficients\n
 
-Coefficients
-
-a[0] = 0.105831884      b[0] = 1.0
-a[1] = -0.105831884     b[1] = 0.78833646
-*/
-
+ * a[0] = 0.105831884      b[0] = 1.0\n
+ * a[1] = -0.105831884     b[1] = 0.78833646
+ */
 const float a0 = 0.105831884f;
 const float a1 = -0.105831884f;
 const float b1 = 0.78833646;

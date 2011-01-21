@@ -76,10 +76,10 @@ enum {
 
 /******************** END FLV.H CONSTANTS ********************/
 
-
+/// Context for decoding/encoding an FLV stream
 typedef struct FLVStream {
     /* Decode */
-    unsigned char d_format_byte;
+    unsigned char d_format_byte; /**< The last format byte received */
     int d_flags_size;             /**< contained in format byte */
     struct AVCodecContext *d_codec_ctx;
     struct ReSampleContext *d_resample_ctx; // NULL if not needed

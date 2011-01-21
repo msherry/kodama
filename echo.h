@@ -44,18 +44,19 @@ typedef struct hp_fir {
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
-/* Holdover for DTD, in taps (ms * 8) */
+/** Holdover for DTD, in taps (ms * 8) */
 #define DTD_HOLDOVER (30 * 8)
 
-/* DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
+/** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 
-/* NLMS length in taps (ms * 8) */
+/** NLMS length in taps (ms * 8) */
 #define NLMS_LEN (200 * 8)
 
-/* Extension for NLMS buffer to minimize memmoves */
+/** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
 
+/// Context for echo-canceling one side of a conversation.
 typedef struct echo {
     CBuffer *rx_buf;
 
@@ -81,7 +82,22 @@ typedef struct echo {
 
 echo *echo_create(struct hybrid *h);
 void echo_destroy(echo *e);
+/**
+ * This function is expected to update the samples in sb to remove echo - once
+ * it completes, they are ready to go out the tx side of the hybrid.
+ *
+ * @param e The echo-cancellation context.
+ * @param sb The samples to echo-cancel.
+ */
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
+
+/**
+ * Just copies samples into the rx part of the echo-cancellation context - no
+ * processing is done.
+ *
+ * @param e Echo-cancellation context.
+ * @param sb Samples to copy.
+ */
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb);
 
 #endif
