@@ -55,6 +55,9 @@ documentation:
 clean:
 	rm -f *.o *.s *.i *.out *.d *flymake* ${PROG}
 
+distclean: clean
+	rm -rf docs
+
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
 
