@@ -90,8 +90,8 @@ int setup_encode_context(FLVStream *flv)
     /* This should match the decode context as closely as possible - use the
      * format byte that we cached */
 
-    /* TODO: what do we report for the speex sample rate? The correct one, or the
-     * lie that FLV tells us */
+    /* TODO: what do we report for the speex sample rate? The correct one, or
+     * the lie that FLV tells us */
 
     /* TODO: We probably need to prepend the format byte to all audio data */
 
@@ -111,7 +111,7 @@ int setup_encode_context(FLVStream *flv)
     local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
     flv->e_codec_ctx->channels = channels;
 
-    if (flv_codecid == FLV_CODECID_SPEEX && NULL) /* TODO: */
+    if (flv_codecid == FLV_CODECID_SPEEX) /* TODO: */
     {
         g_debug("Setting QSCALE flag");
         flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;

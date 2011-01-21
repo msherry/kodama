@@ -25,6 +25,15 @@ static Conversation *conversation_create(void)
     c->h0 = hybrid_new();
     c->h1 = hybrid_new();
 
+    hybrid_setup_echo_cancel(c->h0);
+    hybrid_setup_echo_cancel(c->h1);
+
+    c->h0->tx_cb_fn = NULL;
+    c->h0->rx_cb_fn = NULL;
+
+    c->h1->tx_cb_fn = NULL;
+    c->h1->rx_cb_fn = NULL;
+
     return c;
 }
 
@@ -62,10 +71,6 @@ void r(const unsigned char *msg, int msg_length)
 
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
-
-    /* char *samples_text = samples_to_text(sb->s, sb->count); */
-    /* g_debug("Echo-cancelled audio samples: %s", samples_text); */
-    /* free(samples_text); */
 
     unsigned char *return_msg;
     int return_msg_length;
