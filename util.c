@@ -89,15 +89,15 @@ unsigned int read_uint32_be(const unsigned char *buf)
 
 void write_uint24_be(unsigned char *buf, unsigned int val)
 {
-    buf[0] = (val >> 16);
-    buf[1] = (val >> 8);
-    buf[2] = (val >> 0);
+    buf[0] = (val >> 16) & 0xff;
+    buf[1] = (val >> 8) & 0xff;
+    buf[2] = (val >> 0) & 0xff;
 }
 
 void write_uint32_be(unsigned char *buf, unsigned int val)
 {
-    buf[0] = (val >> 24);
-    buf[1] = (val >> 16);
-    buf[2] = (val >> 8);
-    buf[3] = (val >> 0);
+    buf[0] = (val >> 24) & 0xff;
+    buf[1] = (val >> 16) & 0xff;
+    buf[2] = (val >> 8) & 0xff;
+    buf[3] = (val >> 0) & 0xff;
 }

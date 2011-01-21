@@ -6,6 +6,7 @@
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
+#include "util.h"
 
 GHashTable *id_to_conv = NULL;
 extern stats_t stats;
@@ -56,6 +57,7 @@ void r(const unsigned char *msg, int msg_length)
     }
 
     /* TODO: check for sb == NULL */
+    /* TODO: commenting this out should leave samples alone */
     conversation_process_samples(c, conv_side, sb);
 
     /* sb has echo-canceled samples. Send them back under the same stream
@@ -69,7 +71,12 @@ void r(const unsigned char *msg, int msg_length)
     int return_msg_length;
     return_msg = samples_to_imo_message(sb, &return_msg_length, stream_name);
 
-    char *hex = hexify(return_msg, return_msg_length);
+    char *hex;
+    hex = hexify(msg, msg_length);
+    g_debug("Original message: %s", hex);
+    free(hex);
+
+    hex = hexify(return_msg, return_msg_length);
     g_debug("Return message: %s", hex);
     free(hex);
 

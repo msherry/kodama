@@ -270,9 +270,11 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
     g_debug("Bytes encoded: %d", bytesEncoded);
 
+    int bodyLength = bytesEncoded + 1; /* TODO: +1 for format byte? */
+
     /* We have our audio data (Body part of an FLV tag). Time to create the
-     * tag. TODO: extra +1 for format byte - is this correct? */
-    *packet_len = 1 + 3 + 3 + 1 + 3 + 1 + bytesEncoded + 4;
+     * tag. */
+    *packet_len = 1 + 3 + 3 + 1 + 3 + bodyLength + 4;
     *flv_packet = calloc(*packet_len, 1);
 
     g_debug("Return flv packet len: %d", *packet_len);
@@ -281,25 +283,24 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
     *(*flv_packet + offset++) = 0x08; /* Audio packet */
 
-    int bodyLength = numSamples * sizeof(SAMPLE) + 1; /* TODO: +1 for format byte? */
     write_uint24_be((*flv_packet + offset), bodyLength);
     offset += 3;
 
     int timestamp = sb->pts;
-    unsigned char timestamp_upper = timestamp >> 24;
-    timestamp &= 0x00ffffff;
+    g_debug("Outgoing timestamp: %d", timestamp);
     write_uint24_be((*flv_packet + offset), timestamp);
     offset += 3;
-    *(*flv_packet + offset++) = timestamp_upper;
+    *(*flv_packet + offset++) = ((timestamp >> 24) & 0xff);
 
     /* Stream id */
     offset += 3;
 
     /* Format byte */
     *(*flv_packet + offset++) = flv->d_format_byte; /* TODO: ? */
+    g_debug("Outgoing format byte: %.02x", flv->d_format_byte);
 
     /* Body */
-    memcpy((*flv_packet + offset), sample_buf, bytesEncoded);
+    memcpy((*flv_packet + offset), encoded_audio, bytesEncoded);
     offset += bytesEncoded;
 
     /* Previous tag size */

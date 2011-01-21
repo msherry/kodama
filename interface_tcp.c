@@ -174,10 +174,10 @@ static void handle_imo_message(const unsigned char *msg, int msg_length)
         sample_block_destroy(sb);
 
         /* Just for profiling purposes for now */
-        /* r(msg, msg_length); */
+        r(msg, msg_length);
 
         /* TODO: this reflection is temporary - the one below is not */
-        send_imo_message(msg, msg_length);
+        /* send_imo_message(msg, msg_length); */
 
         /* Done with original message - uncomment once we stop reflecting the
          * original here*/
@@ -200,6 +200,7 @@ void send_imo_message(const unsigned char *msg, int msg_len)
 {
     if (!msg || msg_len == 0)
     {
+        g_warning("(%s:%d) msg is NULL or has zero length", __FILE__, __LINE__);
         return;
     }
 
@@ -211,6 +212,7 @@ void send_imo_message(const unsigned char *msg, int msg_len)
         /* I guess wowza is down. */
         /* TODO: If wowza is smart enough to remember streams across restarts,
          * we should queue data for wowza here */
+        g_warning("(%s:%d) wowza fd is -1", __FILE__, __LINE__);
         return;
     }
 

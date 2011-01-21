@@ -111,7 +111,7 @@ int setup_encode_context(FLVStream *flv)
     local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
     flv->e_codec_ctx->channels = channels;
 
-    if (flv_codecid == FLV_CODECID_SPEEX)
+    if (flv_codecid == FLV_CODECID_SPEEX && NULL) /* TODO: */
     {
         g_debug("Setting QSCALE flag");
         flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;
@@ -124,6 +124,7 @@ int setup_encode_context(FLVStream *flv)
     {
         /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
         g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
+        flv->e_codec_ctx->bit_rate = 20600;
     }
 
 

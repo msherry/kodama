@@ -8,7 +8,7 @@ typedef struct hp_fir {
     float *z;
 } hp_fir;
 
-/* dB Values */
+/** dB Values */
 #define M0dB (1.0f)
 #define M3dB (0.71f)
 #define M6dB (0.50f)
@@ -17,7 +17,7 @@ typedef struct hp_fir {
 #define M18dB (0.125f)
 #define M24dB (0.063f)
 
-/* dB values for 16bit PCM */
+/** dB values for 16bit PCM */
 /* MxdB_PCM = 32767 * 10 ^ (x / 20) */
 #define M10dB_PCM (10362.0f)
 #define M20dB_PCM (3277.0f)
@@ -40,7 +40,7 @@ typedef struct hp_fir {
 
 #define MIN_XF M85dB_PCM
 
-/* convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give
+/** convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
