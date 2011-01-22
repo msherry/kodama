@@ -339,6 +339,7 @@ int main(int argc, char *argv[])
     if (globals.shardnum == -1)
     {
         hybrid *h = get_hybrid("default");
+        h->tx_cb_fn = shortcircuit_tx_to_rx;
         hybrid_simulate_tx_delay(h, globals.tx_delay_ms);
         hybrid_simulate_rx_delay(h, globals.rx_delay_ms);
 

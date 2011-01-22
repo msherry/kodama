@@ -8,9 +8,6 @@
 /* Globals */
 static GHashTable *id_to_hybrid;
 
-/* Static prototypes */
-static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side);
-
 void init_hybrids(void)
 {
     id_to_hybrid = g_hash_table_new(g_str_hash, g_str_equal);
@@ -39,7 +36,7 @@ hybrid *hybrid_new(void)
     h->rx_count = 0;
 
     /* Default callback fn - shortcircuit tx to rx */
-    h->tx_cb_fn = shortcircuit_tx_to_rx;
+    h->tx_cb_fn = NULL;
     h->rx_cb_fn = NULL;
 
     h->tx_cb_data = NULL;
@@ -173,7 +170,7 @@ void hybrid_simulate_rx_delay(hybrid *h, float ms)
 /*********** Hybrid transfer functions ***********/
 
 /* Default transfer function - moves data instantly from tx_buf to rx_buf */
-static void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side)
+void shortcircuit_tx_to_rx(hybrid *h, hybrid_side side)
 {
     UNUSED(side);
 
