@@ -110,8 +110,11 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* High-pass filter - filter out sub-300Hz signals */
         tx = update_fir(e->hp, tx);
 
+        /* Speaker high-pass filter - remove DC */
+        rx = iirdc_highpass(e->iir_dc, rx);
+
         /* Geigel double-talk detector */
-        int update = 1;//!dtd(e, tx);
+        int update = !dtd(e, tx);
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -189,6 +192,9 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     /* Iterative update */
     e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
         e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
+
+    /* TODO: find a reasonable value for this */
+    e->dotp_xf_xf = MAX(e->dotp_xf_xf, 0.1);
 
     VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf);
     if (e->dotp_xf_xf == 0.0)

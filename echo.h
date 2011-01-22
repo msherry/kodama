@@ -74,7 +74,7 @@ typedef struct echo {
     hp_fir *hp;                 /**< >300Hz filter */
 
     /* IIR filters */
-    struct IIR_DC *iir_dc;
+    struct IIR_DC *iir_dc;      /**< For rx samples, not tx  */
     struct IIR *Fx, *Fe;
 
     double dotp_xf_xf;          /**< rolling dot product of xf */
