@@ -94,6 +94,8 @@ void echo_destroy(echo *e)
 
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
+    VERBOSE_LOG("%s\n", e->h->name);
+
     size_t i;
     int any_doubletalk = 0;
     for (i=0; i<sb->count; i++)

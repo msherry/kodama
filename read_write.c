@@ -246,7 +246,7 @@ int write_data(int fd)
     /* We're done with msg at this point */
     free(msg);
 
-    g_debug("Sent an imo packet");
+    /* g_debug("Sent an imo packet"); */
 
     return g_slist_length(fd_buf->write_head);
 }

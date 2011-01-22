@@ -42,13 +42,6 @@ static Conversation *conversation_create(void)
     return c;
 }
 
-/**
- * Handles processing incoming imo messages - extracts audio data, echo cancels,
- * creates a return message, and sends it back over the network.
- *
- * @param msg The incoming message
- * @param msg_length The length of the incoming message
- */
 void r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
@@ -64,8 +57,13 @@ void r(const unsigned char *msg, int msg_length)
         c = conversation_create();
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
 
-        /* TODO: both sides */
-        /* hybrid_set_name(); */
+        gchar *tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 0);
+        hybrid_set_name(c->h0, tmpname);
+        g_free(tmpname);
+
+        tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 1);
+        hybrid_set_name(c->h1, tmpname);
+        g_free(tmpname);
     }
 
     /* TODO: check for sb == NULL */

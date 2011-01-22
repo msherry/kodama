@@ -51,12 +51,20 @@ hybrid *hybrid_new(void)
     return h;
 }
 
+void hybrid_set_name(hybrid *h, char *name)
+{
+    g_return_if_fail(h != NULL);
+
+    if (h->name)
+    {
+        g_free(h->name);
+    }
+    h->name = g_strdup_printf("%s", name);
+}
+
 void hybrid_destroy(hybrid *h)
 {
-    if (!h)
-    {
-        return;
-    }
+    g_return_if_fail(h != NULL);
 
     cbuffer_destroy(h->tx_buf);
     cbuffer_destroy(h->rx_buf);

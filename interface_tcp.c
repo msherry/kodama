@@ -158,7 +158,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
  * perhaps it should be moved to a conversation-specific file */
 static void handle_imo_message(unsigned char *msg, int msg_length)
 {
-    g_debug("Got an imo packet");
+    /* g_debug("Got an imo packet"); */
 
     char *stream_name;
     /* TODO: the first imo message is an FLV header, not an FLV tag. We keep
