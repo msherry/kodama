@@ -165,7 +165,6 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
      * forgetting that and expecting audio data in every imo message */
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
-    /* TODO: who is responsible for freeing msg? */
     if (sb)
     {
         /* char *samples_text = samples_to_text(sb->s, sb->count); */
@@ -177,7 +176,6 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
 
         sample_block_destroy(sb);
 
-        /* Just for profiling purposes for now */
         r(msg, msg_length);
 
         /* TODO: this reflection is temporary - the one below is not */
