@@ -134,6 +134,8 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         sb->s[i] = (int)tx;
     }
+
+    VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf);
     VERBOSE_LOG("%s\n", any_doubletalk ? "doubletalk" : "no doubletalk");
 }
 
@@ -196,7 +198,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     /* TODO: find a reasonable value for this */
     e->dotp_xf_xf = MAX(e->dotp_xf_xf, 0.1);
 
-    VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf);
     if (e->dotp_xf_xf == 0.0)
     {
         DEBUG_LOG("%s\n", "dotp_xf_xf went to zero");
@@ -216,6 +217,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
             DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
+            DEBUG_LOG("STEPSIZE: %f\tef: %f\n", STEPSIZE, ef);
             stack_trace(1);
         }
 

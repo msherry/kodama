@@ -46,6 +46,7 @@ hybrid *hybrid_new(void)
     h->rx_cb_data = NULL;
 
     h->e = NULL;
+    h->name = NULL;
 
     return h;
 }
@@ -61,6 +62,8 @@ void hybrid_destroy(hybrid *h)
     cbuffer_destroy(h->rx_buf);
 
     echo_destroy(h->e);
+
+    g_free(h->name);
 
     free(h);
 }

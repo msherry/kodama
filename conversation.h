@@ -6,6 +6,10 @@ typedef struct Conversation {
     struct hybrid *h0, *h1;
 } Conversation;
 
+/**
+ * Must be called before using any of the functions in conversation.c.
+ *
+ */
 void init_conversations(void);
 void r(const unsigned char *msg, int msg_length);
 

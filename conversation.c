@@ -63,6 +63,9 @@ void r(const unsigned char *msg, int msg_length)
     {
         c = conversation_create();
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
+
+        /* TODO: both sides */
+        /* hybrid_set_name(); */
     }
 
     /* TODO: check for sb == NULL */

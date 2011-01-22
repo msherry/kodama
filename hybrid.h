@@ -47,6 +47,8 @@ typedef struct hybrid {
     void *rx_cb_data;
 
     struct echo *e;
+
+    char *name;                 /**< stream name owning this hybrid  */
 } hybrid;
 
 

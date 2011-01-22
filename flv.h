@@ -101,7 +101,9 @@ void flv_parse_header(void);
 
 /**
  * Given an FLV tag, decode it and create a SAMPLE_BLOCK if possible, possibly
- * resampling in the process. Caller must free sb.
+ * resampling in the process.
+ *
+ * \note Caller must free sb.
  *
  * @param packet_data The FLV packet data.
  * @param packet_len The length of the FLV packet data in bytes.
@@ -115,7 +117,9 @@ void flv_parse_header(void);
 
 /**
  * Given a SAMPLE_BLOCK and stream name, create an FLV packet ready to be packed
- * into an imo message. Caller must free flv_packet.
+ * into an imo message.
+ *
+ * \note Caller must free flv_packet.
  *
  * @param flv_packet Address of the packet to create.
  * @param packet_len Will contain the length of the created packet.
