@@ -111,7 +111,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         tx = update_fir(e->hp, tx);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx);
+        int update = 1;//!dtd(e, tx);
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -131,7 +131,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         sb->s[i] = (int)tx;
     }
-    VERBOSE_LOG("%s\n", any_doubletalk ? "doubletalk" : " ");
+    VERBOSE_LOG("%s\n", any_doubletalk ? "doubletalk" : "no doubletalk");
 }
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
@@ -190,6 +190,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
         e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
 
+    VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf);
     if (e->dotp_xf_xf == 0.0)
     {
         DEBUG_LOG("%s\n", "dotp_xf_xf went to zero");
@@ -268,8 +269,8 @@ static int dtd(echo *e, float tx)
         e->holdover--;
     }
 
-    VERBOSE_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n",
-        (int)tx, (int)a_tx, (int)max, (e->holdover > 0))
+    /* VERBOSE_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
+    /*     (int)tx, (int)a_tx, (int)max, (e->holdover > 0)) */
 
     return e->holdover > 0;
 }

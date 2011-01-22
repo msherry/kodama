@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <execinfo.h>
 #include <fcntl.h>
 #include <getopt.h>
@@ -25,6 +26,7 @@ G_LOCK_DEFINE(stats);
 /* From interface_tcp */
 extern int attempt_reconnect;
 
+static void check_sanity(void);
 static void usage(char *arg0);
 static void set_fullname(void);
 static void parse_command_line(int argc, char **argv);
@@ -275,6 +277,11 @@ static void init_stats(void)
     G_UNLOCK(stats);
 }
 
+static void check_sanity(void)
+{
+    assert((SAMPLE_RATE % (8000)) == 0);
+}
+
 static void report_stats(void)
 {
     G_LOCK(stats);
@@ -318,6 +325,8 @@ int main(int argc, char *argv[])
     g_thread_init(NULL);
 
     parse_command_line(argc, argv);
+
+    check_sanity();
 
     init_stats();
     init_hybrids();

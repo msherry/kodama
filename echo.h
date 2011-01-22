@@ -44,14 +44,16 @@ typedef struct hp_fir {
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
-/** Holdover for DTD, in taps (ms * 8) */
-#define DTD_HOLDOVER (30 * 8)
-
 /** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 
-/** NLMS length in taps (ms * 8) */
-#define NLMS_LEN (200 * 8)
+#define TAPS_PER_MS (SAMPLE_RATE / 1000)
+
+/** Holdover for DTD, in taps (ms * TAPS_PER_MS) */
+#define DTD_HOLDOVER (30 * TAPS_PER_MS)
+
+/** NLMS length in taps (ms * TAPS_PER_MS) */
+#define NLMS_LEN (200 * TAPS_PER_MS)
 
 /** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
