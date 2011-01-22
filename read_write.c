@@ -238,6 +238,7 @@ int write_data(int fd)
             }
             /* Some other error */
             free(msg);
+            /* TODO: handle this */
             return WRITE_ERROR;
         }
         written += length;
