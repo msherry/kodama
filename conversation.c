@@ -46,9 +46,12 @@ static Conversation *conversation_create(void)
 void r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
+
     struct timeval start, end;
+    uint64_t before_cycles, end_cycles;
 
     gettimeofday(&start, NULL);
+    before_cycles = cycles();
 
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
@@ -95,10 +98,20 @@ void r(const unsigned char *msg, int msg_length)
      * here as a hack, but it should be designed properly */
     send_imo_message(return_msg, return_msg_length);
 
+    end_cycles = cycles();
     gettimeofday(&end, NULL);
+    long d_us = delta(&start, &end);
 
-    long d = delta(&start, &end);
-    g_debug("Time to process samples: %.02f ms", (d/1000.));
+    float mips_cpu = (end_cycles - before_cycles) / (d_us);
+    float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
+    float mips_per_ec_sec = mips_cpu / ((secs_of_speech*1E6)/d_us);
+
+    /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
+
+    g_debug("%.02f ms for %.02f s of speech (%.02f MIPS / second)",
+        (d_us/1000.), secs_of_speech, mips_per_ec_sec);
+
+    g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec_sec));
 
     G_LOCK(stats);
     stats.samples_processed += sb->count;

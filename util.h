@@ -19,6 +19,7 @@ unsigned int read_uint32_be(const unsigned char *buf);
 void write_uint24_be(unsigned char *buf, const unsigned int val);
 void write_uint32_be(unsigned char *buf, const unsigned int val);
 long delta(struct timeval *x, struct timeval *y);
+uint64_t cycles(void);
 
 
 #endif

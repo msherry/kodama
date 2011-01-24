@@ -111,3 +111,11 @@ long delta(struct timeval *x, struct timeval *y)
 
   return diff;
 }
+
+/* TODO: inline this */
+uint64_t cycles(void)
+{
+    uint64_t x;
+    __asm__ volatile ("rdtsc\n\t" : "=A" (x));
+    return x;
+}
