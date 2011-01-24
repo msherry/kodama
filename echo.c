@@ -152,10 +152,12 @@ static inline float clip(float in)
     if (in > MAXPCM)
     {
         out = MAXPCM;
+        g_debug("Clipping high");
     }
     else if (in < -MAXPCM)
     {
         out = -MAXPCM;
+        g_debug("Clipping low");
     }
     else
     {

@@ -108,8 +108,8 @@ void r(const unsigned char *msg, int msg_length)
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    g_debug("%.02f ms for %.02f s of speech (%.02f MIPS / second)",
-        (d_us/1000.), secs_of_speech, mips_per_ec_sec);
+    /* g_debug("%.02f ms for %.02f s of speech (%.02f MIPS / second)", */
+    /*     (d_us/1000.), secs_of_speech, mips_per_ec_sec); */
 
     g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec_sec));
 
