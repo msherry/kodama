@@ -12,15 +12,15 @@ typedef struct fd_buffer {
     unsigned char *buffer;
     unsigned int buffer_len;
 
-    GSList *read_head;   /* Completely read messages */
+    GSList *read_head;   /**< Completely read messages */
     GSList *read_tail;
     GArray *read_msg_size;
 
-    GSList *write_head;         /* Messages queued to send */
+    GSList *write_head;         /**< Messages queued to send */
     GSList *write_tail;
     GArray *write_msg_size;
 
-    GMutex *mutex;              /* per-fd mutex */
+    GMutex *mutex;              /**< per-fd mutex */
 } fd_buffer;
 
 void init_read_write(void);

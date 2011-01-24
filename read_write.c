@@ -88,8 +88,10 @@ static int extract_messages(fd_buffer *fd_buf)
 
             /* Queue the message in the full message list. temp will have to be
              * freed later */
+            g_mutex_lock(fd_buf->mutex);
             slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), temp);
             g_array_append_val(fd_buf->read_msg_size, msg_length);
+            g_mutex_unlock(fd_buf->mutex);
 
             num_msgs++;
 
