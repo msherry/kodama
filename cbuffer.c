@@ -143,6 +143,8 @@ SAMPLE_BLOCK *sample_block_create(size_t count)
     sb->s = malloc(count * sizeof(SAMPLE));
     sb->count = count;
 
+    sb->pts = 0;
+
     return sb;
 }
 

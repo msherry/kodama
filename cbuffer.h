@@ -21,10 +21,8 @@ typedef struct CBuffer
 typedef struct SAMPLE_BLOCK
 {
     SAMPLE *s;
-    /// number of samples in s
-    size_t count;
-    /// timestamp for this sample block
-    int64_t pts;
+    size_t count;               /**< number of samples in s */
+    int64_t pts;                /**< presentation ts for this sample block */
 } SAMPLE_BLOCK;
 
 

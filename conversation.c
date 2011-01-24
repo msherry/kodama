@@ -1,4 +1,5 @@
 #include <glib.h>
+#include <sys/time.h>
 
 #include "cbuffer.h"
 #include "conversation.h"
@@ -45,6 +46,10 @@ static Conversation *conversation_create(void)
 void r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
+    struct timeval start, end;
+
+    gettimeofday(&start, NULL);
+
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
@@ -89,6 +94,11 @@ void r(const unsigned char *msg, int msg_length)
     /* TODO: send_imo_message was originally static to interface_tcp. Calling it
      * here as a hack, but it should be designed properly */
     send_imo_message(return_msg, return_msg_length);
+
+    gettimeofday(&end, NULL);
+
+    long d = delta(&start, &end);
+    g_debug("Time to process samples: %.02f ms", (d/1000.));
 
     G_LOCK(stats);
     stats.samples_processed += sb->count;

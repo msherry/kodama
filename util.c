@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "kodama.h"
 #include "util.h"
@@ -100,4 +101,13 @@ void write_uint32_be(unsigned char *buf, unsigned int val)
     buf[1] = (val >> 16) & 0xff;
     buf[2] = (val >> 8) & 0xff;
     buf[3] = (val >> 0) & 0xff;
+}
+
+long delta(struct timeval *x, struct timeval *y)
+{
+  long int xx = x->tv_sec * 1000000 + x->tv_usec;
+  long int yy = y->tv_sec * 1000000 + y->tv_usec;
+  long diff = abs(xx - yy);
+
+  return diff;
 }

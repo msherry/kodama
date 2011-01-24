@@ -6,6 +6,7 @@
 #include "flv.h"
 #include "imo_message.h"
 #include "protocol.h"
+#include "util.h"
 
 /* PROTOCOL 1 - UDP */
 
@@ -88,6 +89,12 @@ SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
     if (data_len > 0)
     {
         int ret = flv_parse_tag(packet_data, data_len, *stream_name, &sb);
+        if (ret)
+        {
+            g_warning("(%s:%d) Error in flv_parse_tag. Returning null sample block",
+                __FILE__, __LINE__);
+            return NULL;
+        }
     }
 
     /* g_debug("\n\n"); */
