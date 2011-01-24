@@ -236,12 +236,12 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         return -1;
     }
 
+    SAMPLE *sample_buf = sb->s;
+    int numSamples = sb->count;
+
     /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
      * client was originally transmitting */
     SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
-    SAMPLE *sample_buf;
-    int numSamples = sb->count;
-
     if (flv->e_resample_ctx)
     {
         FLV_LOG("Resampling from %d to %d Hz",
@@ -255,10 +255,6 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
         sample_buf = resampled;
         numSamples = newrate_num_samples;
-    }
-    else
-    {
-        sample_buf = sb->s;
     }
 
     uint8_t encoded_audio[AVCODEC_MAX_AUDIO_FRAME_SIZE];
