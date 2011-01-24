@@ -222,7 +222,6 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     return ret;
 }
 
-/* Caller must free flv_packet */
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, SAMPLE_BLOCK *sb)
 {
