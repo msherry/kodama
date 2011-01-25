@@ -26,25 +26,6 @@ char *hexify(const unsigned char *buf, const int data_len)
     return ret;
 }
 
-char *hexify_16(const short *buf, const int num_shorts)
-{
-    /* TODO: doesn't handle sign */
-    char *ret = malloc(num_shorts*4 + 1);
-    char *ret_off = ret;
-
-    int offset = 0;
-    while(offset < num_shorts)
-    {
-        sprintf(ret_off, "%.4X", buf[offset]);
-        offset++;
-        ret_off += 4;
-    }
-
-    ret[num_shorts*4] = '\0';
-
-    return ret;
-}
-
 /* This just assumes that samples are 16 bits - we seem unlikely to change
  * this */
 /* Returns a string of the format "(num samples) s1 s2 ... */

@@ -4,7 +4,6 @@
 #include <stdint.h>
 
 char *hexify(const unsigned char *buf, const int data_len);
-char *hexify_16(const short *buf, const int num_shorts);
 /**
  * Create a hex representation of the given samples
  *

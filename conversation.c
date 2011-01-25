@@ -81,10 +81,14 @@ void conversation_start(const char *stream_name)
         /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
         /* setup_hw_out(c->h0); */
     }
+
+    g_strfreev(conv_and_num);
 }
 
 void conversation_end(const char *stream_name)
 {
+    gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+
     int conv_side;
     Conversation *c = find_conv_for_stream(stream_name, &conv_side);
 
@@ -94,6 +98,9 @@ void conversation_end(const char *stream_name)
     }
 
     conversation_destroy(c);
+    g_hash_table_remove(id_to_conv, (conv_and_num[0]));
+
+    g_strfreev(conv_and_num);
 }
 
 int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
@@ -113,6 +120,10 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     {
         /* This should have been done on receiving an 'S' message */
         g_warning("Conversation not found for stream %s", stream_name);
+
+        /* TODO: handle this better. We get here at the end of conversations
+         * because we've closed one side but not the other yet */
+        return -1;
 
         /* I guess we can be nice, though */
         conversation_start(stream_name);
