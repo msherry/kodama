@@ -108,11 +108,6 @@ int setup_encode_context(FLVStream *flv)
     /* This should match the decode context as closely as possible - use the
      * format byte that we cached */
 
-    /* TODO: what do we report for the speex sample rate? The correct one, or
-     * the lie that FLV tells us */
-
-    /* TODO: We probably need to prepend the format byte to all audio data */
-
     int flv_codecid, sampleRate, channels, sampleSize, flags_size;
     int ret;
     ret = decode_format_byte(flv->d_format_byte, &flv_codecid, &sampleRate,
