@@ -35,6 +35,7 @@ static FLVStream *create_flv_stream(void)
 
     flv->e_codec_ctx = avcodec_alloc_context2(CODEC_TYPE_AUDIO);
     flv->e_codec_ctx->codec_id = CODEC_ID_NONE;
+    flv->e_codec_ctx->sample_fmt = SAMPLE_FMT_S16;
     flv->e_resample_ctx = NULL;
 
     return flv;
@@ -136,10 +137,18 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             }
         }
 
+        /* TODO: all this crap is probably unnecessary */
+        uint8_t *aligned;
+        posix_memalign((void **)&aligned, 16,
+            bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
+        memset(aligned, 0, bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
+        memcpy(aligned, packet_data+offset+flv->d_flags_size,
+            bodyLength-flv->d_flags_size);
+
         /* The codec context should be set at this point. Convert data */
         AVPacket avpkt;
         av_init_packet(&avpkt);
-        avpkt.data = packet_data+offset+flv->d_flags_size;//aligned_packet_data;
+        avpkt.data = aligned; //packet_data+offset+flv->d_flags_size;
         avpkt.size = bodyLength-flv->d_flags_size;
 
         SAMPLE sample_array[AVCODEC_MAX_AUDIO_FRAME_SIZE];
@@ -170,6 +179,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
         FLV_LOG("Bytes decoded: %d\n", bytesDecoded);
 
+        free(aligned);
+
         if (bytesDecoded > 0)
         {
             int numSamples;
@@ -195,8 +206,14 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             /*     sample_buf = resampled; */
             /* } */
 
-            /* char *hex = samples_to_text(sample_buf, numSamples); */
-            /* FLV_LOG("Decoded samples: %s\n", hex); */
+            char *hex;
+
+            hex = hexify(packet_data, packet_len);
+            FLV_LOG("Incoming FLV packet: %s\n", hex);
+            free(hex);
+
+            /* hex = samples_to_text(sample_buf, numSamples); */
+            /* FLV_LOG("Decoded incoming samples: %s\n", hex); */
             /* free(hex); */
 
             *sb = sample_block_create(numSamples);
@@ -221,10 +238,6 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     offset += 4;
     FLV_LOG("PrevTagSize: %u  (%#.8x)\n", prev_tag_size, prev_tag_size);
 
-    char *hex = hexify(packet_data, packet_len);
-    FLV_LOG("Incoming FLV packet: %s\n", hex);
-    free(hex);
-
     return ret;
 }
 
@@ -232,6 +245,8 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     char *stream_name, SAMPLE_BLOCK *sb)
 {
     /* This should always only create FLV tags of type 'A' */
+
+    char *hex;
 
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     if (!flv)
@@ -243,6 +258,10 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
     SAMPLE *sample_buf = sb->s;
     int numSamples = sb->count;
+
+    /* hex = samples_to_text(sample_buf, numSamples); */
+    /* FLV_LOG("Decoded outgoing samples: %s\n", hex); */
+    /* free(hex); */
 
     /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
      * client was originally transmitting */
@@ -262,13 +281,13 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /*     numSamples = newrate_num_samples; */
     /* } */
 
-    uint8_t encoded_audio[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+    uint8_t encoded_audio[FF_MIN_BUFFER_SIZE];
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
-                AVCODEC_MAX_AUDIO_FRAME_SIZE, sample_buf);
+                FF_MIN_BUFFER_SIZE, sample_buf);
 
     FLV_LOG("Bytes encoded: %d\n", bytesEncoded);
 
-    int bodyLength = bytesEncoded + 1; /* TODO: +1 for format byte? */
+    int bodyLength = bytesEncoded + 1; /* +1 for format byte */
 
     /* We have our audio data (Body part of an FLV tag). Time to create the
      * tag. */
@@ -294,7 +313,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     offset += 3;
 
     /* Format byte */
-    *(*flv_packet + offset++) = flv->d_format_byte; /* TODO: ? */
+    *(*flv_packet + offset++) = flv->d_format_byte;
 
     /* Body */
     memcpy((*flv_packet + offset), encoded_audio, bytesEncoded);
@@ -304,7 +323,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     write_uint32_be((*flv_packet + offset), *packet_len - 4);
     offset += 4;
 
-    char *hex = hexify(*flv_packet, *packet_len);
+    hex = hexify(*flv_packet, *packet_len);
     FLV_LOG("Outgoing FLV packet: %s\n", hex);
     free(hex);
 

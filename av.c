@@ -9,7 +9,9 @@
 static int decode_format_byte(const unsigned char formatByte, int *codecid,
         int *sampleRate, int *channels, int *sampleSize, int *flags_size);
 static int get_sample_rate(const unsigned char formatbyte);
-static void local_flv_set_audio_codec(struct AVCodecContext *acodec, int flv_codecid);
+static void local_flv_set_audio_codec(struct AVCodecContext *acodec,
+    int flv_codecid);
+static int local_get_audio_flags(AVCodecContext *enc);
 
 void init_av(void)
 {
@@ -130,7 +132,7 @@ int setup_encode_context(FLVStream *flv)
         /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
         g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
         flv->e_codec_ctx->bit_rate = 20600;
-        /* flv->e_codec_ctx->compression_level = 5; */
+        flv->e_codec_ctx->compression_level = 10; /* Higher = better quality */
     }
 
     /* Load the codec */
@@ -154,8 +156,8 @@ int setup_encode_context(FLVStream *flv)
         return -1;
     }
 
-    /* TODO: resampling back to the original sample rate, if we downsampled for
-     * echo cancellation */
+    /* Resample back to the original sample rate, if we downsampled for echo
+     * cancellation */
     if (flv->e_codec_ctx->sample_rate != SAMPLE_RATE)
     {
         g_debug("Creating encode resample context: %d -> %d",
@@ -169,6 +171,20 @@ int setup_encode_context(FLVStream *flv)
     else
     {
         flv->e_resample_ctx = NULL;
+    }
+
+    /* This should match the incoming format byte */
+    int flags = local_get_audio_flags(flv->e_codec_ctx);
+
+    if (flags != flv->d_format_byte)
+    {
+        g_warning("Calculated encode format byte != decode format byte");
+        g_warning("%.2X\t%.2X", flags, flv->d_format_byte);
+        return -1;
+    }
+    else
+    {
+        /* g_message("Everything is cool with the format byte"); */
     }
 
     return 0;
@@ -345,4 +361,84 @@ static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
   }
 }
 
+static int local_get_audio_flags(AVCodecContext *enc)
+{
+    int flags = (enc->bits_per_coded_sample == 16) ? FLV_SAMPLESSIZE_16BIT : FLV_SAMPLESSIZE_8BIT;
 
+    if (enc->codec_id == CODEC_ID_AAC) // specs force these parameters
+        return FLV_CODECID_AAC | FLV_SAMPLERATE_44100HZ | FLV_SAMPLESSIZE_16BIT | FLV_STEREO;
+    else if (enc->codec_id == CODEC_ID_SPEEX) {
+        if (enc->sample_rate != 16000) {
+            g_warning("flv only supports wideband (16kHz) Speex audio\n");
+            return -1;
+        }
+        if (enc->channels != 1) {
+            g_warning("flv only supports mono Speex audio\n");
+            return -1;
+        }
+        if (enc->frame_size / 320 > 8) {
+            g_warning("Warning: Speex stream has more than "
+                "8 frames per packet. Adobe Flash "
+                "Player cannot handle this!\n");
+        }
+        return FLV_CODECID_SPEEX | FLV_SAMPLERATE_11025HZ | FLV_SAMPLESSIZE_16BIT;
+    } else {
+    switch (enc->sample_rate) {
+        case    44100:
+            flags |= FLV_SAMPLERATE_44100HZ;
+            break;
+        case    22050:
+            flags |= FLV_SAMPLERATE_22050HZ;
+            break;
+        case    11025:
+            flags |= FLV_SAMPLERATE_11025HZ;
+            break;
+        case     8000: //nellymoser only
+        case     5512: //not mp3
+            if(enc->codec_id != CODEC_ID_MP3){
+                flags |= FLV_SAMPLERATE_SPECIAL;
+                break;
+            }
+        default:
+            g_warning("flv does not support that sample rate, choose from (44100, 22050, 11025).\n");
+            return -1;
+    }
+    }
+
+    if (enc->channels > 1) {
+        flags |= FLV_STEREO;
+    }
+
+    switch(enc->codec_id){
+    case CODEC_ID_MP3:
+        flags |= FLV_CODECID_MP3    | FLV_SAMPLESSIZE_16BIT;
+        break;
+    case CODEC_ID_PCM_U8:
+        flags |= FLV_CODECID_PCM    | FLV_SAMPLESSIZE_8BIT;
+        break;
+    case CODEC_ID_PCM_S16BE:
+        flags |= FLV_CODECID_PCM    | FLV_SAMPLESSIZE_16BIT;
+        break;
+    case CODEC_ID_PCM_S16LE:
+        flags |= FLV_CODECID_PCM_LE | FLV_SAMPLESSIZE_16BIT;
+        break;
+    case CODEC_ID_ADPCM_SWF:
+        flags |= FLV_CODECID_ADPCM | FLV_SAMPLESSIZE_16BIT;
+        break;
+    case CODEC_ID_NELLYMOSER:
+        if (enc->sample_rate == 8000) {
+            flags |= FLV_CODECID_NELLYMOSER_8KHZ_MONO | FLV_SAMPLESSIZE_16BIT;
+        } else {
+            flags |= FLV_CODECID_NELLYMOSER | FLV_SAMPLESSIZE_16BIT;
+        }
+        break;
+    case 0:
+        flags |= enc->codec_tag<<4;
+        break;
+    default:
+        g_warning("codec not compatible with flv\n");
+        return -1;
+    }
+
+    return flags;
+}
