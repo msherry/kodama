@@ -123,7 +123,7 @@ static void parse_command_line(int argc, char *argv[])
             {"shard", 1, 0, 0}, /* 0 */
             {"server", 1, 0, 0},
             {"basename", 1, 0, 0},
-            {"flv", 1, 0, 0},
+            {"flv", 0, 0, 0},
             {"help", 0, 0, 'h'},
             {0, 0, 0, 0}
         };
