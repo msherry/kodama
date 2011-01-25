@@ -14,6 +14,7 @@
 */
 
 /* Caller must free stream_name and packet_data */
+/* TODO: error checking would be good */
 void decode_imo_message(const unsigned char *msg, const int msg_length, char *type,
         char **stream_name, unsigned char **packet_data, int *packet_len)
 {
