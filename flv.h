@@ -129,6 +129,6 @@ void flv_parse_header(void);
  * @return Zero on success, non-zero on failure.
  */
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
-    char *stream_name, struct SAMPLE_BLOCK *sb);
+    const char *stream_name, struct SAMPLE_BLOCK *sb);
 
 #endif

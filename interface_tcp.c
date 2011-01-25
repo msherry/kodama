@@ -7,6 +7,7 @@
 
 #include "cbuffer.h"
 #include "conversation.h"
+#include "imo_message.h"
 #include "interface_tcp.h"
 #include "protocol.h"
 #include "read_write.h"
@@ -161,40 +162,55 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
     /* g_debug("Got an imo packet"); */
 
     char *stream_name;
-    /* TODO: the first imo message is an FLV header, not an FLV tag. We keep
-     * forgetting that and expecting audio data in every imo message */
-    SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
+    char type;
 
-    if (sb)
+    /* We may or may not get these */
+    unsigned char *flv_data = NULL;
+    int flv_len = 0;
+
+    int reflect = 1;            /* Reflect this message back unchanged? */
+
+    decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
+            &flv_len);
+
+    switch(type)
     {
-        /* char *samples_text = samples_to_text(sb->s, sb->count); */
-        /* g_debug("Audio samples: %s", samples_text); */
-        /* free(samples_text); */
-
-        /* TODO: calling r() calls imo_message_to_samples, which we had to call
-         * to get here. Avoid this duplication */
-
-        sample_block_destroy(sb);
-
-        if (r(msg, msg_length) == 0)
+    case 'S':
+        /* TODO: */
+        break;
+    case 'E':
+        /* TODO: */
+        break;
+    case 'D':
+        if ((!flv_data) || (flv_len == 0))
         {
-            /* Great, done with original message */
-            free(msg);
+            g_warning("D message received with no FLV packet");
         }
         else
         {
-            /* TODO: handle this better */
-            send_imo_message(msg, msg_length);
+            /* This will handle sending the return message, if everything goes
+             * right */
+            /* TODO: should it? */
+            int ret = r(stream_name, flv_data, flv_len);
+
+            reflect = (ret == 0) ? 0 : 1; /* Don't reflect if everything's ok */
         }
+        break;
+    default:
+        g_debug("Unknown message type %c", type);
+        char *hex = hexify(msg, msg_length);
+        g_debug("%s", hex);
+        free(hex);
+    }
+
+    if (reflect)
+    {
+        send_imo_message(msg, msg_length);
     }
     else
     {
-        /* If we didn't get any samples out of the imo message, for whatever
-         * reason, send the message untouched back to wowza. The message could
-         * have been a sample-less header, a close packet, or corrupt
-         * somehow. If it's corrupt, let wowza deal with it - we don't want it
-         * to crash us */
-        send_imo_message(msg, msg_length);
+        /* Done with this message */
+        free(msg);
     }
 
     free(stream_name);

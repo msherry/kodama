@@ -65,46 +65,8 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 
 /* PROTOCOL 2 - TCP (WOWZA) */
-/* Caller must free stream_name as well as the returned SAMPLE_BLOCK */
-SAMPLE_BLOCK *imo_message_to_samples(const unsigned char *msg, int msg_length,
-        char **stream_name)
-{
-    char type;
-    unsigned char *packet_data;
-    int data_len;
-
-    /* TODO: if there are any problems decoding/encoding, just reflect the
-     * original message back(?) */
-
-    decode_imo_message(msg, msg_length, &type, stream_name, &packet_data,
-            &data_len);
-
-    /* Stream name is convName:[01] */
-
-    /* g_debug("Size: %d", msg_length); */
-    /* g_debug("Type: %c", type); */
-    /* g_debug("Stream name: %s", *stream_name); */
-
-    SAMPLE_BLOCK *sb = NULL;
-    if (data_len > 0)
-    {
-        int ret = flv_parse_tag(packet_data, data_len, *stream_name, &sb);
-        if (ret)
-        {
-            g_warning("(%s:%d) Error in flv_parse_tag. Returning null sample block",
-                __FILE__, __LINE__);
-            return NULL;
-        }
-    }
-
-    /* g_debug("\n\n"); */
-
-    free(packet_data);
-    return sb;
-}
-
 unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
-        char *stream_name)
+        const char *stream_name)
 {
     unsigned char *flv_packet = NULL;
     int flv_packet_len;

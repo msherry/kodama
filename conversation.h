@@ -12,15 +12,6 @@ typedef struct Conversation {
  */
 void init_conversations(void);
 
-/**
- * Handles processing incoming imo messages - extracts audio data, echo cancels,
- * creates a return message, and queues it to be sent back over the network.
- *
- * @param msg The incoming message
- * @param msg_length The length of the incoming message
- *
- * @return zero on success, non-zero on error.
- */
-int r(const unsigned char *msg, int msg_length);
+int r(const char *stream_name, const unsigned char *flv_data, int flv_len);
 
 #endif

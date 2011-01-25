@@ -244,7 +244,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 }
 
 int flv_create_tag(unsigned char **flv_packet, int *packet_len,
-    char *stream_name, SAMPLE_BLOCK *sb)
+    const char *stream_name, SAMPLE_BLOCK *sb)
 {
     /* This should always only create FLV tags of type 'A' */
 

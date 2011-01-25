@@ -3,6 +3,7 @@
 
 #include "cbuffer.h"
 #include "conversation.h"
+#include "flv.h"
 #include "hybrid.h"
 #include "interface_tcp.h"
 #include "kodama.h"
@@ -43,17 +44,21 @@ static Conversation *conversation_create(void)
     return c;
 }
 
-int r(const unsigned char *msg, int msg_length)
+int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
 {
-    char *stream_name;
-
     struct timeval start, end;
     uint64_t before_cycles, end_cycles;
+
+    SAMPLE_BLOCK *sb = NULL;
 
     gettimeofday(&start, NULL);
     before_cycles = cycles();
 
-    SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
+    int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
+    if (ret != 0)
+    {
+        return ret;
+    }
 
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
     int conv_side = atoi(conv_and_num[1]);
@@ -99,15 +104,6 @@ int r(const unsigned char *msg, int msg_length)
     unsigned char *return_msg;
     int return_msg_length;
     return_msg = samples_to_imo_message(sb, &return_msg_length, stream_name);
-
-    char *hex;
-    hex = hexify(msg, msg_length);
-    /* g_debug("Original message: %s", hex); */
-    free(hex);
-
-    hex = hexify(return_msg, return_msg_length);
-    /* g_debug("Return message: %s", hex); */
-    free(hex);
 
     /* TODO: send_imo_message was originally static to interface_tcp. Calling it
      * here as a hack, but it should be designed properly */
