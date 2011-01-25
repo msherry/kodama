@@ -193,20 +193,20 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             numSamples = frame_size / sizeof(SAMPLE);
             FLV_LOG("Samples decoded: %d\n", numSamples);
 
-            /* if (flv->d_resample_ctx) */
-            /* { */
-            /*     /\* Need to resample *\/ */
-            /*     FLV_LOG("Resampling from %d to %d Hz\n", */
-            /*         flv->d_codec_ctx->sample_rate, SAMPLE_RATE); */
+            if (flv->d_resample_ctx)
+            {
+                /* Need to resample */
+                FLV_LOG("Resampling from %d to %d Hz\n",
+                    flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
 
-            /*     int newrate_num_samples; */
+                int newrate_num_samples;
 
-            /*     newrate_num_samples = audio_resample(flv->d_resample_ctx, */
-            /*         resampled, sample_array, numSamples); */
+                newrate_num_samples = audio_resample(flv->d_resample_ctx,
+                    resampled, sample_array, numSamples);
 
-            /*     numSamples = newrate_num_samples; */
-            /*     sample_buf = resampled; */
-            /* } */
+                numSamples = newrate_num_samples;
+                sample_buf = resampled;
+            }
 
             char *hex;
 
@@ -268,20 +268,20 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
      * client was originally transmitting */
     SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
-    /* if (flv->e_resample_ctx) */
-    /* { */
-    /*     FLV_LOG("Resampling from %d to %d Hz\n", */
-    /*             SAMPLE_RATE, flv->d_codec_ctx->sample_rate); */
+    if (flv->e_resample_ctx)
+    {
+        FLV_LOG("Resampling from %d to %d Hz\n",
+                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
 
-    /*     int newrate_num_samples = audio_resample(flv->e_resample_ctx, */
-    /*             resampled, sb->s, sb->count); */
+        int newrate_num_samples = audio_resample(flv->e_resample_ctx,
+                resampled, sb->s, sb->count);
 
-    /*     FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count, */
-    /*         newrate_num_samples); */
+        FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count,
+            newrate_num_samples);
 
-    /*     sample_buf = resampled; */
-    /*     numSamples = newrate_num_samples; */
-    /* } */
+        sample_buf = resampled;
+        numSamples = newrate_num_samples;
+    }
 
     uint8_t encoded_audio[FF_MIN_BUFFER_SIZE];
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,

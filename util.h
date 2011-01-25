@@ -13,6 +13,7 @@ char *hexify(const unsigned char *buf, const int data_len);
  * @return string representation of samples
  */
 char *samples_to_text(const SAMPLE *samples, const int num_samples);
+char *floats_to_text(const float *samples, const int num_samples);
 unsigned int read_uint24_be(const unsigned char *buf);
 unsigned int read_uint32_be(const unsigned char *buf);
 void write_uint24_be(unsigned char *buf, const unsigned int val);

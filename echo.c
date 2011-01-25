@@ -6,6 +6,7 @@
 #include "hybrid.h"
 #include "iir.h"
 #include "kodama.h"
+#include "util.h"
 
 extern globals_t globals;
 
@@ -219,10 +220,17 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
         if (isinf(u_ef))
         {
+            char *hex;
             DEBUG_LOG("%s\n", "u_ef went infinite");
             DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
             DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err);
             DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
+            hex = floats_to_text(e->w, NLMS_LEN);
+            DEBUG_LOG("e->w: %s\n", hex);
+            free(hex);
+            hex = floats_to_text(e->x+j, NLMS_LEN);
+            DEBUG_LOG("e->x+j: %s\n", hex);
+            free(hex);
             stack_trace(1);
         }
 

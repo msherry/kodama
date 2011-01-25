@@ -175,9 +175,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    /* g_debug("%.02f ms for %.02f s of speech (%.02f MIPS / second)", */
-    /*     (d_us/1000.), secs_of_speech, mips_per_ec_sec); */
-
+    g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS / second)",
+        (d_us/1000.), secs_of_speech*1000, mips_per_ec_sec);
     g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec_sec));
 
     G_LOCK(stats);

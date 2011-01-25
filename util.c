@@ -53,6 +53,30 @@ char *samples_to_text(const SAMPLE *samples, const int num_samples)
     return ret;
 }
 
+char *floats_to_text(const float *samples, const int num_samples)
+{
+    char *ret;
+    gchar **sample_strings = malloc((num_samples+2) * sizeof(gchar *));
+
+    sample_strings[0] = g_strdup_printf("(%d)", num_samples);
+    sample_strings[num_samples] = 0;
+
+    int i;
+    for(i = 1; i < num_samples; i++)
+    {
+        sample_strings[i] = g_strdup_printf("%f", samples[i]);
+    }
+
+    ret = g_strjoinv(" ", sample_strings);
+
+    for(i = 0; i < num_samples; i++)
+    {
+        g_free(sample_strings[i]);
+    }
+
+    return ret;
+}
+
 unsigned int read_uint24_be(const unsigned char *buf)
 {
     unsigned int ret;
