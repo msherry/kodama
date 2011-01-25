@@ -81,7 +81,7 @@ int r(const unsigned char *msg, int msg_length)
     }
 
     /* commenting this out should leave samples alone */
-    conversation_process_samples(c, conv_side, sb);
+    /* conversation_process_samples(c, conv_side, sb); */
 
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */

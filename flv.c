@@ -10,7 +10,7 @@
 #include "kodama.h"
 #include "util.h"
 
-extern globals_t globals;
+extern globals_t globals;       /* Needed for FLV_LOG */
 
 static FLVStream *create_flv_stream(void);
 
@@ -195,6 +195,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             /*     sample_buf = resampled; */
             /* } */
 
+            /* char *hex = samples_to_text(sample_buf, numSamples); */
+            /* FLV_LOG("Decoded samples: %s\n", hex); */
+            /* free(hex); */
+
             *sb = sample_block_create(numSamples);
             memcpy((*sb)->s, sample_buf, numSamples*sizeof(SAMPLE));
             (*sb)->pts = timestamp; /* We're just going to pass this back to the
@@ -216,6 +220,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     prev_tag_size = read_uint32_be(packet_data + offset);
     offset += 4;
     FLV_LOG("PrevTagSize: %u  (%#.8x)\n", prev_tag_size, prev_tag_size);
+
+    char *hex = hexify(packet_data, packet_len);
+    FLV_LOG("Incoming FLV packet: %s\n", hex);
+    free(hex);
 
     return ret;
 }
@@ -265,7 +273,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /* We have our audio data (Body part of an FLV tag). Time to create the
      * tag. */
     *packet_len = 1 + 3 + 3 + 1 + 3 + bodyLength + 4;
-    *flv_packet = calloc(*packet_len, 1);
+    *flv_packet = malloc(*packet_len);
 
     FLV_LOG("Return flv packet len: %d\n", *packet_len);
 
@@ -282,7 +290,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     offset += 3;
     *(*flv_packet + offset++) = ((timestamp >> 24) & 0xff);
 
-    /* Stream id */
+    /* Stream id - don't care*/
     offset += 3;
 
     /* Format byte */
@@ -295,6 +303,10 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /* Previous tag size */
     write_uint32_be((*flv_packet + offset), *packet_len - 4);
     offset += 4;
+
+    char *hex = hexify(*flv_packet, *packet_len);
+    FLV_LOG("Outgoing FLV packet: %s\n", hex);
+    free(hex);
 
     return 0;
 }
