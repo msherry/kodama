@@ -124,7 +124,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         {
             FLV_LOG("Setting up decode context\n");
             ret = setup_decode_context(flv, formatByte);
-            if (ret != 0)
+            if (ret)
             {
                 FLV_LOG("Error setting up decode context: %d\n", ret);
                 return ret;

@@ -91,7 +91,8 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
     }
     if (flv->d_codec_ctx->sample_fmt != SAMPLE_FMT_S16)
     {
-        /* TODO: don't abort here */
+        /* TODO: don't abort here, but we have to signal that this codec context
+         * isn't valid */
         g_error("WTF? sample_fmt was %d", flv->d_codec_ctx->sample_fmt);
         return -1;
     }
