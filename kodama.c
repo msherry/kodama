@@ -68,6 +68,8 @@ static void usage(char *arg0)
     fprintf(stderr, "\n");
     fprintf(stderr, "-v:        verbose output\n");
     fprintf(stderr, "--flv:     FLV debugging output \n");
+
+    exit(0);
 }
 
 static void set_fullname(void)
@@ -137,6 +139,14 @@ static void parse_command_line(int argc, char *argv[])
 
         switch (c)
         {
+        case 'h':
+            usage(argv[0]);
+            exit(0);
+            break;
+        case 'd':
+            list_hw_input_devices();
+            exit(0);
+            break;
         case 0:
             if (!strcmp("shard", long_options[option_index].name))
             {
@@ -167,14 +177,6 @@ static void parse_command_line(int argc, char *argv[])
                 globals.flv_debug = 1;
             }
            break;
-        case 'h':
-            usage(argv[0]);
-            exit(0);
-            break;
-        case 'd':
-            list_hw_input_devices();
-            exit(0);
-            break;
         case 'e':
             globals.echo_cancel = 1;
             break;
