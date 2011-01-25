@@ -19,6 +19,8 @@ G_LOCK_EXTERN(stats);
 static Conversation *conversation_create(void);
 static void conversation_process_samples(Conversation *c, int conv_side,
     SAMPLE_BLOCK *sb);
+static Conversation *find_conv_for_stream(const char *stream_name,
+        int *conv_side);
 
 void init_conversations(void)
 {
@@ -45,27 +47,23 @@ static Conversation *conversation_create(void)
     return c;
 }
 
-int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
+static void conversation_destroy(Conversation *c)
 {
-    struct timeval start, end;
-    uint64_t before_cycles, end_cycles;
+    g_return_if_fail(c != NULL);
 
-    SAMPLE_BLOCK *sb = NULL;
+    hybrid_destroy(c->h0);
+    hybrid_destroy(c->h1);
 
-    gettimeofday(&start, NULL);
-    before_cycles = cycles();
+    free(c);
+}
 
-    int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
-    if (ret)
-    {
-        return ret;
-    }
-
+void conversation_start(const char *stream_name)
+{
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
-    int conv_side = atoi(conv_and_num[1]);
-
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
 
+    /* This will be called once per participant in a conversation -- only create
+     * one the first time */
     if (!c)
     {
         c = conversation_create();
@@ -83,14 +81,49 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
         c->h0->tx_cb_fn = shortcircuit_tx_to_rx;
         setup_hw_out(c->h0);
     }
+}
 
-    if (sb == NULL)
+void conversation_end(const char *stream_name)
+{
+    int conv_side;
+    Conversation *c = find_conv_for_stream(stream_name, &conv_side);
+
+    if (!c)
     {
-        g_warning("sb == NULL in r(). Returning original samples");
-        return -1;
+        return;
     }
 
-    /* commenting this out should leave samples alone */
+    conversation_destroy(c);
+}
+
+int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
+{
+    struct timeval start, end;
+    uint64_t before_cycles, end_cycles;
+
+    SAMPLE_BLOCK *sb = NULL;
+
+    gettimeofday(&start, NULL);
+    before_cycles = cycles();
+
+    int conv_side;
+    Conversation *c = find_conv_for_stream(stream_name, &conv_side);
+
+    if (!c)
+    {
+        /* This should have been done on receiving an 'S' message */
+        g_warning("Conversation not found for stream %s", stream_name);
+
+        /* I guess we can be nice, though */
+        conversation_start(stream_name);
+    }
+
+    int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
+    if (ret)
+    {
+        return ret;
+    }
+
     conversation_process_samples(c, conv_side, sb);
 
     /* sb has echo-canceled samples. Send them back under the same stream
@@ -110,13 +143,11 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
         return ret;
     }
 
-
     /* TODO: we may want to move this part elsewhere */
     unsigned char *return_msg;
     int return_msg_length;
     create_imo_message(&return_msg, &return_msg_length, 'D',
             stream_name, return_flv_packet, return_flv_len);
-
 
     /* TODO: send_imo_message was originally static to interface_tcp. Calling it
      * here as a hack, but it should be designed properly */
@@ -142,10 +173,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     stats.samples_processed += sb->count;
     G_UNLOCK(stats);
 
-
     sample_block_destroy(sb);
     free(return_flv_packet);
-    g_strfreev(conv_and_num);
 
     return 0;
 }
@@ -163,4 +192,16 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     /* Now that the samples have been echo-canceled, let the right-side hybrid
      * see them */
     hybrid_put_rx_samples(hr, sb);
+}
+
+static Conversation *find_conv_for_stream(const char *stream_name,
+        int *conv_side)
+{
+    gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+    Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
+    *conv_side = atoi(conv_and_num[1]);
+
+    g_strfreev(conv_and_num);
+
+    return c;
 }

@@ -11,6 +11,8 @@ typedef struct Conversation {
  *
  */
 void init_conversations(void);
+void conversation_start(const char *stream_name);
+void conversation_end(const char *stream_name);
 
 int r(const char *stream_name, const unsigned char *flv_data, int flv_len);
 

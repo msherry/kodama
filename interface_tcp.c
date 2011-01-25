@@ -176,10 +176,10 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
     switch(type)
     {
     case 'S':
-        /* TODO: */
+        conversation_start(stream_name);
         break;
     case 'E':
-        /* TODO: */
+        conversation_end(stream_name);
         break;
     case 'D':
         if ((!flv_data) || (flv_len == 0))
