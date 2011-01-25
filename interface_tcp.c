@@ -214,6 +214,7 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
     }
 
     free(stream_name);
+    free(flv_data);             /* Should be ok to free even if it's NULL */
 }
 
 void send_imo_message(const unsigned char *msg, int msg_len)

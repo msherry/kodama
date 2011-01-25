@@ -30,11 +30,17 @@ void decode_imo_message(const unsigned char *msg, const int msg_length, char *ty
     offset += stream_name_length;
 
     /* account for header */
-    int packet_length = msg_length - (6+stream_name_length);
-    *packet_data = malloc(packet_length);
-    memcpy(*packet_data, msg+offset, packet_length);
+    *packet_len = msg_length - (6+stream_name_length);
 
-    *packet_len = packet_length;
+    if (*packet_len)
+    {
+        *packet_data = malloc(*packet_len);
+        memcpy(*packet_data, msg+offset, *packet_len);
+    }
+    else
+    {
+        g_debug("Got an imo message with zero packet len (type %c)", *type);
+    }
 }
 
 /* msg must eventually be freed */
