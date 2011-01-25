@@ -45,7 +45,7 @@ void decode_imo_message(const unsigned char *msg, const int msg_length, char *ty
 
 /* msg must eventually be freed */
 void create_imo_message(unsigned char **msg, int *msg_length, char type,
-        char *stream_name, unsigned char *packet_data, int packet_len)
+        const char *stream_name, unsigned char *packet_data, int packet_len)
 {
     int stream_name_len = strlen(stream_name); // Hope this fits in a byte
     int total_len = 4 + 1 + 1 + stream_name_len + packet_len;

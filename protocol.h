@@ -16,8 +16,4 @@ typedef struct proto_header {
 struct SAMPLE_BLOCK *message_to_samples(gchar *buf, gint num_bytes);
 gchar *samples_to_message(struct SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto);
 
-/* Protocol 2 -TCP (Wowza) */
-unsigned char *samples_to_imo_message(SAMPLE_BLOCK *sb, int *msg_length,
-        const char *stream_name);
-
 #endif

@@ -5,6 +5,7 @@
 #include "conversation.h"
 #include "flv.h"
 #include "hybrid.h"
+#include "imo_message.h"
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
@@ -55,7 +56,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     before_cycles = cycles();
 
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
-    if (ret != 0)
+    if (ret)
     {
         return ret;
     }
@@ -101,9 +102,21 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     /* TODO: is this kosher? */
     /* sb->pts += d_us/1000; */
 
+    unsigned char *return_flv_packet = NULL;
+    int return_flv_len = 0;
+    ret = flv_create_tag(&return_flv_packet, &return_flv_len, stream_name, sb);
+    if (ret)
+    {
+        return ret;
+    }
+
+
+    /* TODO: we may want to move this part elsewhere */
     unsigned char *return_msg;
     int return_msg_length;
-    return_msg = samples_to_imo_message(sb, &return_msg_length, stream_name);
+    create_imo_message(&return_msg, &return_msg_length, 'D',
+            stream_name, return_flv_packet, return_flv_len);
+
 
     /* TODO: send_imo_message was originally static to interface_tcp. Calling it
      * here as a hack, but it should be designed properly */
@@ -129,7 +142,9 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     stats.samples_processed += sb->count;
     G_UNLOCK(stats);
 
+
     sample_block_destroy(sb);
+    free(return_flv_packet);
     g_strfreev(conv_and_num);
 
     return 0;
