@@ -130,8 +130,8 @@ int setup_encode_context(FLVStream *flv)
         /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
         g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
         flv->e_codec_ctx->bit_rate = 20600;
+        /* flv->e_codec_ctx->compression_level = 5; */
     }
-
 
     /* Load the codec */
     AVCodec *codec;

@@ -176,13 +176,16 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
 
         sample_block_destroy(sb);
 
-        r(msg, msg_length);
-
-        /* TODO: this reflection is temporary - the one below is not */
-        /* send_imo_message(msg, msg_length); */
-
-        /* Done with original message */
-        free(msg);
+        if (r(msg, msg_length) == 0)
+        {
+            /* Great, done with original message */
+            free(msg);
+        }
+        else
+        {
+            /* TODO: handle this better */
+            send_imo_message(msg, msg_length);
+        }
     }
     else
     {

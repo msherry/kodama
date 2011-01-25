@@ -57,7 +57,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     if (!flv)
     {
-        FLV_LOG("FLVStream not found for stream %s - creating it", stream_name);
+        FLV_LOG("FLVStream not found for stream %s - creating it\n",
+            stream_name);
         flv = create_flv_stream();
         g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
     }
@@ -66,7 +67,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     int offset = 0;
     int ret=-1;
 
-    FLV_LOG("Packet length: %d", packet_len);
+    FLV_LOG("Packet length: %d\n", packet_len);
 
     type_code = packet_data[offset++];
     switch(type_code)
@@ -86,24 +87,24 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     default:
         /* Unknown */
         type = 'U';
-        FLV_LOG("Unknown packet type: %c", type_code);
+        FLV_LOG("Unknown packet type: %c\n", type_code);
         return -1;
         break;
     }
-    FLV_LOG("Type: %c", type);
+    FLV_LOG("Type: %c\n", type);
 
     /* 3 bytes, big-endian */
     unsigned int bodyLength;
     bodyLength = read_uint24_be(packet_data+offset);
     offset += 3;
-    FLV_LOG("BodyLength: %d", bodyLength);
+    FLV_LOG("BodyLength: %d\n", bodyLength);
 
     /* Timestamp - 4 bytes, crazy order */
     unsigned int timestamp;
     timestamp = read_uint24_be(packet_data+offset);
     offset += 3;
     timestamp |= (packet_data[offset++] << 24);
-    FLV_LOG("Timestamp: %u  (%#.8x)", timestamp, timestamp);
+    FLV_LOG("Timestamp: %u  (%#.8x)\n", timestamp, timestamp);
 
     /* stream id is 3 bytes, and always zero - skip it */
     offset += 3;
@@ -118,31 +119,28 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
         if (!flv->d_format_byte || flv->d_format_byte != formatByte)
         {
-            FLV_LOG("Setting up decode context");
+            FLV_LOG("Setting up decode context\n");
             ret = setup_decode_context(flv, formatByte);
             if (ret != 0)
             {
-                FLV_LOG("Error setting up decode context: %d", ret);
+                FLV_LOG("Error setting up decode context: %d\n", ret);
                 return ret;
             }
 
-            FLV_LOG("Setting up encode context");
+            FLV_LOG("Setting up encode context\n");
             ret = setup_encode_context(flv);
             if (ret != 0)
             {
-                FLV_LOG("Error setting up encode context: %d", ret);
+                FLV_LOG("Error setting up encode context: %d\n", ret);
                 return ret;
             }
         }
 
         /* The codec context should be set at this point. Convert data */
-
         AVPacket avpkt;
         av_init_packet(&avpkt);
-        avpkt.data = packet_data+offset+flv->d_flags_size;
+        avpkt.data = packet_data+offset+flv->d_flags_size;//aligned_packet_data;
         avpkt.size = bodyLength-flv->d_flags_size;
-        avpkt.dts = timestamp;
-        avpkt.stream_index = 1;
 
         SAMPLE sample_array[AVCODEC_MAX_AUDIO_FRAME_SIZE];
         int frame_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
@@ -170,7 +168,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         int bytesDecoded = avcodec_decode_audio3(flv->d_codec_ctx, sample_array,
                 &frame_size, &avpkt);
 
-        FLV_LOG("Bytes decoded: %d", bytesDecoded);
+        FLV_LOG("Bytes decoded: %d\n", bytesDecoded);
 
         if (bytesDecoded > 0)
         {
@@ -180,27 +178,27 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             SAMPLE *sample_buf = sample_array;
 
             numSamples = frame_size / sizeof(SAMPLE);
-            FLV_LOG("Samples decoded: %d", numSamples);
+            FLV_LOG("Samples decoded: %d\n", numSamples);
 
-            if (flv->d_resample_ctx)
-            {
-                /* Need to resample */
-                FLV_LOG("Resampling from %d to %d Hz",
-                    flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
+            /* if (flv->d_resample_ctx) */
+            /* { */
+            /*     /\* Need to resample *\/ */
+            /*     FLV_LOG("Resampling from %d to %d Hz\n", */
+            /*         flv->d_codec_ctx->sample_rate, SAMPLE_RATE); */
 
-                int newrate_num_samples;
+            /*     int newrate_num_samples; */
 
-                newrate_num_samples = audio_resample(flv->d_resample_ctx,
-                    resampled, sample_array, numSamples);
+            /*     newrate_num_samples = audio_resample(flv->d_resample_ctx, */
+            /*         resampled, sample_array, numSamples); */
 
-                numSamples = newrate_num_samples;
-                sample_buf = resampled;
-            }
+            /*     numSamples = newrate_num_samples; */
+            /*     sample_buf = resampled; */
+            /* } */
 
             *sb = sample_block_create(numSamples);
             memcpy((*sb)->s, sample_buf, numSamples*sizeof(SAMPLE));
             (*sb)->pts = timestamp; /* We're just going to pass this back to the
-                                  * encoder */
+                                     * encoder */
 
             ret = 0;
         }
@@ -217,7 +215,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     unsigned int prev_tag_size;
     prev_tag_size = read_uint32_be(packet_data + offset);
     offset += 4;
-    FLV_LOG("PrevTagSize: %u  (%#.8x)", prev_tag_size, prev_tag_size);
+    FLV_LOG("PrevTagSize: %u  (%#.8x)\n", prev_tag_size, prev_tag_size);
 
     return ret;
 }
@@ -241,26 +239,26 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
      * client was originally transmitting */
     SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
-    if (flv->e_resample_ctx)
-    {
-        FLV_LOG("Resampling from %d to %d Hz",
-                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
+    /* if (flv->e_resample_ctx) */
+    /* { */
+    /*     FLV_LOG("Resampling from %d to %d Hz\n", */
+    /*             SAMPLE_RATE, flv->d_codec_ctx->sample_rate); */
 
-        int newrate_num_samples = audio_resample(flv->e_resample_ctx,
-                resampled, sb->s, sb->count);
+    /*     int newrate_num_samples = audio_resample(flv->e_resample_ctx, */
+    /*             resampled, sb->s, sb->count); */
 
-        FLV_LOG("Resampled from %d to %d samples", (int)sb->count,
-            newrate_num_samples);
+    /*     FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count, */
+    /*         newrate_num_samples); */
 
-        sample_buf = resampled;
-        numSamples = newrate_num_samples;
-    }
+    /*     sample_buf = resampled; */
+    /*     numSamples = newrate_num_samples; */
+    /* } */
 
     uint8_t encoded_audio[AVCODEC_MAX_AUDIO_FRAME_SIZE];
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
                 AVCODEC_MAX_AUDIO_FRAME_SIZE, sample_buf);
 
-    FLV_LOG("Bytes encoded: %d", bytesEncoded);
+    FLV_LOG("Bytes encoded: %d\n", bytesEncoded);
 
     int bodyLength = bytesEncoded + 1; /* TODO: +1 for format byte? */
 
@@ -269,7 +267,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     *packet_len = 1 + 3 + 3 + 1 + 3 + bodyLength + 4;
     *flv_packet = calloc(*packet_len, 1);
 
-    FLV_LOG("Return flv packet len: %d", *packet_len);
+    FLV_LOG("Return flv packet len: %d\n", *packet_len);
 
     int offset = 0;
 
@@ -279,7 +277,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     offset += 3;
 
     int timestamp = sb->pts;
-    FLV_LOG("Outgoing timestamp: %d", timestamp);
+    FLV_LOG("Outgoing timestamp: %d\n", timestamp);
     write_uint24_be((*flv_packet + offset), timestamp);
     offset += 3;
     *(*flv_packet + offset++) = ((timestamp >> 24) & 0xff);

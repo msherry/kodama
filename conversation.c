@@ -43,7 +43,7 @@ static Conversation *conversation_create(void)
     return c;
 }
 
-void r(const unsigned char *msg, int msg_length)
+int r(const unsigned char *msg, int msg_length)
 {
     char *stream_name;
 
@@ -74,12 +74,23 @@ void r(const unsigned char *msg, int msg_length)
         g_free(tmpname);
     }
 
-    /* TODO: check for sb == NULL */
-    /* TODO: commenting this out should leave samples alone */
+    if (sb == NULL)
+    {
+        g_warning("sb == NULL in r(). Returning original samples");
+        return -1;
+    }
+
+    /* commenting this out should leave samples alone */
     conversation_process_samples(c, conv_side, sb);
 
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
+
+    gettimeofday(&end, NULL);
+    long d_us = delta(&start, &end);
+
+    /* TODO: is this kosher? */
+    /* sb->pts += d_us/1000; */
 
     unsigned char *return_msg;
     int return_msg_length;
@@ -99,8 +110,9 @@ void r(const unsigned char *msg, int msg_length)
     send_imo_message(return_msg, return_msg_length);
 
     end_cycles = cycles();
+    /* Reuse end */
     gettimeofday(&end, NULL);
-    long d_us = delta(&start, &end);
+    d_us = delta(&start, &end);
 
     float mips_cpu = (end_cycles - before_cycles) / (d_us);
     float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
@@ -119,6 +131,8 @@ void r(const unsigned char *msg, int msg_length)
 
     sample_block_destroy(sb);
     g_strfreev(conv_and_num);
+
+    return 0;
 }
 
 static void conversation_process_samples(Conversation *c, int conv_side,

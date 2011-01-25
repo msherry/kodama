@@ -18,7 +18,9 @@ void init_conversations(void);
  *
  * @param msg The incoming message
  * @param msg_length The length of the incoming message
+ *
+ * @return zero on success, non-zero on error.
  */
-void r(const unsigned char *msg, int msg_length);
+int r(const unsigned char *msg, int msg_length);
 
 #endif
