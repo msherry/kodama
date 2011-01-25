@@ -10,6 +10,8 @@
 #include "kodama.h"
 #include "util.h"
 
+/* TODO: shortcircuit tx samples to rx, send to hardware for testing */
+
 extern globals_t globals;       /* Needed for FLV_LOG */
 
 static FLVStream *create_flv_stream(void);
