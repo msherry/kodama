@@ -56,6 +56,7 @@ int r(const unsigned char *msg, int msg_length)
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+    int conv_side = atoi(conv_and_num[1]);
 
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
 
@@ -71,6 +72,10 @@ int r(const unsigned char *msg, int msg_length)
         tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 1);
         hybrid_set_name(c->h1, tmpname);
         g_free(tmpname);
+
+        /* TODO: temporary debugging */
+        c->h0->tx_cb_fn = shortcircuit_tx_to_rx;
+        setup_hw_out(c->h0);
     }
 
     if (sb == NULL)
@@ -80,7 +85,7 @@ int r(const unsigned char *msg, int msg_length)
     }
 
     /* commenting this out should leave samples alone */
-    /* conversation_process_samples(c, conv_side, sb); */
+    conversation_process_samples(c, conv_side, sb);
 
     /* sb has echo-canceled samples. Send them back under the same stream
      * name */
