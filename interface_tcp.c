@@ -170,18 +170,23 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
 
     int reflect = 1;            /* Reflect this message back unchanged? */
 
+    char *hex;
+
     decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
             &flv_len);
 
     switch(type)
     {
     case 'S':
+        g_debug("Got an S packet");
         conversation_start(stream_name);
         break;
     case 'E':
+        g_debug("Got an E packet");
         conversation_end(stream_name);
         break;
     case 'D':
+        g_debug("Got a D packet");
         if ((!flv_data) || (flv_len == 0))
         {
             g_warning("D message received with no FLV packet");
@@ -198,7 +203,7 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
         break;
     default:
         g_debug("Unknown message type %c", type);
-        char *hex = hexify(msg, msg_length);
+        hex = hexify(msg, msg_length);
         g_debug("%s", hex);
         free(hex);
     }

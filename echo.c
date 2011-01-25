@@ -221,7 +221,8 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
             DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
-            DEBUG_LOG("STEPSIZE: %f\tef: %f\n", STEPSIZE, ef);
+            DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err);
+            DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
             stack_trace(1);
         }
 

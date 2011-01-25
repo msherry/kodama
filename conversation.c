@@ -78,8 +78,8 @@ void conversation_start(const char *stream_name)
         g_free(tmpname);
 
         /* TODO: temporary debugging */
-        c->h0->tx_cb_fn = shortcircuit_tx_to_rx;
-        setup_hw_out(c->h0);
+        /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
+        /* setup_hw_out(c->h0); */
     }
 }
 
