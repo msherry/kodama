@@ -89,6 +89,17 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
         /* TODO: free old one, if it existed */
         flv->d_resample_ctx = NULL;
     }
+    if (flv->d_codec_ctx->sample_fmt != SAMPLE_FMT_S16)
+    {
+        /* TODO: don't abort here */
+        g_error("WTF? sample_fmt was %d", flv->d_codec_ctx->sample_fmt);
+        return -1;
+    }
+    else
+    {
+        /* g_debug("Copacetic"); */
+    }
+
     return 0;
 }
 
