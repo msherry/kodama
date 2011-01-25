@@ -56,7 +56,6 @@ int r(const unsigned char *msg, int msg_length)
     SAMPLE_BLOCK *sb = imo_message_to_samples(msg, msg_length, &stream_name);
 
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
-    int conv_side = atoi(conv_and_num[1]);
 
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
 
