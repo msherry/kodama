@@ -121,7 +121,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
     {
-        return ret;
+        goto exit;
     }
 
     conversation_process_samples(c, conv_side, sb);
@@ -140,7 +140,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     ret = flv_create_tag(&return_flv_packet, &return_flv_len, stream_name, sb);
     if (ret)
     {
-        return ret;
+        goto free_sample_block;
     }
 
     /* TODO: we may want to move this part elsewhere */
@@ -173,10 +173,13 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     stats.samples_processed += sb->count;
     G_UNLOCK(stats);
 
-    sample_block_destroy(sb);
     free(return_flv_packet);
 
-    return 0;
+free_sample_block:
+    sample_block_destroy(sb);
+
+exit:
+    return ret;
 }
 
 static void conversation_process_samples(Conversation *c, int conv_side,
