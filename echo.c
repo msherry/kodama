@@ -284,7 +284,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 static int dtd(echo *e, float tx, float rx)
 {
     /* Get the last NLMS_LEN rx samples and find the max*/
-    float max = 0.0;
     size_t i;
 
     float a_rx = fabsf(rx);
@@ -319,7 +318,7 @@ static int dtd(echo *e, float tx, float rx)
         e->max_x[e->dtd_index] = 0.0; /* This will be set next time */
     }
 
-    if (fabsf(tx) > (GeigelThreshold * max))
+    if (fabsf(tx) > (GeigelThreshold * e->max_max_x))
     {
         e->holdover = DTD_HOLDOVER;
     }

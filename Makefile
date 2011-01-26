@@ -12,6 +12,7 @@ PROFILE_FLAGS = -pg
 CFLAGS = -g ${PROFILE_FLAGS} ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64 -DG_ERRORCHECK_MUTEXES -DFAST_DOTP \
 	-DFAST_DTD
+
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = ${PROFILE_FLAGS} -L${PORTAUDIODIR}/lib/.libs
 LIBRARIES = -lportaudio -lm -lavcodec -lavformat -lavutil -lavcore
