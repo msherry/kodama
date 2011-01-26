@@ -186,7 +186,7 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
         conversation_end(stream_name);
         break;
     case 'D':
-        g_debug("Got a D packet");
+        /* g_debug("Got a D packet"); */
         if ((!flv_data) || (flv_len == 0))
         {
             g_warning("D message received with no FLV packet");

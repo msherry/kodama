@@ -207,9 +207,14 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         stack_trace(1);
     }
 
+#ifdef FAST_DOTP
     /* Iterative update */
     e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
         e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
+#else
+    /* The slow way to do this */
+    e->dotp_xf_xf = dotp(e->xf, e->xf);
+#endif
 
     /* TODO: find a reasonable value for this */
     e->dotp_xf_xf = MAX(e->dotp_xf_xf, 0.1);
