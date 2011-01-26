@@ -43,9 +43,40 @@ static FLVStream *create_flv_stream(void)
     return flv;
 }
 
+static void destroy_flv_stream(FLVStream *flv)
+{
+    g_return_if_fail(flv != NULL);
+
+    /* TODO: */
+}
+
 void flv_parse_header(void)
 {
     /* TODO: */
+}
+
+void flv_start_stream(const char *stream_name)
+{
+    FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+    if (flv)
+    {
+        g_warning("FLVStream already exists for stream %s - "
+            "this is suspicious", stream_name);
+        return;
+    }
+    FLV_LOG("Creating FLVStream for %s\n", stream_name);
+    flv = create_flv_stream();
+    g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
+}
+
+void flv_end_stream(const char *stream_name)
+{
+    FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+
+    /* TODO: this can be done as part of g_hash_table_new_full */
+    destroy_flv_stream(flv);
+
+    g_hash_table_remove(id_to_flvstream, stream_name);
 }
 
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
@@ -60,10 +91,11 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     if (!flv)
     {
-        FLV_LOG("FLVStream not found for stream %s - creating it\n",
-            stream_name);
-        flv = create_flv_stream();
-        g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
+        /* We'll require that FLVStreams are only created in response to 'S'
+         * messages for now */
+        g_warning("(%s:%d) No FLVStream found for stream %s - aborting",
+            __FILE__, __LINE__, stream_name);
+        return -1;
     }
 
     unsigned char type_code, type;
