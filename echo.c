@@ -279,6 +279,8 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 /* Compare against the last NLMS_LEN samples */
 /* TODO: apparently Geigel works well on line echo, but rather more poorly on
  * acoustic echo. Look into something more sophisticated. */
+
+#ifdef FAST_DTD
 static int dtd(echo *e, float tx, float rx)
 {
     /* Get the last NLMS_LEN rx samples and find the max*/
@@ -332,6 +334,44 @@ static int dtd(echo *e, float tx, float rx)
 
     return e->holdover > 0;
 }
+
+#else
+static int dtd(echo *e, float tx, float rx)
+{
+    UNUSED(rx);                 /* Just here to make the signatures match */
+
+    /* Get the last NLMS_LEN rx samples and find the max*/
+    float max = 0.0;
+    size_t i;
+    int j = e->j;
+
+    for (i=0; i<NLMS_LEN-1; i++)
+    {
+        float rx = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
+        if (rx > max)
+        {
+            max = rx;
+        }
+    }
+
+    float a_tx = fabsf(tx);
+
+    if (a_tx > (GeigelThreshold * max))
+    {
+        e->holdover = DTD_HOLDOVER;
+    }
+
+    if (e->holdover)
+    {
+        e->holdover--;
+    }
+
+    /* VERBOSE_LOG("tx: %5d\ta_tx: %5d\tmax:%5d\tdtd: %d\n", */
+    /*     (int)tx, (int)a_tx, (int)max, (e->holdover > 0)) */
+
+    return e->holdover > 0;
+}
+#endif
 
 /*********** High-pass FIR functions ***********/
 static hp_fir *hp_fir_create(void)
