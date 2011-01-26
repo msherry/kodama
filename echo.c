@@ -336,9 +336,9 @@ static int dtd(echo *e, float tx, float rx)
 }
 
 #else
-static int dtd(echo *e, float tx, float rx)
+static int dtd(echo *e, float tx, float rx_unused)
 {
-    UNUSED(rx);                 /* Just here to make the signatures match */
+    UNUSED(rx_unused);          /* Just here to make the signatures match */
 
     /* Get the last NLMS_LEN rx samples and find the max*/
     float max = 0.0;
