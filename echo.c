@@ -220,18 +220,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     /* TODO: find a reasonable value for this */
     e->dotp_xf_xf = MAX(e->dotp_xf_xf, 0.1);
 
-    if (e->dotp_xf_xf == 0.0)
-    {
-        DEBUG_LOG("%s\n", "dotp_xf_xf went to zero");
-        int i;
-        for (i = 0; i < NLMS_LEN; i++)
-        {
-            DEBUG_LOG("%.02f ", e->xf[j+i]);
-        }
-        DEBUG_LOG("%s\n\n", "");
-        stack_trace(1);
-    }
-
     if (update)
     {
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
