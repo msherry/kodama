@@ -99,6 +99,9 @@ void flv_init(void);
 
 void flv_parse_header(void);
 
+void flv_start_stream(const char *stream_name);
+void flv_end_stream(const char *stream_name);
+
 /**
  * Given an FLV tag, decode it and create a SAMPLE_BLOCK if possible, possibly
  * resampling in the process.

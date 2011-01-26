@@ -7,6 +7,8 @@
 
 #include "cbuffer.h"
 #include "conversation.h"
+#include "flv.h"                /* TODO: this file is getting bloated,
+                                 * particularly handle_imo_message */
 #include "imo_message.h"
 #include "interface_tcp.h"
 #include "protocol.h"
@@ -178,15 +180,17 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
     switch(type)
     {
     case 'S':
-        g_debug("Got an S packet");
+        g_debug("Got an S message");
+        flv_start_stream(stream_name);
         conversation_start(stream_name);
         break;
     case 'E':
-        g_debug("Got an E packet");
+        g_debug("Got an E message");
+        flv_end_stream(stream_name);
         conversation_end(stream_name);
         break;
     case 'D':
-        /* g_debug("Got a D packet"); */
+        /* g_debug("Got a D message"); */
         if ((!flv_data) || (flv_len == 0))
         {
             g_warning("D message received with no FLV packet");
