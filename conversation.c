@@ -124,9 +124,6 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
         /* TODO: handle this better. We get here at the end of conversations
          * because we've closed one side but not the other yet */
         return -1;
-
-        /* I guess we can be nice, though */
-        conversation_start(stream_name);
     }
 
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
