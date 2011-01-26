@@ -11,6 +11,7 @@
 
 #include "av.h"
 #include "conversation.h"
+#include "echo.h"               /* TODO: this is for sanity-checking only */
 #include "hybrid.h"
 #include "interface_hardware.h"
 #include "interface_tcp.h"
@@ -282,6 +283,7 @@ static void init_stats(void)
 static void check_sanity(void)
 {
     assert((SAMPLE_RATE % (8000)) == 0);
+    assert((NLMS_LEN % DTD_LEN) == 0);
 }
 
 static void report_stats(void)

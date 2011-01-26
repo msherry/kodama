@@ -10,6 +10,9 @@
 
 extern globals_t globals;
 
+/* Much of this is from http://www.andreadrian.de/echo_cancel, with credit also
+ * to the OSLEC project */
+
 /**
 Kaiser Window FIR Filter.\n
 source:
@@ -33,7 +36,7 @@ const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 static hp_fir *hp_fir_create(void);
 static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
-static int dtd(echo *e, float tx);
+static int dtd(echo *e, float tx, float rx);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
 
@@ -48,6 +51,12 @@ echo *echo_create(hybrid *h)
     e->w  = malloc(NLMS_LEN * sizeof(float));
 
     e->j  = NLMS_EXT;
+
+    e->max_x = malloc((NLMS_LEN/DTD_LEN) * sizeof(float));
+    memset(e->max_x, 0, (NLMS_LEN/DTD_LEN) * sizeof(float));
+    e->max_max_x = 0.0;
+    e->dtd_index = 0;
+    e->dtd_count = 0;
 
     /* HACK: we increment w rather than setting it directly, so it needs to have
      * a valid IEEE-754 value */
@@ -83,6 +92,8 @@ void echo_destroy(echo *e)
     free(e->xf);
     free(e->x);
 
+    free(e->max_x);
+
     cbuffer_destroy(e->rx_buf);
 
     hp_fir_destroy(e->hp);
@@ -117,7 +128,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         rx = iirdc_highpass(e->iir_dc, rx);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx);
+        int update = !dtd(e, tx, rx);
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -262,25 +273,45 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 /* Compare against the last NLMS_LEN samples */
 /* TODO: apparently Geigel works well on line echo, but rather more poorly on
  * acoustic echo. Look into something more sophisticated. */
-static int dtd(echo *e, float tx)
+static int dtd(echo *e, float tx, float rx)
 {
     /* Get the last NLMS_LEN rx samples and find the max*/
     float max = 0.0;
     size_t i;
-    int j = e->j;
 
-    for (i=0; i<NLMS_LEN-1; i++)
+    float a_rx = fabsf(rx);
+
+    if (a_rx > e->max_x[e->dtd_index])
     {
-        float rx = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
-        if (rx > max)
+        e->max_x[e->dtd_index] = a_rx;
+        if (a_rx > e->max_max_x)
         {
-            max = rx;
+            e->max_max_x = a_rx;
         }
     }
 
-    float a_tx = fabsf(tx);
+    /* Do we have a new chunk of samples to summarize? */
+    if (++e->dtd_count >= DTD_LEN)
+    {
+        e->dtd_count = 0;
+        /* Find max of max */
+        e->max_max_x = 0;
+        for (i = 0; i< NLMS_LEN/DTD_LEN; i++)
+        {
+            if (e->max_x[i] > e->max_max_x)
+            {
+                e->max_max_x = e->max_x[i];
+            }
+        }
+        /* Rotate */
+        if (++e->dtd_index >= NLMS_LEN/DTD_LEN)
+        {
+            e->dtd_index = 0;
+        }
+        e->max_x[e->dtd_index] = 0.0; /* This will be set next time */
+    }
 
-    if (a_tx > (GeigelThreshold * max))
+    if (fabsf(tx) > (GeigelThreshold * max))
     {
         e->holdover = DTD_HOLDOVER;
     }

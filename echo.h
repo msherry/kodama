@@ -58,6 +58,9 @@ typedef struct hp_fir {
 /** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
 
+/** Optimize Geigel DTD calculation  */
+#define DTD_LEN (80)
+
 /// Context for echo-canceling one side of a conversation.
 typedef struct echo {
     CBuffer *rx_buf;
@@ -69,7 +72,11 @@ typedef struct echo {
 
     int j;                      /**< offset into x and xf */
 
+    float *max_x;
+    float max_max_x;
     int holdover;               /**< DTD hangover */
+    int dtd_index;
+    int dtd_count;
 
     hp_fir *hp;                 /**< >300Hz filter */
 
