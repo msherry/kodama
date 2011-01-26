@@ -21,6 +21,10 @@
 #define NUM_CHANNELS (1)
 #define SAMPLE_RATE  (8000)
 
+#if (SAMPLE_RATE % 8000)
+#error SAMPLE_RATE must be a multiple of 8000
+#endif
+
 #define PORTNUM (7650)
 
 /* Select sample format. TODO: let's not make these constants, yes? */

@@ -61,6 +61,10 @@ typedef struct hp_fir {
 /** Optimize Geigel DTD calculation  */
 #define DTD_LEN (80)
 
+#if (NLMS_LEN % DTD_LEN)
+#error DTD_LEN must divide evenly into NLMS_LEN
+#endif
+
 /// Context for echo-canceling one side of a conversation.
 typedef struct echo {
     CBuffer *rx_buf;
