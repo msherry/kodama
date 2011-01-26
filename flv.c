@@ -15,12 +15,14 @@
 extern globals_t globals;       /* Needed for FLV_LOG */
 
 static FLVStream *create_flv_stream(void);
+static void destroy_flv_stream(FLVStream *flv);
 
 static GHashTable *id_to_flvstream;
 
 void flv_init(void)
 {
-    id_to_flvstream = g_hash_table_new_full(g_str_hash, g_str_equal, g_free, NULL/*FLVStream_free_func*/);
+    id_to_flvstream = g_hash_table_new_full(g_str_hash, g_str_equal,
+        g_free, (GDestroyNotify)destroy_flv_stream);
 }
 
 static FLVStream *create_flv_stream(void)
@@ -47,7 +49,13 @@ static void destroy_flv_stream(FLVStream *flv)
 {
     g_return_if_fail(flv != NULL);
 
-    /* TODO: */
+    av_free(flv->d_codec_ctx);
+    av_free(flv->d_resample_ctx); /* Ok if this is NULL */
+
+    av_free(flv->e_codec_ctx);
+    av_free(flv->e_resample_ctx);
+
+    free(flv);
 }
 
 void flv_parse_header(void)
@@ -71,11 +79,7 @@ void flv_start_stream(const char *stream_name)
 
 void flv_end_stream(const char *stream_name)
 {
-    FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
-
-    /* TODO: this can be done as part of g_hash_table_new_full */
-    destroy_flv_stream(flv);
-
+    FLV_LOG("Destroying FLVStream for %s\n", stream_name);
     g_hash_table_remove(id_to_flvstream, stream_name);
 }
 
