@@ -177,6 +177,9 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
     decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
             &flv_len);
 
+    /* TODO: test reflecting message back with different delays -- see what
+     * wowza's deadline is */
+
     switch(type)
     {
     case 'S':
