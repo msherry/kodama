@@ -4,6 +4,7 @@
 #include <gnet.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "cbuffer.h"
 #include "conversation.h"
@@ -179,6 +180,9 @@ static void handle_imo_message(unsigned char *msg, int msg_length)
 
     /* TODO: test reflecting message back with different delays -- see what
      * wowza's deadline is */
+
+    /* int ms = 10; */
+    /* usleep(ms * 1000); */
 
     switch(type)
     {
