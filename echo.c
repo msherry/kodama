@@ -146,6 +146,14 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* clipping */
         tx = clip(tx);
 
+        /* HACK: I'd rather diverge for a bit than have that horrible
+         * static. Find out why we get such bad data sometimes */
+        if (fabsf(tx)+10 > MAXPCM)
+        {
+            /* Wipe all the weights. Brutal. */
+            memset(e->w, 0, (NLMS_LEN*sizeof(float)));
+        }
+
         sb->s[i] = (int)tx;
     }
 
@@ -236,7 +244,10 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
             hex = floats_to_text(e->x+j, NLMS_LEN);
             DEBUG_LOG("e->x+j: %s\n", hex);
             free(hex);
-            stack_trace(1);
+            /* stack_trace(1); */
+
+            /* TODO: / HACK: for now, reset the weights to zero */
+            memset(e->w, 0, (NLMS_LEN)*sizeof(float));
         }
 
         /* Update tap weights */

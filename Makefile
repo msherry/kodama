@@ -7,7 +7,7 @@ LD = gcc
 
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
-PROFILE_FLAGS = -pg
+PROFILE_FLAGS = #-pg
 
 CFLAGS = -g ${PROFILE_FLAGS} ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64 -DG_ERRORCHECK_MUTEXES -DFAST_DOTP \
