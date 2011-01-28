@@ -152,6 +152,8 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         {
             /* Wipe all the weights. Brutal. */
             memset(e->w, 0, (NLMS_LEN*sizeof(float)));
+
+            g_debug("Orig: %i  clipped: %f", tx_s, tx);
         }
 
         sb->s[i] = (int)tx;
