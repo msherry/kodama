@@ -197,7 +197,7 @@ static float dotp(float * restrict a, float * restrict b)
 #ifdef ASM_DOTP
     int *i = 0;
     __asm__ volatile(
-        "1:                               \n\t"
+"1:                                       \n\t"
         "movlps (%2,%0), %%xmm1           \n\t"
         "movhps 8(%2,%0), %%xmm1          \n\t"
         "movlps (%3,%0), %%xmm2           \n\t"
