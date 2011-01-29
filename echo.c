@@ -204,6 +204,7 @@ static float dotp(float * restrict a, float * restrict b)
 
 static float nlms_pw(echo *e, float tx, float rx, int update)
 {
+    char *hex;
     int j = e->j;
 
     e->x[j] = rx;
@@ -215,6 +216,14 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     if (isnan(ef))
     {
         DEBUG_LOG("%s\n", "ef went NaN");
+        DEBUG_LOG("err: %f\n", err);
+        DEBUG_LOG("dotp_w_x: %f\n", dotp_w_x);
+        hex = floats_to_text(e->w, NLMS_LEN);
+        DEBUG_LOG("w: %s\n", hex);
+        free(hex);
+        hex = floats_to_text(e->x+j, NLMS_LEN);
+        DEBUG_LOG("x: %s\n", hex);
+        free(hex);
         stack_trace(1);
     }
 
@@ -235,7 +244,6 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         float u_ef = STEPSIZE * ef / e->dotp_xf_xf;
         if (isinf(u_ef))
         {
-            char *hex;
             DEBUG_LOG("%s\n", "u_ef went infinite");
             DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
             DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err);
