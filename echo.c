@@ -202,10 +202,16 @@ static float dotp(float * restrict a, float * restrict b)
         "movhps 8(%2,%0), %%xmm1          \n\t"
         "movlps (%3,%0), %%xmm2           \n\t"
         "movhps 8(%3,%0), %%xmm2          \n\t"
-        "addq   $16, %0                   \n\t"
+        "movlps 12(%2,%0), %%xmm3         \n\t"
+        "movhps 16(%2,%0), %%xmm3         \n\t"
+        "movlps 12(%3,%0), %%xmm4         \n\t"
+        "movhps 16(%3,%0), %%xmm4         \n\t"
+        "addq   $32, %0                   \n\t"
         "cmpq   %4, %0                    \n\t"
         "mulps  %%xmm2, %%xmm1            \n\t"
         "addps  %%xmm1, %1                \n\t"
+        "mulps  %%xmm4, %%xmm3            \n\t"
+        "addps  %%xmm3, %1                \n\t"
         "jne    1b                        \n\t"
         "haddps %1, %1                    \n\t"
         "haddps %1, %1                    \n\t"
@@ -213,7 +219,9 @@ static float dotp(float * restrict a, float * restrict b)
         :"+r"(i), "+x"(sum)
         :"r"(a), "r"(b), "n"(NLMS_LEN*sizeof(float))
         :"%xmm1",
-         "%xmm2"
+         "%xmm2",
+         "%xmm3",
+         "%xmm4"
     );
 
 #else
