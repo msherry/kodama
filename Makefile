@@ -12,9 +12,10 @@ ARCH_FLAGS = -msse4.1
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math
 PROFILE_FLAGS = #-pg
 
-CFLAGS = -g ${PROFILE_FLAGS} ${ARCH_FLAGS} ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
+CFLAGS = -g ${PROFILE_FLAGS} ${ARCH_FLAGS} ${OPTFLAGS} -Wall \
+	-Wextra ${PEDANTIC} -std=gnu99 \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64 -DG_ERRORCHECK_MUTEXES -DFAST_DOTP \
-	-DFAST_DTD
+	-DFAST_DTD -DASM_DOTP
 
 INCLUDES = -I${PORTAUDIODIR}/include
 LDFLAGS = ${PROFILE_FLAGS} -L${PORTAUDIODIR}/lib/.libs
@@ -32,7 +33,7 @@ else
 	-I/opt/local/include/gnet-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
 	-I/opt/local/lib/gnet-2.0/include
-        # need to bring in lgthread specifically on the Mac
+        # need to bring in lgthread explicitly on the Mac
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0 -lgthread-2.0
 endif
 

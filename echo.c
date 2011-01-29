@@ -194,6 +194,7 @@ static float dotp(float * restrict a, float * restrict b)
 {
     float sum = 0.0;
 
+#ifdef ASM_DOTP
     int *i = 0;
     __asm__ volatile(
         "1:                               \n\t"
@@ -215,10 +216,12 @@ static float dotp(float * restrict a, float * restrict b)
          "%xmm2"
     );
 
-    /* for (int i=0; i<NLMS_LEN; i++) */
-    /* { */
-    /*     sum += a[i] * b[i]; */
-    /* } */
+#else
+    for (int i=0; i<NLMS_LEN; i++)
+    {
+        sum += a[i] * b[i];
+    }
+#endif
 
     return sum;
 }
