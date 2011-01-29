@@ -193,34 +193,29 @@ __attribute__ ((noinline))
 static float dotp(float * restrict a, float * restrict b)
 {
     float sum = 0.0;
-    int *i = 0;
 
+    int *i = 0;
     __asm__ volatile(
-        "xorps %%xmm3, %%xmm3             \n\t"
         "1:                               \n\t"
-        "movaps %%xmm3, %%xmm0            \n\t"
-        "movaps %%xmm3, %%xmm1            \n\t"
-        "movlps (%2,%0), %%xmm0           \n\t"
-        "movhps 8(%2,%0), %%xmm0          \n\t"
-        "movlps (%3,%0), %%xmm1           \n\t"
-        "movhps 8(%3,%0), %%xmm1          \n\t"
+        "movlps (%2,%0), %%xmm1           \n\t"
+        "movhps 8(%2,%0), %%xmm1          \n\t"
+        "movlps (%3,%0), %%xmm2           \n\t"
+        "movhps 8(%3,%0), %%xmm2          \n\t"
         "addq   $16, %0                   \n\t"
         "cmpq   %4, %0                    \n\t"
-        "mulps  %%xmm1, %%xmm0            \n\t"
-        "addps  %%xmm0, %%xmm2            \n\t"
+        "mulps  %%xmm2, %%xmm1            \n\t"
+        "addps  %%xmm1, %1                \n\t"
         "jne    1b                        \n\t"
-        "haddps %%xmm2, %%xmm2            \n\t"
-        "haddps %%xmm2, %%xmm2            \n\t"
-        "movaps %%xmm2, %1                \n\t"
+        "haddps %1, %1                    \n\t"
+        "haddps %1, %1                    \n\t"
 
         :"+r"(i), "+x"(sum)
         :"r"(a), "r"(b), "n"(NLMS_LEN*sizeof(float))
-        :"%xmm0", "%xmm1", "%xmm3"
+        :"%xmm1",
+         "%xmm2"
     );
 
-    /* TODO: gcc returns sum in xmm0? */
-
-    /* for (i=0; i<NLMS_LEN; i++) */
+    /* for (int i=0; i<NLMS_LEN; i++) */
     /* { */
     /*     sum += a[i] * b[i]; */
     /* } */
