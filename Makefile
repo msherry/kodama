@@ -2,14 +2,17 @@
 
 PORTAUDIODIR = portaudio
 
-CC = gcc
-LD = gcc
+#/opt/local/bin/gcc-mp-4.4
+
+CC=gcc
+LD=gcc
 
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers
-OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math -msse4.1
+ARCH_FLAGS = -msse4.1
+OPTFLAGS = #-O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math
 PROFILE_FLAGS = #-pg
 
-CFLAGS = -g ${PROFILE_FLAGS} ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
+CFLAGS = -g ${PROFILE_FLAGS} ${ARCH_FLAGS} ${OPTFLAGS} -Wall -Wextra ${PEDANTIC} -std=gnu99 \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64 -DG_ERRORCHECK_MUTEXES -DFAST_DOTP \
 	-DFAST_DTD
 
@@ -48,7 +51,7 @@ ${PROG}: ${OBJS}
 
 %.o: %.c
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -c $<
-	#${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -S $<
+	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -S $<
 	${CC} ${CFLAGS} -MM $< > $*.d
 
 documentation:
