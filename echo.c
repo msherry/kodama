@@ -189,8 +189,11 @@ static inline float clip(float in)
 }
 
 /*********** NLMS functions ***********/
+
+/* -funroll-loops doesn't help, but does look crazy */
+/* So far, hand-written asm with a 32-byte stride is fastest */
 __attribute__ ((noinline))
-static float dotp(float * restrict a, float * restrict b)
+static float dotp(const float * restrict a, const float * restrict b)
 {
     float sum = 0.0;
 
