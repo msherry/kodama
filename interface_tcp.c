@@ -6,15 +6,10 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "cbuffer.h"
-#include "conversation.h"
-#include "flv.h"                /* TODO: this file is getting bloated,
-                                 * particularly handle_imo_message */
-#include "imo_message.h"
 #include "interface_tcp.h"
+#include "kodama.h"
 #include "protocol.h"
 #include "read_write.h"
-#include "util.h"
 
 static char *g_host;
 static int g_port;
@@ -27,7 +22,6 @@ static gboolean
     handle_input(GIOChannel *source, GIOCondition cond, gpointer data);
 static gboolean
     handle_output(GIOChannel *source, GIOCondition cond, gpointer data);
-static void handle_imo_message(unsigned char *msg, int msg_len);
 
 /* NOTES: when our connection to wowza dies, we should just forget all
  * information we have, and attempt to reconnect */
@@ -153,84 +147,6 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
     /* Return TRUE to keep this handler intact (don't unregister it) */
     return TRUE;
-}
-
-
-
-/* TODO: if we decide to thread this, this function is a good candidate to be
- * run in multiple threads. Since it will probably deal at a conversation level,
- * perhaps it should be moved to a conversation-specific file */
-static void handle_imo_message(unsigned char *msg, int msg_length)
-{
-    /* g_debug("Got an imo packet"); */
-
-    char *stream_name;
-    char type;
-
-    /* We may or may not get these */
-    unsigned char *flv_data = NULL;
-    int flv_len = 0;
-
-    int reflect = 1;            /* Reflect this message back unchanged? */
-
-    char *hex;
-
-    decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
-            &flv_len);
-
-    /* TODO: test reflecting message back with different delays -- see what
-     * wowza's deadline is */
-
-    /* int ms = 10; */
-    /* usleep(ms * 1000); */
-
-    switch(type)
-    {
-    case 'S':
-        g_debug("Got an S message");
-        flv_start_stream(stream_name);
-        conversation_start(stream_name);
-        break;
-    case 'E':
-        g_debug("Got an E message");
-        flv_end_stream(stream_name);
-        conversation_end(stream_name);
-        break;
-    case 'D':
-        /* g_debug("Got a D message"); */
-        if ((!flv_data) || (flv_len == 0))
-        {
-            g_warning("D message received with no FLV packet");
-        }
-        else
-        {
-            /* This will handle sending the return message, if everything goes
-             * right */
-            /* TODO: should it? */
-            int ret = r(stream_name, flv_data, flv_len);
-
-            reflect = (ret == 0) ? 0 : 1; /* Don't reflect if everything's ok */
-        }
-        break;
-    default:
-        g_debug("Unknown message type %c", type);
-        hex = hexify(msg, msg_length);
-        g_debug("%s", hex);
-        free(hex);
-    }
-
-    if (reflect)
-    {
-        send_imo_message(msg, msg_length);
-    }
-    else
-    {
-        /* Done with this message */
-        free(msg);
-    }
-
-    free(stream_name);
-    free(flv_data);             /* Should be ok to free even if it's NULL */
 }
 
 void send_imo_message(const unsigned char *msg, int msg_len)
