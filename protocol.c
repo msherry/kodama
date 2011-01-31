@@ -113,12 +113,29 @@ void handle_imo_message(unsigned char *msg, int msg_length)
         }
         else
         {
-            /* This will handle sending the return message, if everything goes
-             * right */
-            /* TODO: should it? */
-            int ret = r(stream_name, flv_data, flv_len);
+            unsigned char *return_flv_packet = NULL;
+            int return_flv_len;
 
-            reflect = (ret == 0) ? 0 : 1; /* Don't reflect if everything's ok */
+            int ret = r(stream_name, flv_data, flv_len, &return_flv_packet,
+                &return_flv_len);
+
+            /* Don't reflect if everything is OK */
+            reflect = ((ret != 0) || (return_flv_packet == NULL) ||
+                       (return_flv_len == 0));
+
+            if (!reflect)
+            {
+                unsigned char *return_msg;
+                int return_msg_length;
+                create_imo_message(&return_msg, &return_msg_length, 'D',
+                    stream_name, return_flv_packet, return_flv_len);
+
+                send_imo_message(return_msg, return_msg_length);
+
+                free(return_msg);
+            }
+            /* Ok to do this even if it's NULL */
+            free(return_flv_packet);
         }
         break;
     default:

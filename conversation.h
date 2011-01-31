@@ -16,8 +16,8 @@ void conversation_end(const char *stream_name);
 
 /**
  * Handles the audio processing for a message - decodes FLV, resampling if
- * necessary, cancels echo, creates a new FLV packet, then a new imo message,
- * and sends it off.
+ * necessary, cancels echo, and if all goes well, creates a new FLV packet to be
+ * encapsulated into an imo message and sent back to wowza
  *
  * @param stream_name Name of the stream which sent us this message.
  * @param flv_data The FLV data containing our audio samples.
@@ -25,6 +25,7 @@ void conversation_end(const char *stream_name);
  *
  * @return Zero on success, non-zero on failure.
  */
-int r(const char *stream_name, const unsigned char *flv_data, int flv_len);
+int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
+    unsigned char **return_flv_data, int *return_flv_len);
 
 #endif

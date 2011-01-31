@@ -103,7 +103,8 @@ void conversation_end(const char *stream_name)
     g_strfreev(conv_and_num);
 }
 
-int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
+int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
+    unsigned char **return_flv_packet, int *return_flv_len)
 {
     struct timeval start, end;
     uint64_t before_cycles, end_cycles;
@@ -134,8 +135,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
 
     conversation_process_samples(c, conv_side, sb);
 
-    /* sb has echo-canceled samples. Send them back under the same stream
-     * name */
+    /* sb now contains echo-canceled samples */
 
     gettimeofday(&end, NULL);
     long d_us = delta(&start, &end);
@@ -143,23 +143,13 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     /* TODO: is this kosher? */
     /* sb->pts += d_us/1000; */
 
-    unsigned char *return_flv_packet = NULL;
-    int return_flv_len = 0;
-    ret = flv_create_tag(&return_flv_packet, &return_flv_len, stream_name, sb);
+    *return_flv_packet = NULL;
+    *return_flv_len = 0;
+    ret = flv_create_tag(return_flv_packet, return_flv_len, stream_name, sb);
     if (ret)
     {
         goto free_sample_block;
     }
-
-    /* TODO: we may want to move this part elsewhere */
-    unsigned char *return_msg;
-    int return_msg_length;
-    create_imo_message(&return_msg, &return_msg_length, 'D',
-            stream_name, return_flv_packet, return_flv_len);
-
-    /* TODO: send_imo_message was originally static to interface_tcp. Calling it
-     * here as a hack, but it should be designed properly */
-    send_imo_message(return_msg, return_msg_length);
 
     end_cycles = cycles();
     /* Reuse end */
@@ -188,8 +178,6 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len)
     float avg_mips_per_ec = mips_cpu / ((total_secs_of_speech*1E6)/total_us);
     g_debug("%5.2f avg instances possible / core", (mips_cpu/avg_mips_per_ec));
 
-
-    free(return_flv_packet);
 
 free_sample_block:
     sample_block_destroy(sb);
