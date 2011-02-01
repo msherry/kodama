@@ -124,9 +124,6 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     {
         /* This should have been done on receiving an 'S' message */
         g_warning("Conversation not found for stream %s", stream_name);
-
-        /* TODO: handle this better. We get here at the end of conversations
-         * because we've closed one side but not the other yet */
         return -1;
     }
 
