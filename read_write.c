@@ -211,6 +211,7 @@ int write_data(int fd)
     fd_buffer *fd_buf;
     unsigned char *msg = NULL;
     int written = 0, total;
+    int messages_remaining = 0;
 
     fd_buf = g_hash_table_lookup(fd_to_buffer, GINT_TO_POINTER(fd));
     if (fd_buf == NULL)
@@ -218,16 +219,25 @@ int write_data(int fd)
         return FD_NOT_FOUND;
     }
 
-    if (g_slist_length(fd_buf->write_head) <= 0)
+    g_mutex_lock(fd_buf->mutex);
+
+    if ((messages_remaining = g_slist_length(fd_buf->write_head)) > 0)
+    {
+        msg = g_slist_nth_data(fd_buf->write_head, 0);
+        slist_delete_first(&(fd_buf->write_head), &(fd_buf->write_tail));
+
+        total = g_array_index(fd_buf->write_msg_size, int, 0);
+        g_array_remove_index(fd_buf->write_msg_size, 0);
+    }
+
+    g_mutex_unlock(fd_buf->mutex);
+
+    if (!messages_remaining)
     {
         return 0;
     }
 
-    msg = g_slist_nth_data(fd_buf->write_head, 0);
-    slist_delete_first(&(fd_buf->write_head), &(fd_buf->write_tail));
-
-    total = g_array_index(fd_buf->write_msg_size, int, 0);
-    g_array_remove_index(fd_buf->write_msg_size, 0);
+    messages_remaining--;
 
     while (written < total)
     {
@@ -251,7 +261,7 @@ int write_data(int fd)
 
     /* g_debug("Sent an imo packet"); */
 
-    return g_slist_length(fd_buf->write_head);
+    return messages_remaining;
 }
 
 int get_next_message(int fd, unsigned char **msg, int *msg_length)
@@ -268,6 +278,8 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     {
         return 0;
     }
+
+    /* Only called by one thread, so no need to lock here */
 
     *msg = g_slist_nth_data(fd_buf->read_head, 0);
     slist_delete_first(&(fd_buf->read_head), &(fd_buf->read_tail));
@@ -293,6 +305,7 @@ int queue_message(int fd, const unsigned char *msg, int length)
     {
         g_warning("(%s:%d) No fd_buffer found for fd %d", __FILE__, __LINE__,
                 fd);
+        /* TODO: free msg here */
         return -2;
     }
 
@@ -313,6 +326,8 @@ int queue_message(int fd, const unsigned char *msg, int length)
     slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), new_msg);
     g_array_append_val(fd_buf->write_msg_size, length);
     g_mutex_unlock(fd_buf->mutex);
+
+    /* TODO: free msg here (until we stop copying it in the first place) */
 
     return 0;
 }

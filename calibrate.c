@@ -88,6 +88,7 @@ void calibrate(void)
     stats.num_cpus = num_cpus;
     stats.ec_per_core = instances_per_core;
     stats.num_threads = num_threads;
+    stats.num_threads = 1;
     G_UNLOCK(stats);
 
     globals.verbose = verbose;
