@@ -16,6 +16,7 @@ static FLVStream *create_flv_stream(void);
 static void destroy_flv_stream(FLVStream *flv);
 
 static GHashTable *id_to_flvstream;
+G_LOCK_DEFINE(id_to_flvstream);
 
 void flv_init(void)
 {
@@ -67,22 +68,29 @@ void flv_parse_header(void)
 
 void flv_start_stream(const char *stream_name)
 {
+    G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     if (flv)
     {
         g_warning("FLVStream already exists for stream %s - "
             "this is suspicious", stream_name);
-        return;
     }
-    FLV_LOG("Creating FLVStream for %s\n", stream_name);
-    flv = create_flv_stream();
-    g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
+    else
+    {
+        FLV_LOG("Creating FLVStream for %s\n", stream_name);
+        flv = create_flv_stream();
+        g_hash_table_insert(id_to_flvstream, g_strdup(stream_name), flv);
+    }
+    G_UNLOCK(id_to_flvstream);
 }
 
 void flv_end_stream(const char *stream_name)
 {
     FLV_LOG("Destroying FLVStream for %s\n", stream_name);
+
+    G_LOCK(id_to_flvstream);
     g_hash_table_remove(id_to_flvstream, stream_name);
+    G_UNLOCK(id_to_flvstream);
 }
 
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
@@ -94,7 +102,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
     /* TODO: ok, this whole function is an ugly hack. Rewrite all this crap once
      * we have something working */
+    G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+    G_UNLOCK(id_to_flvstream);
+
     if (!flv)
     {
         /* We'll require that FLVStreams are only created in response to 'S'
@@ -103,6 +114,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             __FILE__, __LINE__, stream_name);
         return -1;
     }
+
+    /* Only one thread should work on this stream at a time */
+    g_mutex_lock(flv->mutex);
 
     unsigned char type_code, type;
     int offset = 0;
@@ -129,7 +143,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         /* Unknown */
         type = 'U';
         FLV_LOG("Unknown packet type: %c\n", type_code);
-        return -1;
+        goto exit;
         break;
     }
     FLV_LOG("Type: %c\n", type);
@@ -165,7 +179,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             if (ret)
             {
                 FLV_LOG("Error setting up decode context: %d\n", ret);
-                return ret;
+                goto exit;
             }
 
             FLV_LOG("Setting up encode context\n");
@@ -173,7 +187,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             if (ret != 0)
             {
                 FLV_LOG("Error setting up encode context: %d\n", ret);
-                return ret;
+                goto exit;
             }
         }
 
@@ -214,10 +228,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
           and on others it will work but it will have an impact on performance.
         */
 
-        g_mutex_lock(flv->mutex);
         int bytesDecoded = avcodec_decode_audio3(flv->d_codec_ctx, sample_array,
                 &frame_size, &avpkt);
-        g_mutex_unlock(flv->mutex);
 
         FLV_LOG("Bytes decoded: %d\n", bytesDecoded);
 
@@ -282,6 +294,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     offset += 4;
     FLV_LOG("PrevTagSize: %u  (%#.8x)\n", prev_tag_size, prev_tag_size);
 
+exit:
+    g_mutex_unlock(flv->mutex);
+
     return ret;
 }
 
@@ -300,6 +315,9 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         return -1;
     }
 
+    /* Only one thread should work on this stream at a time */
+    g_mutex_lock(flv->mutex);
+
     SAMPLE *sample_buf = sb->s;
     int numSamples = sb->count;
 
@@ -315,10 +333,8 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         FLV_LOG("Resampling from %d to %d Hz\n",
                 SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
 
-        g_mutex_lock(flv->mutex);
         int newrate_num_samples = audio_resample(flv->e_resample_ctx,
                 resampled, sb->s, sb->count);
-        g_mutex_unlock(flv->mutex);
 
         FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count,
             newrate_num_samples);
@@ -328,10 +344,8 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     }
 
     uint8_t encoded_audio[FF_MIN_BUFFER_SIZE];
-    g_mutex_lock(flv->mutex);
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
                 FF_MIN_BUFFER_SIZE, sample_buf);
-    g_mutex_unlock(flv->mutex);
 
     FLV_LOG("Bytes encoded: %d\n", bytesEncoded);
 
@@ -375,5 +389,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     FLV_LOG("Outgoing FLV packet: %s\n", hex);
     free(hex);
 
+exit:
+    g_mutex_unlock(flv->mutex);
     return 0;
 }
