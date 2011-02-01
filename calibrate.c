@@ -65,8 +65,9 @@ void calibrate(void)
     float cpu_mips = (end_cycles - before_cycles) / (d_us);
     float secs_of_speech = (float)(stats.total_samples_processed) / SAMPLE_RATE;
     float mips_per_ec = cpu_mips / ((secs_of_speech*1E6)/d_us);
-
     float instances_per_core = cpu_mips/mips_per_ec;
+
+    g_debug("CPU runs at %.02f MIPS", cpu_mips);
     g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)",
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     g_debug("%5.2f instances possible / core", instances_per_core);
