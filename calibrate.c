@@ -19,7 +19,7 @@ unsigned char flv_packet_1[] = "\x08\x00\x00\x35\x00\x15\x6B\x00\x00\x00\x00\xB6
 
 #define FLV_PACKET_LEN (68)
 
-#define CALIBRATE_TIME_US (1 * 1000000)
+#define CALIBRATE_TIME_US (2 * 1000000)
 
 
 void calibrate(void)
@@ -76,8 +76,10 @@ void calibrate(void)
 
     /* Our caller will be responsible for resetting the resettable fields of
      * stats */
+    G_LOCK(stats);
     stats.cpu_mips = cpu_mips;
     stats.ec_per_core = instances_per_core;
+    G_UNLOCK(stats);
 
     globals.verbose = verbose;
     globals.flv_debug = flv_debug;
