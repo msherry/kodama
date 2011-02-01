@@ -108,12 +108,17 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
     VERBOSE_LOG("%s\n", e->h->name);
 
+    g_return_if_fail(sb != NULL);
+
     size_t i;
     int any_doubletalk = 0;
     for (i=0; i<sb->count; i++)
     {
         SAMPLE rx_s, tx_s;
         float tx, rx;
+
+        /* TODO: these values are for debugging - remove them later */
+        float tx_fir, tx_nlms_pw;
 
         rx_s = cbuffer_pop(e->rx_buf);
         tx_s = sb->s[i];
@@ -123,6 +128,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         /* High-pass filter - filter out sub-300Hz signals */
         tx = update_fir(e->hp, tx);
+        tx_fir = tx;
 
         /* Speaker high-pass filter - remove DC */
         rx = iirdc_highpass(e->iir_dc, rx);
@@ -132,6 +138,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
+        tx_nlms_pw = tx;
 
         /* If we're not talking, let's attenuate our signal */
         if (update)
@@ -154,6 +161,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
             memset(e->w, 0, (NLMS_LEN*sizeof(float)));
 
             g_debug("Orig: %i  clipped: %f", tx_s, tx);
+            g_debug("tx_fir: %f   tx_nlms_pw: %f", tx_fir, tx_nlms_pw);
         }
 
         sb->s[i] = (int)tx;
@@ -165,6 +173,8 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)
 {
+    g_return_if_fail(sb != NULL);
+
     cbuffer_push_bulk(e->rx_buf, sb);
 }
 
@@ -269,7 +279,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 #endif
 
     /* TODO: find a reasonable value for this */
-    e->dotp_xf_xf = MAX(e->dotp_xf_xf, 0.1);
+    e->dotp_xf_xf = MAX(e->dotp_xf_xf, 1.0);
 
     if (update)
     {
