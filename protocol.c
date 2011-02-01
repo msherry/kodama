@@ -151,6 +151,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     case 'E':
         g_debug("Got an E message");
         flv_end_stream(stream_name);
+        /* Any messages from the other side will just be reflected */
         conversation_end(stream_name);
         break;
     case 'D':
@@ -234,6 +235,9 @@ static gpointer worker_thread_loop(gpointer data)
 {
     UNUSED(data);
 
+    g_async_queue_ref(work_queue);
+    g_async_queue_ref(return_queue);
+
     while(TRUE)
     {
         g_debug("Waiting for a message block");
@@ -251,6 +255,8 @@ static gpointer worker_thread_loop(gpointer data)
 
         free(mb);
     }
+    g_async_queue_unref(return_queue);
+    g_async_queue_unref(work_queue);
 
     return NULL;
 }
@@ -258,6 +264,8 @@ static gpointer worker_thread_loop(gpointer data)
 static gpointer wowza_thread_loop(gpointer data)
 {
     UNUSED(data);
+
+    g_async_queue_ref(return_queue);
 
     while(TRUE)
     {
@@ -273,6 +281,8 @@ static gpointer wowza_thread_loop(gpointer data)
 
         free(mb);
     }
+
+    g_async_queue_unref(return_queue);
 
     return NULL;
 }
