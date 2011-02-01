@@ -29,6 +29,6 @@ void unregister_fd(int fd);
 int read_data(int fd);
 int write_data(int fd);
 int get_next_message(int fd, unsigned char **msg, int *msg_length);
-int queue_message(int fd, const unsigned char *msg, int length);
+int queue_message(int fd, unsigned char *msg, int length);
 
 #endif

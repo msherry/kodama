@@ -143,7 +143,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
 
-#if 0
+#if THREADED
         queue_imo_message_for_worker(msg, msg_length);
 #else
         handle_imo_message(msg, msg_length);
@@ -154,7 +154,7 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
-void send_imo_message(const unsigned char *msg, int msg_len)
+void send_imo_message(unsigned char *msg, int msg_len)
 {
     if (!msg || msg_len == 0)
     {

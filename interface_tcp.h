@@ -3,6 +3,6 @@
 
 void setup_tcp_connection(char *host, int port);
 void tcp_connect(void);
-void send_imo_message(const unsigned char *msg, int msg_len);
+void send_imo_message(unsigned char *msg, int msg_len);
 
 #endif

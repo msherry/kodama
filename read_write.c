@@ -290,10 +290,9 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     return g_slist_length(fd_buf->read_head);
 }
 
-int queue_message(int fd, const unsigned char *msg, int length)
+int queue_message(int fd, unsigned char *msg, int length)
 {
     fd_buffer *fd_buf;
-    char *new_msg;
 
     if (!msg || length <= 0)
     {
@@ -309,25 +308,11 @@ int queue_message(int fd, const unsigned char *msg, int length)
         return -2;
     }
 
-    /* TODO: this is retarded - we're copying the message just to enqueue
-     * it. Avoid this */
-
-    /* length includes the extra 4 bytes for the message size */
-    uint32_t length_net_order;
-
-    new_msg = malloc(length);
-    length_net_order = htonl(length);
-    memcpy(new_msg, &length_net_order, 4); /* not sizeof(int) */
-    memcpy(new_msg+4, msg+4, length-4);
-
-
     /* Queue the new message in the write list */
     g_mutex_lock(fd_buf->mutex);
-    slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), new_msg);
+    slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), msg);
     g_array_append_val(fd_buf->write_msg_size, length);
     g_mutex_unlock(fd_buf->mutex);
-
-    /* TODO: free msg here (until we stop copying it in the first place) */
 
     return 0;
 }

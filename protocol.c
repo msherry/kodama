@@ -119,7 +119,7 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 void handle_imo_message(unsigned char *msg, int msg_length)
 {
-    g_debug("Got an imo packet");
+    /* g_debug("Got an imo packet"); */
 
     char *stream_name;
     char type;
@@ -178,14 +178,11 @@ void handle_imo_message(unsigned char *msg, int msg_length)
                 create_imo_message(&return_msg, &return_msg_length, 'D',
                     stream_name, return_flv_packet, return_flv_len);
 
-#if 0
+#if THREADED
                 queue_imo_message_for_wowza(return_msg, return_msg_length);
 #else
                 send_imo_message(return_msg, return_msg_length);
 #endif
-                /* TODO: fix this - we can only free here because we're doing a
-                 * useless copy to put the message on the write queue */
-                free(return_msg);
             }
             /* Ok to do this even if it's NULL */
             free(return_flv_packet);
@@ -200,7 +197,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
     if (reflect)
     {
-#if 0
+#if THREADED
         queue_imo_message_for_wowza(msg, msg_length);
 #else
         send_imo_message(msg, msg_length);

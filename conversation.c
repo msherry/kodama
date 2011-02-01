@@ -14,6 +14,7 @@
 GHashTable *id_to_conv = NULL;
 extern stats_t stats;
 
+G_LOCK_DEFINE(id_to_conv);
 G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
@@ -64,6 +65,8 @@ static void conversation_destroy(Conversation *c)
 void conversation_start(const char *stream_name)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+
+    G_LOCK(id_to_conv);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
 
     /* This will be called once per participant in a conversation -- only create
@@ -85,6 +88,7 @@ void conversation_start(const char *stream_name)
         /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
         /* setup_hw_out(c->h0); */
     }
+    G_UNLOCK(id_to_conv);
 
     g_strfreev(conv_and_num);
 }
@@ -102,7 +106,9 @@ void conversation_end(const char *stream_name)
     }
 
     conversation_destroy(c);
+    G_LOCK(id_to_conv);
     g_hash_table_remove(id_to_conv, (conv_and_num[0]));
+    G_UNLOCK(id_to_conv);
 
     g_strfreev(conv_and_num);
 }
@@ -130,8 +136,6 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
          * because we've closed one side but not the other yet */
         return -1;
     }
-
-    g_mutex_lock(c->mutex);
 
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
@@ -189,7 +193,6 @@ free_sample_block:
     sample_block_destroy(sb);
 
 exit:
-    g_mutex_unlock(c->mutex);
     return ret;
 }
 
@@ -199,20 +202,23 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     hybrid *hl = (conv_side == 0) ? c->h0 : c->h1;
     hybrid *hr = (conv_side == 0) ? c->h1 : c->h0;
 
-
+    g_mutex_lock(c->mutex);
     /* Let the left-side hybrid see these samples and echo-cancel them */
     hybrid_put_tx_samples(hl, sb);
 
     /* Now that the samples have been echo-canceled, let the right-side hybrid
      * see them */
     hybrid_put_rx_samples(hr, sb);
+    g_mutex_unlock(c->mutex);
 }
 
 static Conversation *find_conv_for_stream(const char *stream_name,
         int *conv_side)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+    G_LOCK(id_to_conv);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
+    G_UNLOCK(id_to_conv);
     *conv_side = atoi(conv_and_num[1]);
 
     g_strfreev(conv_and_num);
