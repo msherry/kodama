@@ -40,6 +40,8 @@ static FLVStream *create_flv_stream(void)
     flv->e_codec_ctx->sample_fmt = SAMPLE_FMT_S16;
     flv->e_resample_ctx = NULL;
 
+    flv->mutex = g_mutex_new();
+
     return flv;
 }
 
@@ -52,6 +54,8 @@ static void destroy_flv_stream(FLVStream *flv)
 
     av_free(flv->e_codec_ctx);
     av_free(flv->e_resample_ctx);
+
+    g_mutex_free(flv->mutex);
 
     free(flv);
 }
@@ -210,8 +214,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
           and on others it will work but it will have an impact on performance.
         */
 
+        g_mutex_lock(flv->mutex);
         int bytesDecoded = avcodec_decode_audio3(flv->d_codec_ctx, sample_array,
                 &frame_size, &avpkt);
+        g_mutex_unlock(flv->mutex);
 
         FLV_LOG("Bytes decoded: %d\n", bytesDecoded);
 
@@ -235,8 +241,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
                 int newrate_num_samples;
 
+                g_mutex_lock(flv->mutex);
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
                     resampled, sample_array, numSamples);
+                g_mutex_unlock(flv->mutex);
 
                 numSamples = newrate_num_samples;
                 sample_buf = resampled;
@@ -307,8 +315,10 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         FLV_LOG("Resampling from %d to %d Hz\n",
                 SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
 
+        g_mutex_lock(flv->mutex);
         int newrate_num_samples = audio_resample(flv->e_resample_ctx,
                 resampled, sb->s, sb->count);
+        g_mutex_unlock(flv->mutex);
 
         FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count,
             newrate_num_samples);
@@ -318,8 +328,10 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     }
 
     uint8_t encoded_audio[FF_MIN_BUFFER_SIZE];
+    g_mutex_lock(flv->mutex);
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
                 FF_MIN_BUFFER_SIZE, sample_buf);
+    g_mutex_unlock(flv->mutex);
 
     FLV_LOG("Bytes encoded: %d\n", bytesEncoded);
 

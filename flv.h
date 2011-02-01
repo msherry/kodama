@@ -87,6 +87,10 @@ typedef struct FLVStream {
     /* Encode */
     struct AVCodecContext *e_codec_ctx;
     struct ReSampleContext *e_resample_ctx;
+
+    /** Both libavcodec and libspeex are reentrant, but not
+     * thread-safe. */
+    GMutex *mutex;
 } FLVStream;
 
 struct SAMPLE_BLOCK;

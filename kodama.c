@@ -16,6 +16,7 @@
 #include "interface_tcp.h"
 #include "interface_udp.h"
 #include "kodama.h"
+#include "protocol.h"
 
 GMainLoop *loop;
 globals_t globals;
@@ -331,8 +332,9 @@ int main(int argc, char *argv[])
     init_av();
     init_conversations();
 
-    calibrate();
-    init_stats();               /* Do this again now that we're calibrated */
+    calibrate();                /* Determine how many threads we can run */
+    init_protocol();            /* Create the work queue and threads */
+    init_stats();               /* Clear out the calibration values */
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)

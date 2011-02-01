@@ -142,7 +142,8 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         unsigned char *msg;
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
-        handle_imo_message(msg, msg_length);
+
+        queue_imo_message_for_worker(msg, msg_length);
     }
 
     /* Return TRUE to keep this handler intact (don't unregister it) */

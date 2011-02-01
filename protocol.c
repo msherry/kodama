@@ -10,6 +10,38 @@
 #include "protocol.h"
 #include "util.h"
 
+typedef struct msg_block
+{
+    unsigned char *msg;
+    int len;
+} msg_block;
+
+extern stats_t stats;
+
+/// Incoming imo messages get queued here for the next available thread
+GAsyncQueue *work_queue = NULL;
+
+static gpointer thread_loop(gpointer data);
+
+void init_protocol(void)
+{
+    if (work_queue)
+    {
+        return;
+    }
+    work_queue = g_async_queue_new();
+
+    /* We assume the global stats object has been populated at this point -
+     * start the number of threads that we've determined is appropriate */
+    g_debug("Starting %d threads", stats.num_threads);
+    for (int i = 0; i < stats.num_threads; i++)
+    {
+        /* TODO: should we save thread objects? */
+        /* TODO: monitor when threads crash so we can start them up again */
+        g_thread_create(thread_loop, NULL, FALSE, NULL);
+    }
+}
+
 /* PROTOCOL 1 - UDP */
 
 /* Convert a buffer of bytes (gchars) from the network into a SAMPLE_BLOCK,
@@ -159,4 +191,34 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
     free(stream_name);
     free(flv_data);             /* Should be ok to free even if it's NULL */
+}
+
+void queue_imo_message_for_worker(unsigned char *msg, int msg_length)
+{
+    msg_block *mb = malloc(sizeof(msg_block));
+    mb->msg = msg;
+    mb->len = msg_length;
+    g_async_queue_push(work_queue, mb);
+}
+
+static gpointer thread_loop(gpointer data)
+{
+    UNUSED(data);
+
+    while(TRUE)
+    {
+        msg_block *mb;
+        unsigned char *msg;
+        int msg_len;
+
+        mb = g_async_queue_pop(work_queue);
+        msg = mb->msg;
+        msg_len = mb->len;
+
+        handle_imo_message(msg, msg_len);
+
+        free(mb);
+    }
+
+    return NULL;
 }
