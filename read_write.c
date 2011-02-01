@@ -276,6 +276,8 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     /* If there are no messages in the sll, give up */
     if (g_slist_length(fd_buf->read_head) <= 0)
     {
+        *msg = NULL;
+        *msg_length = 0;
         return 0;
     }
 
