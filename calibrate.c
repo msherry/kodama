@@ -59,7 +59,6 @@ void calibrate(void)
     end_cycles = cycles();
 
 
-    /* No lock, because we run before any other threads are started */
     float cpu_mips = (end_cycles - before_cycles) / (d_us);
     float secs_of_speech = (float)(stats.total_samples_processed) / SAMPLE_RATE;
     float mips_per_ec = cpu_mips / ((secs_of_speech*1E6)/d_us);
