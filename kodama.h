@@ -68,6 +68,7 @@ typedef struct globals_t {
 } globals_t;
 
 typedef struct stats_t {
+    float cpu_mips;              /// MIPS per core - read-only, no lock required
     uint64_t samples_processed;            /// Processed in the last minute
     uint64_t total_samples_processed;      /// Processed over server lifetime
     uint64_t total_us;                     /// Total time spent processing

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#include "kodama.h"             /* For SAMPLE type */
+
 char *hexify(const unsigned char *buf, const int data_len);
 /**
  * Create a hex representation of the given samples

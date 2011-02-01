@@ -9,6 +9,7 @@
 #include <unistd.h>
 
 #include "av.h"
+#include "calibrate.h"
 #include "conversation.h"
 #include "hybrid.h"
 #include "interface_hardware.h"
@@ -325,10 +326,13 @@ int main(int argc, char *argv[])
 
     init_stats();
     init_hybrids();
-    init_log_handlers();
+    /* init_log_handlers(); */
     init_sig_handlers();
     init_av();
     init_conversations();
+
+    calibrate();
+    exit(0);
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)
