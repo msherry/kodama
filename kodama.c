@@ -272,9 +272,9 @@ static void init_log_handlers(void)
 static void init_stats(void)
 {
     G_LOCK(stats);
-
     stats.samples_processed = 0;
-
+    stats.total_samples_processed = 0;
+    stats.total_us = 0;
     G_UNLOCK(stats);
 }
 
@@ -326,13 +326,13 @@ int main(int argc, char *argv[])
 
     init_stats();
     init_hybrids();
-    /* init_log_handlers(); */
+    init_log_handlers();
     init_sig_handlers();
     init_av();
     init_conversations();
 
     calibrate();
-    exit(0);
+    init_stats();               /* Do this again now that we're calibrated */
 
     /* If no shardnum is given, we're running in standalone mode */
     if (globals.shardnum == -1)

@@ -6,6 +6,8 @@
 #include "flv.h"
 #include "kodama.h"
 
+extern globals_t globals;       /* for FLV_LOG */
+
 static int decode_format_byte(const unsigned char formatByte, int *codecid,
         int *sampleRate, int *channels, int *sampleSize, int *flags_size);
 static int get_sample_rate(const unsigned char formatbyte);
@@ -37,7 +39,7 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
 
     if (flv->d_format_byte)
     {
-        g_debug("Format byte changed. Old: %#.2x   New: %#.2x",
+        g_warning("Format byte changed. Old: %#.2x   New: %#.2x",
             flv->d_format_byte, formatByte);
     }
 
@@ -57,7 +59,7 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
     /* TODO: if our format byte has changed, we have an old codec (and
      * possible resample context) lying around. Free everything that we
      * reallocate */
-    g_debug("Loading codec id %d", flv->d_codec_ctx->codec_id);
+    FLV_LOG("Loading codec id %d\n", flv->d_codec_ctx->codec_id);
     codec = avcodec_find_decoder(flv->d_codec_ctx->codec_id);
     if (!codec)
     {
@@ -76,7 +78,7 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
      * sample rate, since the format byte often lies */
     if (flv->d_codec_ctx->sample_rate != SAMPLE_RATE)
     {
-        g_debug("Creating decode resample context: %d -> %d",
+        FLV_LOG("Creating decode resample context: %d -> %d\n",
             flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
         flv->d_resample_ctx = av_audio_resample_init(1, channels,
             SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
@@ -127,7 +129,7 @@ int setup_encode_context(FLVStream *flv)
 
     if (flv_codecid == FLV_CODECID_SPEEX && 0) /* TODO: */
     {
-        g_debug("Setting QSCALE flag");
+        FLV_LOG("Setting QSCALE flag\n");
         flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;
         /* TODO: This is defaulted to 6/10, CBR in actionscript. This should
          * probably be roughly equivalent, which might mean not using VBR at
@@ -137,7 +139,7 @@ int setup_encode_context(FLVStream *flv)
     else
     {
         /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
-        g_debug("Not setting QSCALE flag: flv_codecid = %d", flv_codecid);
+        FLV_LOG("Not setting QSCALE flag: flv_codecid = %d\n", flv_codecid);
         flv->e_codec_ctx->bit_rate = 20600;
         flv->e_codec_ctx->compression_level = 10; /* Higher = better quality */
     }
@@ -148,7 +150,7 @@ int setup_encode_context(FLVStream *flv)
     /* TODO: if our format byte has changed, we have an old codec (and
      * possible resample context) lying around. Free everything that we
      * reallocate */
-    g_debug("Loading codec id %d", flv->e_codec_ctx->codec_id);
+    FLV_LOG("Loading codec id %d\n", flv->e_codec_ctx->codec_id);
     codec = avcodec_find_encoder(flv->e_codec_ctx->codec_id);
     if (!codec)
     {
@@ -167,7 +169,7 @@ int setup_encode_context(FLVStream *flv)
      * cancellation */
     if (flv->e_codec_ctx->sample_rate != SAMPLE_RATE)
     {
-        g_debug("Creating encode resample context: %d -> %d",
+        FLV_LOG("Creating encode resample context: %d -> %d\n",
                 SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
         flv->e_resample_ctx = av_audio_resample_init(1, channels,
             flv->e_codec_ctx->sample_rate, SAMPLE_RATE,
@@ -200,11 +202,11 @@ int setup_encode_context(FLVStream *flv)
 static int decode_format_byte(const unsigned char formatByte, int *codecid,
         int *sampleRate, int *channels, int *sampleSize, int *flags_size)
 {
-    g_debug("Format byte: %#.2x", formatByte);
+    FLV_LOG("Format byte: %#.2x\n", formatByte);
 
     /* Find the codec */
     *codecid = formatByte & FLV_AUDIO_CODECID_MASK;
-    g_debug("codec id: %d", *codecid);
+    FLV_LOG("codec id: %d\n", *codecid);
     char *codec_name;
     switch(*codecid)
     {
@@ -237,7 +239,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
         *codecid = -1;
         break;
     }
-    g_debug("Codec: %s", codec_name);
+    FLV_LOG("Codec: %s\n", codec_name);
 
     if (*codecid == -1)
     {
@@ -246,7 +248,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
 
     /* Audio sample rate */
     *sampleRate = get_sample_rate(formatByte);
-    g_debug("(Reported) sample rate: %d", *sampleRate);
+    FLV_LOG("(Reported) sample rate: %d\n", *sampleRate);
 
     if (*sampleRate == -1)
     {
@@ -255,7 +257,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
 
     /* Number of audio channels */
     *channels = (formatByte & FLV_AUDIO_CHANNEL_MASK) == FLV_STEREO ? 2 : 1;
-    g_debug("Number of channels: %d", *channels);
+    FLV_LOG("Number of channels: %d\n", *channels);
     if (*channels != 1)
     {
         g_warning("********* Channels != 1 ************");
@@ -264,7 +266,7 @@ static int decode_format_byte(const unsigned char formatByte, int *codecid,
 
     /* Bits per coded sample */
     *sampleSize = (formatByte & FLV_AUDIO_SAMPLESIZE_MASK) ? 16 : 8;
-    g_debug("Bits per sample: %d", *sampleSize);
+    FLV_LOG("Bits per sample: %d\n", *sampleSize);
 
     if (*codecid == FLV_CODECID_VP6 || *codecid == FLV_CODECID_VP6A ||
             *codecid == FLV_CODECID_AAC)
@@ -332,39 +334,39 @@ static void local_flv_set_audio_codec(AVCodecContext *acodec, int flv_codecid)
 #else
       CODEC_ID_PCM_S16LE;
 #endif
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_PCM");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_PCM\n");
       break;
     case FLV_CODECID_PCM_LE:
       acodec->codec_id = acodec->bits_per_coded_sample == 8 ? CODEC_ID_PCM_U8 : CODEC_ID_PCM_S16LE;
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_PCM_LE");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_PCM_LE\n");
       break;
     case FLV_CODECID_AAC:
       acodec->codec_id = CODEC_ID_AAC;
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_AAC");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_AAC\n");
       break;
     case FLV_CODECID_ADPCM:
       acodec->codec_id = CODEC_ID_ADPCM_SWF;
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_ADPCM");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_ADPCM\n");
       break;
     case FLV_CODECID_MP3:
       acodec->codec_id = CODEC_ID_MP3;
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_MP3");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_MP3\n");
       break;
     case FLV_CODECID_NELLYMOSER_8KHZ_MONO:
       acodec->sample_rate = 8000; //in case metadata does not otherwise declare samplerate
     case FLV_CODECID_NELLYMOSER:
       acodec->codec_id = CODEC_ID_NELLYMOSER;
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_NELLYMOSER");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_NELLYMOSER\n");
       break;
     case FLV_CODECID_SPEEX:
       acodec->codec_id = CODEC_ID_SPEEX;
       /* Should be safe to do this for now - adobe always seems to use it */
       acodec->sample_rate = 16000; /* flvdec.c */
-      g_debug("local_flv_set_audio_codec: FLV_CODECID_SPEEX");
+      FLV_LOG("local_flv_set_audio_codec: FLV_CODECID_SPEEX\n");
       break;
     default:
       acodec->codec_tag = flv_codecid >> FLV_AUDIO_CODECID_OFFSET;
-      g_debug("local_flv_set_audio_codec: default");
+      FLV_LOG("local_flv_set_audio_codec: default\n");
   }
 }
 

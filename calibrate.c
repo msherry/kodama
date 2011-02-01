@@ -8,6 +8,7 @@
 #include "flv.h"
 #include "util.h"
 
+extern globals_t globals;
 extern stats_t stats;
 G_LOCK_EXTERN(stats);
 
@@ -27,7 +28,14 @@ void calibrate(void)
     uint64_t before_cycles, end_cycles;
     long d_us;
 
-    g_debug("Calibrating...");
+    /* Save global logging prefs, but disable as much as we can while
+     * calibrating */
+    int verbose = globals.verbose;
+    globals.verbose = 0;
+    int flv_debug = globals.flv_debug;
+    globals.flv_debug = 0;
+
+   g_debug("Calibrating...");
     flv_start_stream(stream_name_0);
     flv_start_stream(stream_name_1);
     conversation_start(stream_name_0);
@@ -66,5 +74,11 @@ void calibrate(void)
     flv_end_stream(stream_name_1);
     conversation_end(stream_name_0);
 
-    /* Our caller will be responsible for clearing out stats */
+    /* Our caller will be responsible for resetting the resettable fields of
+     * stats */
+    stats.cpu_mips = cpu_mips;
+    stats.ec_per_core = instances_per_core;
+
+    globals.verbose = verbose;
+    globals.flv_debug = flv_debug;
 }
