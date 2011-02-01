@@ -4,6 +4,8 @@
 /// Holds information about a single 2-party conversation.
 typedef struct Conversation {
     struct hybrid *h0, *h1;
+
+    GMutex *mutex;
 } Conversation;
 
 /**

@@ -44,6 +44,8 @@ static Conversation *conversation_create(void)
     c->h1->tx_cb_fn = NULL;
     c->h1->rx_cb_fn = NULL;
 
+    c->mutex = g_mutex_new();
+
     return c;
 }
 
@@ -53,6 +55,8 @@ static void conversation_destroy(Conversation *c)
 
     hybrid_destroy(c->h0);
     hybrid_destroy(c->h1);
+
+    g_mutex_free(c->mutex);
 
     free(c);
 }
@@ -127,6 +131,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
         return -1;
     }
 
+    g_mutex_lock(c->mutex);
+
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
     {
@@ -183,6 +189,7 @@ free_sample_block:
     sample_block_destroy(sb);
 
 exit:
+    g_mutex_unlock(c->mutex);
     return ret;
 }
 
