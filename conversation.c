@@ -18,6 +18,7 @@ G_LOCK_DEFINE(id_to_conv);
 G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
+static void conversation_destroy(Conversation *c);
 static void conversation_process_samples(Conversation *c, int conv_side,
     SAMPLE_BLOCK *sb);
 static Conversation *find_conv_for_stream(const char *stream_name,
@@ -26,7 +27,7 @@ static Conversation *find_conv_for_stream(const char *stream_name,
 void init_conversations(void)
 {
     id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
-            g_free, NULL);  /* TODO: conversation_destroy */
+            g_free, (GDestroyNotify)conversation_destroy);
 }
 
 static Conversation *conversation_create(void)
@@ -83,10 +84,6 @@ void conversation_start(const char *stream_name)
         tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 1);
         hybrid_set_name(c->h1, tmpname);
         g_free(tmpname);
-
-        /* TODO: temporary debugging */
-        /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
-        /* setup_hw_out(c->h0); */
     }
     G_UNLOCK(id_to_conv);
 
@@ -97,18 +94,14 @@ void conversation_end(const char *stream_name)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
 
-    int conv_side;
-    Conversation *c = find_conv_for_stream(stream_name, &conv_side);
-
-    if (!c)
-    {
-        return;
-    }
-
-    conversation_destroy(c);
     G_LOCK(id_to_conv);
-    g_hash_table_remove(id_to_conv, (conv_and_num[0]));
+    gboolean found = g_hash_table_remove(id_to_conv, conv_and_num[0]);
     G_UNLOCK(id_to_conv);
+
+    if (!found)
+    {
+        /* This should still be ok */
+    }
 
     g_strfreev(conv_and_num);
 }
