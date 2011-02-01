@@ -71,7 +71,7 @@ void calibrate(void)
     /* g_debug("Cycles taken: %lu", (end_cycles - before_cycles)); */
     /* g_debug("us taken: %u", d_us); */
     g_debug("CPU runs at %.02f MIPS", cpu_mips);
-    g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)",
+    g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS/ec)",
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     g_debug("%5.2f instances possible / core", instances_per_core);
 
