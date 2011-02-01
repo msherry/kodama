@@ -167,6 +167,8 @@ void send_imo_message(const unsigned char *msg, int msg_len)
         /* TODO: If wowza is smart enough to remember streams across restarts,
          * we should queue data for wowza here */
         g_warning("(%s:%d) wowza fd is -1", __FILE__, __LINE__);
+
+        /* TODO: we should free msg here */
         return;
     }
 
