@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
+#include <unistd.h>
 
 #include "kodama.h"
 #include "util.h"
@@ -123,4 +124,9 @@ uint64_t cycles(void)
     uint64_t x;
     __asm__ volatile ("rdtsc\n\t" : "=A" (x));
     return x;
+}
+
+int num_processors(void)
+{
+    return sysconf(_SC_NPROCESSORS_ONLN);
 }

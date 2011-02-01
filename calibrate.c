@@ -35,7 +35,10 @@ void calibrate(void)
     int flv_debug = globals.flv_debug;
     globals.flv_debug = 0;
 
-   g_debug("Calibrating...");
+    int num_cpus = num_processors();
+    g_debug("Num cpus: %i", num_cpus);
+
+    g_debug("Calibrating...");
     flv_start_stream(stream_name_0);
     flv_start_stream(stream_name_1);
     conversation_start(stream_name_0);
@@ -76,6 +79,7 @@ void calibrate(void)
     /* Our caller will be responsible for resetting the resettable fields of
      * stats */
     G_LOCK(stats);
+    stats.num_cpus = num_cpus;
     stats.cpu_mips = cpu_mips;
     stats.ec_per_core = instances_per_core;
     G_UNLOCK(stats);
