@@ -22,6 +22,9 @@ void conversation_end(const char *stream_name);
  * @param stream_name Name of the stream which sent us this message.
  * @param flv_data The FLV data containing our audio samples.
  * @param flv_len Length of the FLV packet.
+ * @param return_flv_data Address of a pointer to hold the return FLV packet,
+ * if any
+ * @param return_flv_len Length of the returned FLV packet
  *
  * @return Zero on success, non-zero on failure.
  */
