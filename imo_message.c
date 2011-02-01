@@ -40,7 +40,7 @@ void decode_imo_message(const unsigned char *msg, const int msg_length, char *ty
     }
     else
     {
-        g_debug("Got an imo message with zero packet len (type %c)", *type);
+        /* g_debug("Got an imo message with zero packet len (type %c)", *type); */
     }
 }
 
