@@ -296,12 +296,8 @@ int queue_message(int fd, const unsigned char *msg, int length)
         return -2;
     }
 
-    /* The message should have 4 bytes free at the beginning for us to place a
-     * network-order 4-byte int giving the length. */
-    /* TODO: is this the right place to do this? Should it be done at a higher
-     * level? */
-    /* TODO: do we want to just queue the original message object (with suitable
-     * modification for the length header), or a copy? */
+    /* TODO: this is retarded - we're copying the message just to enqueue
+     * it. Avoid this */
 
     /* length includes the extra 4 bytes for the message size */
     uint32_t length_net_order;

@@ -132,6 +132,8 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
                 send_imo_message(return_msg, return_msg_length);
 
+                /* TODO: fix this - we can only free here because we're doing a
+                 * useless copy to put the message on the write queue */
                 free(return_msg);
             }
             /* Ok to do this even if it's NULL */
