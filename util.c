@@ -121,9 +121,10 @@ long delta(struct timeval *x, struct timeval *y)
 /* TODO: inline this */
 uint64_t cycles(void)
 {
-    uint64_t x;
-    __asm__ volatile ("rdtsc\n\t" : "=A" (x));
-    return x;
+    uint32_t lo, hi;
+    /* We can't use "=A", since this would use %rax on x86_64 */
+    __asm__ volatile ("rdtsc\n\t" : "=a" (lo), "=d"(hi));
+    return (uint64_t)hi<<32 | lo;
 }
 
 int num_processors(void)

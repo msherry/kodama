@@ -26,7 +26,7 @@ void calibrate(void)
 {
     struct timeval start, end;
     uint64_t before_cycles, end_cycles;
-    long d_us;
+    unsigned long d_us;
 
     /* Save global logging prefs, but disable as much as we can while
      * calibrating */
@@ -67,6 +67,9 @@ void calibrate(void)
     float mips_per_ec = cpu_mips / ((secs_of_speech*1E6)/d_us);
     float instances_per_core = cpu_mips/mips_per_ec;
 
+    /* g_debug("Samples processed: %d", stats.total_samples_processed); */
+    /* g_debug("Cycles taken: %lu", (end_cycles - before_cycles)); */
+    /* g_debug("us taken: %u", d_us); */
     g_debug("CPU runs at %.02f MIPS", cpu_mips);
     g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)",
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
