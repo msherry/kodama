@@ -69,9 +69,10 @@ typedef struct globals_t {
 
 typedef struct stats_t {
 
-    int num_cpus;
     float cpu_mips;              /// MIPS per core - read-only, no lock required
-    float ec_per_core;           /// Estimate of the number of ec we can run per core
+    int num_cpus;
+    float ec_per_core;           /// Estimate of how many ec we can run per core
+    int num_threads;             /// How many threads we actually run
 
     uint64_t samples_processed;            /// Processed in the last minute
     uint64_t total_samples_processed;      /// Processed over server lifetime

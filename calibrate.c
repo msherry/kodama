@@ -71,6 +71,8 @@ void calibrate(void)
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     g_debug("%5.2f instances possible / core", instances_per_core);
 
+    int num_threads = instances_per_core * num_cpus * .8; /* Be conservative */
+    g_debug("Starting %d threads", num_threads);
 
     flv_end_stream(stream_name_0);
     flv_end_stream(stream_name_1);
@@ -79,9 +81,10 @@ void calibrate(void)
     /* Our caller will be responsible for resetting the resettable fields of
      * stats */
     G_LOCK(stats);
-    stats.num_cpus = num_cpus;
     stats.cpu_mips = cpu_mips;
+    stats.num_cpus = num_cpus;
     stats.ec_per_core = instances_per_core;
+    stats.num_threads = num_threads;
     G_UNLOCK(stats);
 
     globals.verbose = verbose;
