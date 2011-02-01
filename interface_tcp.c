@@ -143,7 +143,11 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
         int msg_length;
         n = get_next_message(fd, &msg, &msg_length);
 
+#if 0
         queue_imo_message_for_worker(msg, msg_length);
+#else
+        handle_imo_message(msg, msg_length);
+#endif
     }
 
     /* Return TRUE to keep this handler intact (don't unregister it) */

@@ -27,6 +27,8 @@ GAsyncQueue *return_queue = NULL;
 static gpointer worker_thread_loop(gpointer data);
 static gpointer wowza_thread_loop(gpointer data);
 
+static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length);
+
 void init_protocol(void)
 {
     if (work_queue)
@@ -38,7 +40,15 @@ void init_protocol(void)
 
     /* We assume the global stats object has been populated at this point -
      * start the number of threads that we've determined is appropriate */
-    g_debug("Starting %d threads", stats.num_threads);
+    if (stats.num_threads == 1)
+    {
+        g_debug("Starting 1 thread");
+    }
+    else
+    {
+        g_debug("Starting %d threads", stats.num_threads);
+    }
+
     for (int i = 0; i < stats.num_threads; i++)
     {
         /* TODO: should we save thread objects? */
@@ -109,7 +119,7 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 void handle_imo_message(unsigned char *msg, int msg_length)
 {
-    /* g_debug("Got an imo packet"); */
+    g_debug("Got an imo packet");
 
     char *stream_name;
     char type;
@@ -151,31 +161,34 @@ void handle_imo_message(unsigned char *msg, int msg_length)
         }
         else
         {
-            /* unsigned char *return_flv_packet = NULL; */
-            /* int return_flv_len; */
+            unsigned char *return_flv_packet = NULL;
+            int return_flv_len;
 
-            /* int ret = r(stream_name, flv_data, flv_len, &return_flv_packet, */
-            /*     &return_flv_len); */
+            int ret = r(stream_name, flv_data, flv_len, &return_flv_packet,
+                &return_flv_len);
 
-            /* /\* Don't reflect if everything is OK *\/ */
-            /* reflect = ((ret != 0) || (return_flv_packet == NULL) || */
-            /*            (return_flv_len == 0)); */
+            /* Don't reflect if everything is OK */
+            reflect = ((ret != 0) || (return_flv_packet == NULL) ||
+                       (return_flv_len == 0));
 
-            /* if (!reflect) */
-            /* { */
-            /*     unsigned char *return_msg; */
-            /*     int return_msg_length; */
-            /*     create_imo_message(&return_msg, &return_msg_length, 'D', */
-            /*         stream_name, return_flv_packet, return_flv_len); */
+            if (!reflect)
+            {
+                unsigned char *return_msg;
+                int return_msg_length;
+                create_imo_message(&return_msg, &return_msg_length, 'D',
+                    stream_name, return_flv_packet, return_flv_len);
 
-            /*     queue_imo_message_for_wowza(return_msg, return_msg_length); */
-
-            /*     /\* TODO: fix this - we can only free here because we're doing a */
-            /*      * useless copy to put the message on the write queue *\/ */
-            /*     free(return_msg); */
-            /* } */
-            /* /\* Ok to do this even if it's NULL *\/ */
-            /* free(return_flv_packet); */
+#if 0
+                queue_imo_message_for_wowza(return_msg, return_msg_length);
+#else
+                send_imo_message(return_msg, return_msg_length);
+#endif
+                /* TODO: fix this - we can only free here because we're doing a
+                 * useless copy to put the message on the write queue */
+                free(return_msg);
+            }
+            /* Ok to do this even if it's NULL */
+            free(return_flv_packet);
         }
         break;
     default:
@@ -187,7 +200,11 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
     if (reflect)
     {
+#if 0
         queue_imo_message_for_wowza(msg, msg_length);
+#else
+        send_imo_message(msg, msg_length);
+#endif
     }
     else
     {
@@ -201,13 +218,14 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
 void queue_imo_message_for_worker(unsigned char *msg, int msg_length)
 {
+    g_debug("Queueing a message block for worker threads");
     msg_block *mb = malloc(sizeof(msg_block));
     mb->msg = msg;
     mb->len = msg_length;
     g_async_queue_push(work_queue, mb);
 }
 
-void queue_imo_message_for_wowza(unsigned char *msg, int msg_length)
+static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length)
 {
     msg_block *mb = malloc(sizeof(msg_block));
     mb->msg = msg;
@@ -221,6 +239,7 @@ static gpointer worker_thread_loop(gpointer data)
 
     while(TRUE)
     {
+        g_debug("Waiting for a message block");
         msg_block *mb;
         unsigned char *msg;
         int msg_len;
@@ -229,7 +248,9 @@ static gpointer worker_thread_loop(gpointer data)
         msg = mb->msg;
         msg_len = mb->len;
 
+        g_debug("Got a message block");
         handle_imo_message(msg, msg_len);
+        g_debug("Handled a message block");
 
         free(mb);
     }
