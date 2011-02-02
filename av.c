@@ -127,7 +127,7 @@ int setup_encode_context(FLVStream *flv)
     local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
     flv->e_codec_ctx->channels = channels;
 
-    if (flv_codecid == FLV_CODECID_SPEEX && 0) /* TODO: */
+    if (flv_codecid == FLV_CODECID_SPEEX) /* TODO: */
     {
         FLV_LOG("Setting QSCALE flag\n");
         flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;
@@ -138,10 +138,9 @@ int setup_encode_context(FLVStream *flv)
     }
     else
     {
-        /* TODO: set e_codec_ctx->bit_rate - try to match incoming */
         FLV_LOG("Not setting QSCALE flag: flv_codecid = %d\n", flv_codecid);
-        flv->e_codec_ctx->bit_rate = 20600;
-        flv->e_codec_ctx->compression_level = 10; /* Higher = better quality */
+        flv->e_codec_ctx->bit_rate = 20600; /* The default in actionscript */
+        flv->e_codec_ctx->compression_level = 4; /* Higher = better quality */
     }
 
     /* Load the codec */
