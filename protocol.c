@@ -70,7 +70,7 @@ SAMPLE_BLOCK *message_to_samples(gchar *buf, gint num_bytes)
     gchar *data_start = buf + sizeof(proto_header);
     size_t count = 0;
 
-    SAMPLE_BLOCK *sb;
+    SAMPLE_BLOCK *sb = NULL;
     switch (proto)
     {
     case raw:
