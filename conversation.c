@@ -223,6 +223,10 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     hybrid *hl = (conv_side == 0) ? c->h0 : c->h1;
     hybrid *hr = (conv_side == 0) ? c->h1 : c->h0;
 
+    /* TODO: use sb->pts to determine a) if these samples are too old for us to
+     * care about, and b) if we need to insert them other than at the head of
+     * the queue */
+
     g_mutex_lock(c->mutex);
     /* Let the left-side hybrid see these samples and echo-cancel them */
     hybrid_put_tx_samples(hl, sb);
