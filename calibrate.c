@@ -76,6 +76,7 @@ void calibrate(void)
     g_debug("%5.2f instances possible / core", instances_per_core);
 
     int num_threads = instances_per_core * num_cpus * .8; /* Be conservative */
+    num_threads = MAX(num_threads, 1);                    /* Be pedantic */
 
     flv_end_stream(stream_name_0);
     flv_end_stream(stream_name_1);
