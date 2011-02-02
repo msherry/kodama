@@ -55,6 +55,9 @@ static void conversation_destroy(Conversation *c)
 {
     g_return_if_fail(c != NULL);
 
+    /* TODO: if one side of the conversation is processing samples, and we try
+     * to destroy the other side, we free the mutex while another thread holds
+     * it. This is bad */
     hybrid_destroy(c->h0);
     hybrid_destroy(c->h1);
 
