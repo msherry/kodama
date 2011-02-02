@@ -127,7 +127,7 @@ int setup_encode_context(FLVStream *flv)
     local_flv_set_audio_codec(flv->e_codec_ctx, flv_codecid);
     flv->e_codec_ctx->channels = channels;
 
-    if (flv_codecid == FLV_CODECID_SPEEX) /* TODO: */
+    if (flv_codecid == FLV_CODECID_SPEEX && 0) /* TODO: */
     {
         FLV_LOG("Setting QSCALE flag\n");
         flv->e_codec_ctx->flags |= CODEC_FLAG_QSCALE;

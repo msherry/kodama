@@ -154,6 +154,9 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
     {
+        char *hex = hexify(flv_data, flv_len);
+        g_debug("Error parsing tag: %s", hex);
+        free(hex);
         goto exit;
     }
 
@@ -165,7 +168,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     long d_us = delta(&start, &end);
 
     /* TODO: is this kosher? */
-    /* sb->pts += d_us/1000; */
+    //sb->pts += d_us/1000;
 
     *return_flv_packet = NULL;
     *return_flv_len = 0;
