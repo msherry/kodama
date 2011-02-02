@@ -120,7 +120,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
     unsigned char type_code, type;
     int offset = 0;
-    int ret=-1;
+    int ret = -1;
 
     FLV_LOG("Packet length: %d\n", packet_len);
 
@@ -175,18 +175,16 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         if (!flv->d_format_byte || flv->d_format_byte != formatByte)
         {
             FLV_LOG("Setting up decode context\n");
-            ret = setup_decode_context(flv, formatByte);
-            if (ret)
+            if (setup_decode_context(flv, formatByte))
             {
-                FLV_LOG("Error setting up decode context: %d\n", ret);
+                FLV_LOG("Error setting up decode context\n");
                 goto exit;
             }
 
             FLV_LOG("Setting up encode context\n");
-            ret = setup_encode_context(flv);
-            if (ret != 0)
+            if (setup_encode_context(flv))
             {
-                FLV_LOG("Error setting up encode context: %d\n", ret);
+                FLV_LOG("Error setting up encode context\n");
                 goto exit;
             }
         }
@@ -283,7 +281,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     else if (type == 'V')
     {
         g_warning("Got video frame - I don't know how to handle those yet");
-        ret = -1;
+        goto exit;
     }
 
     offset = (packet_len - 4);
