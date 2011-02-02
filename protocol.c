@@ -240,7 +240,7 @@ static gpointer worker_thread_loop(gpointer data)
 
     while(TRUE)
     {
-        g_debug("Waiting for a message block");
+        /* g_debug("Waiting for a message block"); */
         msg_block *mb;
         unsigned char *msg;
         int msg_len;

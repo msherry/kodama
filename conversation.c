@@ -27,7 +27,9 @@ static Conversation *find_conv_for_stream(const char *stream_name,
 void init_conversations(void)
 {
     id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
-            g_free, (GDestroyNotify)conversation_destroy);
+            g_free,
+            /* We don't put the destroy function here - explained below */
+            NULL);
 }
 
 static Conversation *conversation_create(void)
@@ -55,9 +57,10 @@ static void conversation_destroy(Conversation *c)
 {
     g_return_if_fail(c != NULL);
 
-    /* TODO: if one side of the conversation is processing samples, and we try
-     * to destroy the other side, we free the mutex while another thread holds
-     * it. This is bad */
+
+    /* The lock for the hash table will already be held at this point, since
+     * we're invoked by g_hash_table_removed. */
+
     hybrid_destroy(c->h0);
     hybrid_destroy(c->h1);
 
@@ -97,15 +100,33 @@ void conversation_end(const char *stream_name)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
 
-    G_LOCK(id_to_conv);
-    gboolean found = g_hash_table_remove(id_to_conv, conv_and_num[0]);
-    G_UNLOCK(id_to_conv);
+    /* If one side of the conversation is processing samples, and we try to
+     * destroy the conversation via other side, we free the mutex while another
+     * thread holds it. This is bad. So instead, we remove the conversation from
+     * the hash table so no other thread can find it, then acquire and release
+     * its lock. Once we do, we can immediately free it without worrying that
+     * another thread will grab it again */
 
-    if (!found)
+    G_LOCK(id_to_conv);
+    Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
+
+    if (!c)
     {
-        /* This should still be ok */
+        G_UNLOCK(id_to_conv);
+        goto exit;
+    }
+    else
+    {
+        g_hash_table_remove(id_to_conv, conv_and_num[0]);
+        G_UNLOCK(id_to_conv);
     }
 
+    g_mutex_lock(c->mutex);
+    g_mutex_unlock(c->mutex);
+
+    conversation_destroy(c);
+
+exit:
     g_strfreev(conv_and_num);
 }
 
