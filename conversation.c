@@ -90,6 +90,10 @@ void conversation_start(const char *stream_name)
         tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 1);
         hybrid_set_name(c->h1, tmpname);
         g_free(tmpname);
+
+        /* TODO: temporary debugging */
+        /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
+        /* setup_hw_out(c->h0); */
     }
     G_UNLOCK(id_to_conv);
 
