@@ -57,6 +57,9 @@ void init_protocol(void)
     }
 
     g_thread_create(wowza_thread_loop, NULL, FALSE, NULL);
+#if !THREADED
+    g_debug("THREADING DISABLED");
+#endif
 }
 
 /* PROTOCOL 1 - UDP */

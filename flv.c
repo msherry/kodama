@@ -164,8 +164,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     /* stream id is 3 bytes, and always zero - skip it */
     offset += 3;
 
-    /* The rest is packet data, except the last 4 bytes, which should contain
-     * the size of this packet */
+    /* The rest is packet data (audio/video), except the last 4 bytes, which
+     * should contain the size of this packet */
 
     /* Figure out what we can from the body */
     if (type == 'A')
@@ -293,6 +293,11 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     prev_tag_size = read_uint32_be(packet_data + offset);
     offset += 4;
     FLV_LOG("PrevTagSize: %u  (%#.8x)\n", prev_tag_size, prev_tag_size);
+    if (prev_tag_size != (unsigned)(packet_len - 4))
+    {
+        g_warning("********* prev_tag_size = %i, expected %i",
+                prev_tag_size, packet_len-4);
+    }
 
 exit:
     g_mutex_unlock(flv->mutex);
