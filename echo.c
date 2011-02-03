@@ -200,11 +200,16 @@ static inline float clip(float in)
 
 /*********** NLMS functions ***********/
 
-/* -funroll-loops doesn't help, but does look crazy */
-
 /* Using a 64-byte stride, more temporary registers, and interleaving
  * instructions like crazy is about 5% faster, but this is much more
  * maintainable */
+
+/* Ubuntu 10.04 default gcc (4.4.3), -mtune=core2 sucks, barcelona gives the
+ * 16-byte equivalent of our 32-byte code. -funroll-loops seems to help here */
+
+/* Mac OS X gcc 4.6 (prerelease), -mtune=corei7 does one load, then a multiply
+ * from memory (16-byte stride) */
+
 //__attribute__ ((noinline))
 static float dotp(const float * restrict a, const float * restrict b)
 {
