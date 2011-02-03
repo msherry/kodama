@@ -2,7 +2,7 @@
 
 PORTAUDIODIR = portaudio
 
-#/opt/local/bin/gcc-mp-4.4
+#/opt/local/bin/gcc-mp-4.6
 
 CC=gcc
 LD=gcc
