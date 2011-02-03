@@ -211,14 +211,10 @@ static float dotp(const float * restrict a, const float * restrict b)
     int *i = 0;
     __asm__ volatile(
 "1:                                       \n\t"
-        "movlps (%2,%0), %%xmm1           \n\t"
-        "movhps 8(%2,%0), %%xmm1          \n\t"
-        "movlps (%3,%0), %%xmm2           \n\t"
-        "movhps 8(%3,%0), %%xmm2          \n\t"
-        "movlps 16(%2,%0), %%xmm3         \n\t"
-        "movhps 24(%2,%0), %%xmm3         \n\t"
-        "movlps 16(%3,%0), %%xmm4         \n\t"
-        "movhps 24(%3,%0), %%xmm4         \n\t"
+        "movups (%2,%0), %%xmm1           \n\t"
+        "movups (%3,%0), %%xmm2           \n\t"
+        "movups 16(%2,%0), %%xmm3         \n\t"
+        "movups 16(%3,%0), %%xmm4         \n\t"
         "addq   $32, %0                   \n\t"
         "cmpq   %4, %0                    \n\t"
         "mulps  %%xmm2, %%xmm1            \n\t"
