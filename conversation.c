@@ -57,10 +57,6 @@ static void conversation_destroy(Conversation *c)
 {
     g_return_if_fail(c != NULL);
 
-
-    /* The lock for the hash table will already be held at this point, since
-     * we're invoked by g_hash_table_removed. */
-
     hybrid_destroy(c->h0);
     hybrid_destroy(c->h1);
 
@@ -91,7 +87,7 @@ void conversation_start(const char *stream_name)
         hybrid_set_name(c->h1, tmpname);
         g_free(tmpname);
 
-        /* TODO: temporary debugging */
+        /* Debugging only - shortcircuit audio directly to hardware */
         /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
         /* setup_hw_out(c->h0); */
     }

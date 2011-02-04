@@ -29,8 +29,8 @@ hybrid *hybrid_new(void)
 {
     hybrid *h = malloc(sizeof(hybrid));
 
-    h->tx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
-    h->rx_buf = cbuffer_init(1000 * SAMPLE_RATE * NUM_CHANNELS);
+    h->tx_buf = cbuffer_init(20 * SAMPLE_RATE * NUM_CHANNELS);
+    h->rx_buf = cbuffer_init(20 * SAMPLE_RATE * NUM_CHANNELS);
 
     h->tx_count = 0;
     h->rx_count = 0;
