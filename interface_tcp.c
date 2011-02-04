@@ -178,9 +178,6 @@ void send_imo_message(unsigned char *msg, int msg_len)
         return;
     }
 
-    free(msg);
-    return;                     /* TODO: debugging only */
-
     /* TODO: Who do we send data to? We probably only have one wowza connection,
      * but it would be good to make this more general. We should map stream
      * names to the wowza fd they came in on */
