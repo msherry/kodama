@@ -278,10 +278,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
                 int newrate_num_samples;
 
-                g_mutex_lock(flv->mutex);
+                /* TODO: Don't assume this succeeds */
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
                     resampled, sample_array, numSamples);
-                g_mutex_unlock(flv->mutex);
 
                 numSamples = newrate_num_samples;
                 sample_buf = resampled;
