@@ -178,6 +178,12 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
          * possibly deleting it. If they're deleting it, we don't want to wait
          * around for its mutex to become free, so we tell our caller to try
          * again -- next time they try, c might be free or not exist */
+
+        /* TODO: if the thread holding this lock crashes for some reason, c will
+         * never become available, and all threads might eventually end up
+         * waiting on it. If no thread can make progress towards acquiring
+         * c->mutex for some amount of time, we might want to forcibly remove
+         * c */
         return LOCK_FAILURE;
     }
 
