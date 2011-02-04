@@ -4,7 +4,6 @@
 
 #include "cbuffer.h"
 #include "conversation.h"
-#include "flv.h"
 #include "imo_message.h"
 #include "interface_tcp.h"
 #include "protocol.h"
@@ -150,12 +149,10 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     {
     case 'S':
         g_debug("Got an S message");
-        flv_start_stream(stream_name);
         conversation_start(stream_name);
         break;
     case 'E':
         g_debug("Got an E message");
-        flv_end_stream(stream_name);
         /* Any messages from the other side will just be reflected */
         conversation_end(stream_name);
         break;

@@ -82,17 +82,23 @@ void conversation_start(const char *stream_name)
     {
         c = conversation_create();
 
-        gchar *tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 0);
-        hybrid_set_name(c->h0, tmpname);
-        g_free(tmpname);
+        gchar *stream_name_0, *stream_name_1;
 
-        tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 1);
-        hybrid_set_name(c->h1, tmpname);
-        g_free(tmpname);
+        stream_name_0 = g_strdup_printf("%s:%d", conv_and_num[0], 0);
+        stream_name_1 = g_strdup_printf("%s:%d", conv_and_num[0], 1);
+
+        hybrid_set_name(c->h0, stream_name_0);
+        hybrid_set_name(c->h1, stream_name_1);
 
         /* Debugging only - shortcircuit audio directly to hardware */
         /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
         /* setup_hw_out(c->h0); */
+
+        flv_start_stream(stream_name_0);
+        flv_start_stream(stream_name_1);
+
+        g_free(stream_name_0);
+        g_free(stream_name_1);
 
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
     }
@@ -121,8 +127,20 @@ void conversation_end(const char *stream_name)
 
     if(c)
     {
+        gchar *stream_name_0, *stream_name_1;
+
+        stream_name_0 = g_strdup_printf("%s:%d", conv_and_num[0], 0);
+        stream_name_1 = g_strdup_printf("%s:%d", conv_and_num[0], 1);
+
         g_mutex_lock(c->mutex);
         g_mutex_unlock(c->mutex);
+
+        flv_end_stream(stream_name_0);
+        flv_end_stream(stream_name_1);
+
+        g_free(stream_name_0);
+        g_free(stream_name_1);
+
         conversation_destroy(c);
     }
     g_strfreev(conv_and_num);

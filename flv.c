@@ -92,11 +92,8 @@ void flv_end_stream(const char *stream_name)
 {
     FLV_LOG("Destroying FLVStream for %s\n", stream_name);
 
-    /* If one thread is processing samples for an FLVstream, and an 'E' message
-     * comes in, we might destroy the FLVstream while another thread holds its
-     * lock, which leads to undefined behavior. So, just as in conversation.c,
-     * we remove the FLVstream from the hash table, so no other thread can find
-     * it, then acquire and release its lock first */
+    /* This will be called while holding a lock on the conversation associated
+     * with this FLVStream, so the locking we're doing is probably excessive */
 
     G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
@@ -137,8 +134,13 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     }
 
     /* Only one thread should work on this stream at a time */
-    /* TODO: race condition here - flv could have just been freed */
-    /* Do what we do in conversation.c - we've solved it there */
+
+    /* The locking situation isn't as bad as it is in conversation.c --
+     * FLVStreams are only created/destroyed while holding a lock on the parent
+     * conversation, so they shouldn't be destroyed from under us between
+     * obtaining flv above, and using it below. This probably makes locking flv
+     * unnecessary, but we'll keep it here for now */
+
     g_mutex_lock(flv->mutex);
 
     unsigned char type_code, type;
@@ -262,7 +264,6 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         if (bytesDecoded > 0)
         {
             int numSamples;
-            /* TODO: this doesn't need to be this large */
             SAMPLE resampled[KODAMA_MAX_AUDIO_FRAME_SIZE];
             SAMPLE *sample_buf = sample_array;
 
