@@ -1,3 +1,4 @@
+#include <glib.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -23,8 +24,7 @@ CBuffer *cbuffer_init(size_t capacity)
 
 void cbuffer_destroy(CBuffer *cb)
 {
-    if(cb == NULL)
-        return;
+    g_return_if_fail(cb != NULL);
 
     free(cb->buf);
     cb->buf = NULL;
