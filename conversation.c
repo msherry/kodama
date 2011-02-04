@@ -191,7 +191,6 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     {
         goto free_sample_block;
     }
-    g_mutex_unlock(c->mutex);
 
     end_cycles = cycles();
     /* Reuse end */
