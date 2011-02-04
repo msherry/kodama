@@ -88,6 +88,9 @@ done:
  * used for */
 void setup_hw_out(hybrid *h)
 {
+    /* TODO: when the hybrid is destroyed, we need to remove this stream
+     * attached to it */
+
     PaError err = paNoError;
 
     init_portaudio();

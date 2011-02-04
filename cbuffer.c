@@ -12,7 +12,7 @@ CBuffer *cbuffer_init(size_t capacity)
 
     /* TODO: this only works if SAMPLE_SILENCE == 0 */
     cb->buf = calloc(capacity, sizeof(SAMPLE));
-    cb->end = (SAMPLE *)cb->buf + capacity;
+    cb->end = cb->buf + capacity;
     cb->capacity = capacity;
     cb->count = 0;
     cb->head = cb->buf;

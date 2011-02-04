@@ -31,6 +31,11 @@ static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length);
 
 void init_protocol(void)
 {
+#if !THREADED
+    g_debug("THREADING DISABLED");
+    return;
+#endif
+
     if (work_queue)
     {
         return;
@@ -57,9 +62,6 @@ void init_protocol(void)
     }
 
     g_thread_create(wowza_thread_loop, NULL, FALSE, NULL);
-#if !THREADED
-    g_debug("THREADING DISABLED");
-#endif
 }
 
 /* PROTOCOL 1 - UDP */
