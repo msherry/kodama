@@ -221,7 +221,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
 void queue_imo_message_for_worker(unsigned char *msg, int msg_length)
 {
-    g_debug("Queueing a message block for worker threads");
+    /* g_debug("Queueing a message block for worker threads"); */
     msg_block *mb = malloc(sizeof(msg_block));
     mb->msg = msg;
     mb->len = msg_length;
@@ -254,9 +254,9 @@ static gpointer worker_thread_loop(gpointer data)
         msg = mb->msg;
         msg_len = mb->len;
 
-        g_debug("Got a message block");
+        /* g_debug("Got a message block"); */
         handle_imo_message(msg, msg_len);
-        g_debug("Handled a message block");
+        /* g_debug("Handled a message block"); */
 
         free(mb);
     }
