@@ -23,13 +23,17 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     SAMPLE_BLOCK *sb);
 static Conversation *find_conv_for_stream(const char *stream_name,
         int *conv_side);
+static Conversation *find_conv_for_stream_nolock(const char *stream_name,
+        int *conv_side);
 
 void init_conversations(void)
 {
+    G_LOCK(id_to_conv);
     id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
             g_free,
             /* We don't put the destroy function here - explained below */
             NULL);
+    G_UNLOCK(id_to_conv);
 }
 
 static Conversation *conversation_create(void)
@@ -81,7 +85,6 @@ void conversation_start(const char *stream_name)
     if (!c)
     {
         c = conversation_create();
-        g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
 
         gchar *tmpname = g_strdup_printf("%s:%d", conv_and_num[0], 0);
         hybrid_set_name(c->h0, tmpname);
@@ -94,6 +97,8 @@ void conversation_start(const char *stream_name)
         /* TODO: temporary debugging */
         /* c->h0->tx_cb_fn = shortcircuit_tx_to_rx; */
         /* setup_hw_out(c->h0); */
+
+        g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
     }
     G_UNLOCK(id_to_conv);
 
@@ -106,31 +111,24 @@ void conversation_end(const char *stream_name)
 
     /* If one side of the conversation is processing samples, and we try to
      * destroy the conversation via other side, we free the mutex while another
-     * thread holds it. This is bad. So instead, we remove the conversation from
-     * the hash table so no other thread can find it, then acquire and release
-     * its lock. Once we do, we can immediately free it without worrying that
-     * another thread will grab it again */
+     * thread holds it. This is bad.
+     *
+     * So instead, we remove the conversation from the hash table so no other
+     * thread can find it, including another 'E' message. We then acquire and
+     * release its lock. Once we do, we can immediately free it without worrying
+     * that another thread will grab it again */
 
     G_LOCK(id_to_conv);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
+    g_hash_table_remove(id_to_conv, conv_and_num[0]);
+    G_UNLOCK(id_to_conv);
 
-    if (!c)
+    if(c)
     {
-        G_UNLOCK(id_to_conv);
-        goto exit;
+        g_mutex_lock(c->mutex);
+        g_mutex_unlock(c->mutex);
+        conversation_destroy(c);
     }
-    else
-    {
-        g_hash_table_remove(id_to_conv, conv_and_num[0]);
-        G_UNLOCK(id_to_conv);
-    }
-
-    g_mutex_lock(c->mutex);
-    g_mutex_unlock(c->mutex);
-
-    conversation_destroy(c);
-
-exit:
     g_strfreev(conv_and_num);
 }
 
@@ -146,14 +144,30 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     before_cycles = cycles();
 
     int conv_side;
-    Conversation *c = find_conv_for_stream(stream_name, &conv_side);
 
+    G_LOCK(id_to_conv);
+    Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
     {
         /* This should have been done on receiving an 'S' message */
+        G_UNLOCK(id_to_conv);
         g_warning("Conversation not found for stream %s", stream_name);
         return -1;
     }
+
+    gboolean got_lock = g_mutex_trylock(c->mutex);
+    G_UNLOCK(id_to_conv);
+
+    if (!got_lock)
+    {
+        /* We couldn't immediately get c's mutex. Someone else is using c,
+         * possibly deleting it. If they're deleting it, we don't want to wait
+         * around for its mutex to become free, so we tell our caller to try
+         * again -- next time they try, c might be free or not exist */
+        return LOCK_FAILURE;
+    }
+
+    /* c still exists, and we got its mutex successfully. */
 
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
@@ -181,6 +195,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     {
         goto free_sample_block;
     }
+    g_mutex_unlock(c->mutex);
 
     end_cycles = cycles();
     /* Reuse end */
@@ -214,9 +229,11 @@ free_sample_block:
     sample_block_destroy(sb);
 
 exit:
+    g_mutex_unlock(c->mutex);
     return ret;
 }
 
+/* This should be called with a lock held on c */
 static void conversation_process_samples(Conversation *c, int conv_side,
         SAMPLE_BLOCK *sb)
 {
@@ -227,14 +244,12 @@ static void conversation_process_samples(Conversation *c, int conv_side,
      * care about, and b) if we need to insert them other than at the head of
      * the queue */
 
-    g_mutex_lock(c->mutex);
     /* Let the left-side hybrid see these samples and echo-cancel them */
     hybrid_put_tx_samples(hl, sb);
 
     /* Now that the samples have been echo-canceled, let the right-side hybrid
      * see them */
     hybrid_put_rx_samples(hr, sb);
-    g_mutex_unlock(c->mutex);
 }
 
 static Conversation *find_conv_for_stream(const char *stream_name,
@@ -244,6 +259,19 @@ static Conversation *find_conv_for_stream(const char *stream_name,
     G_LOCK(id_to_conv);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
     G_UNLOCK(id_to_conv);
+    *conv_side = atoi(conv_and_num[1]);
+
+    g_strfreev(conv_and_num);
+
+    return c;
+}
+
+/* Assumes the lock is held externally */
+static Conversation *find_conv_for_stream_nolock(const char *stream_name,
+        int *conv_side)
+{
+    gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+    Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
     *conv_side = atoi(conv_and_num[1]);
 
     g_strfreev(conv_and_num);

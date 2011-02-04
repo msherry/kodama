@@ -20,8 +20,12 @@ G_LOCK_DEFINE(id_to_flvstream);
 
 void flv_init(void)
 {
+    G_LOCK(id_to_flvstream);
     id_to_flvstream = g_hash_table_new_full(g_str_hash, g_str_equal,
-        g_free, (GDestroyNotify)destroy_flv_stream);
+            g_free,
+            /* We don't put the destroy function here - explained below */
+            NULL);
+    G_UNLOCK(id_to_flvstream);
 }
 
 static FLVStream *create_flv_stream(void)
@@ -88,9 +92,26 @@ void flv_end_stream(const char *stream_name)
 {
     FLV_LOG("Destroying FLVStream for %s\n", stream_name);
 
+    /* If one thread is processing samples for an FLVstream, and an 'E' message
+     * comes in, we might destroy the FLVstream while another thread holds its
+     * lock, which leads to undefined behavior. So, just as in conversation.c,
+     * we remove the FLVstream from the hash table, so no other thread can find
+     * it, then acquire and release its lock first */
+
     G_LOCK(id_to_flvstream);
+    FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+
+    /* Ok to call even if the item isn't present */
     g_hash_table_remove(id_to_flvstream, stream_name);
+
     G_UNLOCK(id_to_flvstream);
+
+    if (flv)
+    {
+        g_mutex_lock(flv->mutex);
+        g_mutex_unlock(flv->mutex);
+        destroy_flv_stream(flv);
+    }
 }
 
 int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
@@ -116,6 +137,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     }
 
     /* Only one thread should work on this stream at a time */
+    /* TODO: race condition here - flv could have just been freed */
+    /* Do what we do in conversation.c - we've solved it there */
     g_mutex_lock(flv->mutex);
 
     unsigned char type_code, type;
@@ -310,7 +333,9 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
     char *hex;
 
+    G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
+    G_UNLOCK(id_to_flvstream);
     if (!flv)
     {
         g_warning("FLVStream not found for stream %s for encoding - aborting",

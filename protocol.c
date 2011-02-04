@@ -168,8 +168,11 @@ void handle_imo_message(unsigned char *msg, int msg_length)
             unsigned char *return_flv_packet = NULL;
             int return_flv_len;
 
-            int ret = r(stream_name, flv_data, flv_len, &return_flv_packet,
-                &return_flv_len);
+            int ret;
+            do {
+                ret = r(stream_name, flv_data, flv_len, &return_flv_packet,
+                        &return_flv_len);
+            } while (ret == LOCK_FAILURE);
 
             /* Don't reflect if everything is OK */
             reflect = ((ret != 0) || (return_flv_packet == NULL) ||

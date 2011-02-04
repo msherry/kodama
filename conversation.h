@@ -8,6 +8,8 @@ typedef struct Conversation {
     GMutex *mutex;
 } Conversation;
 
+#define LOCK_FAILURE (-20)
+
 /**
  * Must be called before using any of the functions in conversation.c.
  *
