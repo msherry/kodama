@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "imo_message.h"
-#include "kodama.h"
 
 /* Header format:
    Message length (including header)      - 4 bytes (big-endian)

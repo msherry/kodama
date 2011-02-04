@@ -5,10 +5,7 @@
 #include "conversation.h"
 #include "flv.h"
 #include "hybrid.h"
-#include "imo_message.h"
-#include "interface_tcp.h"
 #include "kodama.h"
-#include "protocol.h"
 #include "util.h"
 
 GHashTable *id_to_conv = NULL;
