@@ -5,7 +5,6 @@
 #include "calibrate.h"
 #include "conversation.h"
 #include "kodama.h"
-#include "flv.h"
 #include "util.h"
 
 extern globals_t globals;
@@ -39,8 +38,6 @@ void calibrate(void)
     g_debug("Num cpus: %i", num_cpus);
 
     g_debug("Calibrating...");
-    flv_start_stream(stream_name_0);
-    flv_start_stream(stream_name_1);
     conversation_start(stream_name_0);
 
     gettimeofday(&start, NULL);
@@ -80,8 +77,6 @@ void calibrate(void)
     int num_threads =  max_instances * .8; /* Be conservative */
     num_threads = MAX(num_threads, 1);   /* Be pedantic */
 
-    flv_end_stream(stream_name_0);
-    flv_end_stream(stream_name_1);
     conversation_end(stream_name_0);
 
     /* Our caller will be responsible for resetting the resettable fields of
