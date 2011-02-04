@@ -49,7 +49,16 @@ void tcp_connect(void)
     /* Stop trying to reconnect */
     attempt_reconnect = 0;
 
+    /* Does a blocking DNS lookup */
     host_addr = gnet_inetaddr_new(g_host, g_port);
+
+    if (!host_addr)
+    {
+        g_warning("There was an error looking up the address for %s:%d",
+                g_host, g_port);
+        attempt_reconnect = 1;
+        return;
+    }
 
     /* This blocks until we connect or fail to connect */
     sock = gnet_tcp_socket_new(host_addr);
@@ -168,6 +177,9 @@ void send_imo_message(unsigned char *msg, int msg_len)
         g_warning("(%s:%d) msg is NULL or has zero length", __FILE__, __LINE__);
         return;
     }
+
+    free(msg);
+    return;                     /* TODO: debugging only */
 
     /* TODO: Who do we send data to? We probably only have one wowza connection,
      * but it would be good to make this more general. We should map stream

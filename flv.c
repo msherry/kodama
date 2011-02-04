@@ -226,6 +226,9 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         avpkt.data = aligned; //packet_data+offset+flv->d_flags_size;
         avpkt.size = bodyLength-flv->d_flags_size;
 
+        /* libspeex forces us to use a buffer this large to decode a
+         * frame. Perhaps we should allocate it dynamically, rather than on the
+         * stack */
         SAMPLE sample_array[AVCODEC_MAX_AUDIO_FRAME_SIZE];
         int frame_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
 
@@ -260,7 +263,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         {
             int numSamples;
             /* TODO: this doesn't need to be this large */
-            SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+            SAMPLE resampled[KODAMA_MAX_AUDIO_FRAME_SIZE];
             SAMPLE *sample_buf = sample_array;
 
             numSamples = frame_size / sizeof(SAMPLE);
@@ -355,7 +358,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
     /* First we (maybe) need to resample from SAMPLE_RATE to the sample rate the
      * client was originally transmitting */
-    SAMPLE resampled[AVCODEC_MAX_AUDIO_FRAME_SIZE];
+    SAMPLE resampled[KODAMA_MAX_AUDIO_FRAME_SIZE];
     if (flv->e_resample_ctx)
     {
         FLV_LOG("Resampling from %d to %d Hz\n",

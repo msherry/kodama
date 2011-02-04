@@ -74,7 +74,9 @@ enum {
     FLV_FRAME_DISP_INTER = 3 << FLV_VIDEO_FRAMETYPE_OFFSET,
 };
 
-/******************** END FLV.H CONSTANTS ********************/
+/******************** END FFMPEG CONSTANTS ********************/
+
+#define KODAMA_MAX_AUDIO_FRAME_SIZE (32000) /// 1 second of 16khz 16bit mono
 
 /// Context for decoding/encoding an FLV stream
 typedef struct FLVStream {
