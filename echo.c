@@ -295,7 +295,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
 #endif
 
     /* TODO: find a reasonable value for this */
-    e->dotp_xf_xf = MAX(e->dotp_xf_xf, 1.0);
+    e->dotp_xf_xf = MAX(e->dotp_xf_xf, M80dB_PCM);
 
     if (update)
     {

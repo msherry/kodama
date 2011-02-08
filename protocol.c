@@ -50,7 +50,8 @@ void init_protocol(void)
     }
     else
     {
-        g_debug("Starting %d threads", stats.num_threads);
+        g_debug("Starting %d threads (%.01f conversations)",
+                stats.num_threads, stats.num_threads * 0.5);
     }
 
     for (int i = 0; i < stats.num_threads; i++)
