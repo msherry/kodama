@@ -205,7 +205,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     if (!got_lock)
     {
-        /* C exists, but we couldn't immediately get its mutex. Someone else is
+        /* c exists, but we couldn't immediately get its mutex. Someone else is
          * using c, possibly deleting it. If they're deleting it, we don't want
          * to wait around for its mutex to become free, so we tell our caller to
          * try again -- next time they try, c might be free or not exist */
