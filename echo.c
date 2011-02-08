@@ -106,7 +106,7 @@ void echo_destroy(echo *e)
 
 void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 {
-    VERBOSE_LOG("%s\n", e->h->name);
+    /* VERBOSE_LOG("%s\n", e->h->name); */
 
     g_return_if_fail(sb != NULL);
 
@@ -167,8 +167,20 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         sb->s[i] = (int)tx;
     }
 
-    VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf);
-    VERBOSE_LOG("%s\n", any_doubletalk ? "doubletalk" : "no doubletalk");
+    /* VERBOSE_LOG("dotp(xf, xf): %f\n", e->dotp_xf_xf); */
+
+    /* Indicate which side doubletalk is on */
+    if (any_doubletalk)
+    {
+        int name_len = strlen(e->h->name);
+        char side = e->h->name[name_len-1];
+        char *spacing = side == '0' ? "\t" : "\t\t\t";
+        VERBOSE_LOG("%s|\n", spacing);
+    }
+    else
+    {
+        VERBOSE_LOG("\n");
+    }
 }
 
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb)

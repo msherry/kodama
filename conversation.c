@@ -9,9 +9,12 @@
 #include "util.h"
 
 GHashTable *id_to_conv = NULL;
+/// Messages arriving for these aren't necessarily an error
+GHashTable *closed_conversations = NULL;
 extern stats_t stats;
 
 G_LOCK_DEFINE(id_to_conv);
+G_LOCK_DEFINE(closed_conversations);
 G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
@@ -22,6 +25,7 @@ static Conversation *find_conv_for_stream(const char *stream_name,
         int *conv_side);
 static Conversation *find_conv_for_stream_nolock(const char *stream_name,
         int *conv_side);
+static gboolean conv_is_closed(const char *stream_name);
 
 void init_conversations(void)
 {
@@ -31,6 +35,11 @@ void init_conversations(void)
             /* We don't put the destroy function here - explained below */
             NULL);
     G_UNLOCK(id_to_conv);
+
+    G_LOCK(closed_conversations);
+    closed_conversations = g_hash_table_new_full(g_str_hash, g_str_equal,
+            g_free, NULL);
+    G_UNLOCK(closed_conversations);
 }
 
 static Conversation *conversation_create(void)
@@ -139,6 +148,27 @@ void conversation_end(const char *stream_name)
         g_free(stream_name_1);
 
         conversation_destroy(c);
+
+        /* If c still existed, this must be the first 'E' message for the
+         * conversation. Mark the conversation as closed so further messages
+         * about this conversation don't cause error messages */
+        G_LOCK(closed_conversations);
+        g_hash_table_insert(closed_conversations, g_strdup(conv_and_num[0]),
+                NULL);
+        G_UNLOCK(closed_conversations);
+    }
+    else
+    {
+        /* No conversation existed - this is most likely the second 'E' message
+         * for this conversation. Remove it from closed_conversations */
+        G_LOCK(closed_conversations);
+        gboolean found = g_hash_table_remove(closed_conversations,
+                conv_and_num[0]);
+        G_UNLOCK(closed_conversations);
+        if (!found)
+        {
+            g_warning("Received a second 'E' message for %s, but conv not found in closed_conversations", conv_and_num[0]);
+        }
     }
     g_strfreev(conv_and_num);
 }
@@ -160,9 +190,13 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
     {
-        /* This should have been done on receiving an 'S' message */
         G_UNLOCK(id_to_conv);
-        g_warning("Conversation not found for stream %s", stream_name);
+
+        /* Maybe the conversation was recently closed */
+        if (!conv_is_closed(stream_name))
+        {
+            g_warning("Conversation not found for stream %s", stream_name);
+        }
         return -1;
     }
 
@@ -171,10 +205,10 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     if (!got_lock)
     {
-        /* We couldn't immediately get c's mutex. Someone else is using c,
-         * possibly deleting it. If they're deleting it, we don't want to wait
-         * around for its mutex to become free, so we tell our caller to try
-         * again -- next time they try, c might be free or not exist */
+        /* C exists, but we couldn't immediately get its mutex. Someone else is
+         * using c, possibly deleting it. If they're deleting it, we don't want
+         * to wait around for its mutex to become free, so we tell our caller to
+         * try again -- next time they try, c might be free or not exist */
 
         /* TODO: if the thread holding this lock crashes for some reason, c will
          * never become available, and all threads might eventually end up
@@ -293,4 +327,18 @@ static Conversation *find_conv_for_stream_nolock(const char *stream_name,
     g_strfreev(conv_and_num);
 
     return c;
+}
+
+static gboolean conv_is_closed(const char *stream_name)
+{
+    gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
+
+    G_LOCK(closed_conversations);
+    gboolean found = g_hash_table_lookup_extended(closed_conversations,
+            conv_and_num[0], NULL, NULL);
+    G_UNLOCK(closed_conversations);
+
+    g_strfreev(conv_and_num);
+
+    return found;
 }
