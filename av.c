@@ -21,6 +21,10 @@ void init_av(void)
     flv_init();
 }
 
+/* TODO: we should be able to handle > 1 speex frame per packet. It looks like
+ * for decode this is handled automatically, but we may have to do something for
+ * encoding */
+
 int setup_decode_context(FLVStream *flv, unsigned char formatByte)
 {
     int ret;
