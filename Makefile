@@ -8,7 +8,7 @@ CC=gcc
 LD=gcc
 
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers -Wundef
-ARCH_FLAGS = -msse4.1
+ARCH_FLAGS = -msse4.1 -mtune=barcelona
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math
 PROFILE_FLAGS = -pg
 
