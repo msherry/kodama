@@ -8,7 +8,7 @@ CC=gcc
 LD=gcc
 
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers -Wundef
-ARCH_FLAGS = -msse4.1 -mtune=barcelona
+ARCH_FLAGS = -msse4.1
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math
 PROFILE_FLAGS = -pg
 
@@ -28,6 +28,7 @@ ifeq ($(OS), Linux)
 	-I/usr/lib/glib-2.0/include \
 	-I/usr/lib/gnet-2.0/include
 	GLIB_LIBS = -L/usr/lib -lgobject-2.0 -lgnet-2.0
+	ARCH_FLAGS = ${ARCH_FLAGS} -mtune=barcelona
 else
 	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/include/gnet-2.0 \
