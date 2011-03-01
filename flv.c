@@ -267,6 +267,11 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             SAMPLE resampled[KODAMA_MAX_AUDIO_FRAME_SIZE];
             SAMPLE *sample_buf = sample_array;
 
+            if (bytesDecoded < avpkt.size)
+            {
+                g_warning("There was leftover data in avpkt: %d bytes (parsed %d)",
+                        avpkt.size-bytesDecoded, bytesDecoded);
+            }
             numSamples = frame_size / sizeof(SAMPLE);
             FLV_LOG("Samples decoded: %d\n", numSamples);
 
