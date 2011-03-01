@@ -283,9 +283,14 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 
                 int newrate_num_samples;
 
-                /* TODO: Don't assume this succeeds */
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
                     resampled, sample_array, numSamples);
+
+                if (newrate_num_samples == 0)
+                {
+                    g_warning("There was an error resampling");
+                    goto exit;
+                }
 
                 numSamples = newrate_num_samples;
                 sample_buf = resampled;
@@ -371,6 +376,14 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
 
         int newrate_num_samples = audio_resample(flv->e_resample_ctx,
                 resampled, sb->s, sb->count);
+
+        if (newrate_num_samples == 0)
+        {
+            g_warning("There was an error resampling");
+            /* TODO: We should signal this to the caller, but this function
+             * doesn't return errors currently */
+            goto exit;
+        }
 
         FLV_LOG("Resampled from %d to %d samples\n", (int)sb->count,
             newrate_num_samples);
