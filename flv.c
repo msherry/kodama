@@ -420,7 +420,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     offset += 3;
     *(*flv_packet + offset++) = ((timestamp >> 24) & 0xff);
 
-    /* Stream id - three zeros*/
+    /* Stream id - three zeros */
     *(*flv_packet + offset++) = 0;
     *(*flv_packet + offset++) = 0;
     *(*flv_packet + offset++) = 0;

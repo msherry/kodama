@@ -226,6 +226,10 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
         /* TODO: We often get errors from libspeex after parsing exactly 84 bits
          * of the stream - mode (m) is set to 11, which isn't a valid
          * mode. Figure out why. */
+
+        /* Valid modes:
+           http://www.speex.org/docs/manual/speex-manual/node10.html
+        */
         char *hex = hexify(flv_data, flv_len);
         g_debug("Error parsing tag: %s", hex);
         free(hex);
