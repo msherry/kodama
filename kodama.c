@@ -235,6 +235,7 @@ static void signal_handler(int signum)
     case SIGTERM:
         g_message("Got SIGTERM - shutting down");
         /* TODO: make this more graceful */
+        /* TODO: stop all threads */
         g_main_loop_quit(loop);
         break;
     case SIGINT:
