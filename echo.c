@@ -228,6 +228,7 @@ static float dotp(const float * restrict a, const float * restrict b)
     float sum = 0.0;
 
 #ifdef ASM_DOTP
+    /* TODO: try using dpps */
     int *i = 0;
     __asm__ volatile(
 "1:                                       \n\t"
