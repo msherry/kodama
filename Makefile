@@ -28,7 +28,7 @@ ifeq ($(OS), Linux)
 	-I/usr/lib/glib-2.0/include \
 	-I/usr/lib/gnet-2.0/include
 	GLIB_LIBS = -L/usr/lib -lgobject-2.0 -lgnet-2.0
-	ARCH_FLAGS = ${ARCH_FLAGS} -mtune=barcelona
+	ARCH_FLAGS += -mtune=barcelona
 else
 	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/include/gnet-2.0 \
