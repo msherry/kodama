@@ -259,9 +259,9 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     gettimeofday(&end, NULL);
     d_us = delta(&start, &end);
 
-    float mips_cpu = (end_cycles - before_cycles) / (d_us);
-    float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
-    float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us);
+    /* float mips_cpu = (end_cycles - before_cycles) / (d_us); */
+    /* float secs_of_speech = (float)(sb->count)/SAMPLE_RATE; */
+    /* float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us); */
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
@@ -274,11 +274,11 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     stats.total_samples_processed += sb->count;
     stats.total_us += d_us;
 
-    float total_secs_of_speech = (float)(stats.total_samples_processed)/SAMPLE_RATE;
-    float total_us = stats.total_us;
+    /* float total_secs_of_speech = (float)(stats.total_samples_processed)/SAMPLE_RATE; */
+    /* float total_us = stats.total_us; */
     G_UNLOCK(stats);
 
-    float avg_mips_per_ec = mips_cpu / ((total_secs_of_speech*1E6)/total_us);
+    /* float avg_mips_per_ec = mips_cpu / ((total_secs_of_speech*1E6)/total_us); */
     /* g_debug("%5.2f avg instances possible / core", (mips_cpu/avg_mips_per_ec)); */
 
 
