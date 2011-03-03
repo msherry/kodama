@@ -169,9 +169,20 @@ void handle_imo_message(unsigned char *msg, int msg_length)
             int return_flv_len;
 
             int ret;
+            int lock_failure_count = 0;
             do {
                 ret = r(stream_name, flv_data, flv_len, &return_flv_packet,
                         &return_flv_len);
+                if (ret == LOCK_FAILURE)
+                {
+                    lock_failure_count++;
+                    if ((lock_failure_count % 10) == 0)
+                    {
+                        g_warning("Failed %d times to get process stream %s",
+                                lock_failure_count, stream_name);
+                    }
+                    usleep(100);
+                }
             } while (ret == LOCK_FAILURE);
 
             /* Don't reflect if everything is OK */
