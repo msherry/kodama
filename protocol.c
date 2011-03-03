@@ -28,6 +28,11 @@ static gpointer wowza_thread_loop(gpointer data);
 
 static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length);
 
+/// How long, in us, to sleep when we can't immediately acquire a conversation's
+/// lock
+#define LOCK_SLEEP_TIME 100
+
+
 void init_protocol(void)
 {
 #if !THREADED
@@ -181,7 +186,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
                         g_warning("Failed %d times to get process stream %s",
                                 lock_failure_count, stream_name);
                     }
-                    usleep(100);
+                    usleep(LOCK_SLEEP_TIME);
                 }
             } while (ret == LOCK_FAILURE);
 
