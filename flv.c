@@ -118,8 +118,6 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
        http://osflash.org/flv
     */
 
-    /* TODO: ok, this whole function is an ugly hack. Rewrite all this crap once
-     * we have something working */
     G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     G_UNLOCK(id_to_flvstream);
