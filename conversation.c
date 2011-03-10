@@ -11,6 +11,8 @@
 GHashTable *id_to_conv = NULL;
 /// Messages arriving for these aren't necessarily an error
 GHashTable *closed_conversations = NULL;
+
+extern globals_t globals;
 extern stats_t stats;
 
 G_LOCK_DEFINE(id_to_conv);
@@ -259,14 +261,14 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     gettimeofday(&end, NULL);
     d_us = delta(&start, &end);
 
-    /* float mips_cpu = (end_cycles - before_cycles) / (d_us); */
-    /* float secs_of_speech = (float)(sb->count)/SAMPLE_RATE; */
-    /* float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us); */
+    float mips_cpu = (end_cycles - before_cycles) / (d_us);
+    float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
+    float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us);
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    /* g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)", */
-    /*     (d_us/1000.), secs_of_speech*1000, mips_per_ec); */
+    VERBOSE_LOG("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n",
+        (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
     G_LOCK(stats);
