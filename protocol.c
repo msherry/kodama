@@ -1,6 +1,7 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "cbuffer.h"
 #include "conversation.h"
@@ -15,6 +16,7 @@ typedef struct msg_block
     int len;
 } msg_block;
 
+extern globals_t globals;
 extern stats_t stats;
 
 /// Incoming imo messages get queued here for the next available thread
@@ -140,6 +142,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
     int reflect = 1;            /* Reflect this message back unchanged? */
 
+    struct timeval start, end;
     char *hex;
 
     decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
@@ -173,6 +176,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
             unsigned char *return_flv_packet = NULL;
             int return_flv_len;
 
+            gettimeofday(&start, NULL);
             int ret;
             int lock_failure_count = 0;
             do {
@@ -209,6 +213,10 @@ void handle_imo_message(unsigned char *msg, int msg_length)
             }
             /* Ok to do this even if it's NULL */
             free(return_flv_packet);
+
+            gettimeofday(&end, NULL);
+            long d_us = delta(&start, &end);
+            VERBOSE_LOG("%.02f ms to handle message\n", (d_us/1000.));
         }
         break;
     default:
