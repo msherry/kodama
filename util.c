@@ -113,7 +113,7 @@ long delta(struct timeval *x, struct timeval *y)
 {
   long int xx = x->tv_sec * 1000000 + x->tv_usec;
   long int yy = y->tv_sec * 1000000 + y->tv_usec;
-  long diff = abs(xx - yy);
+  long diff = labs(xx - yy);
 
   return diff;
 }
