@@ -214,10 +214,16 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             }
         }
 
-        /* TODO: all this crap is probably unnecessary */
+        /* ffmpeg claims that memory should be 16-byte aligned for decoding, but
+         * it seems to make no difference speed-wise either way */
         uint8_t *aligned;
-        posix_memalign((void **)&aligned, 16,
+        ret = posix_memalign((void **)&aligned, 16,
             bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
+        if (ret)
+        {
+            g_warning("posix_memalign failed with value %d", ret);
+            goto exit;
+        }
         memset(aligned, 0, bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
         memcpy(aligned, packet_data+offset+flv->d_flags_size,
             bodyLength-flv->d_flags_size);
