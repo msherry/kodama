@@ -179,7 +179,9 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     unsigned char **return_flv_packet, int *return_flv_len)
 {
     struct timeval start, end;
+    struct timeval t1, t2;
     uint64_t before_cycles, end_cycles;
+    long d_us;
 
     SAMPLE_BLOCK *sb = NULL;
 
@@ -222,6 +224,11 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     /* c still exists, and we got its mutex successfully. */
 
+    gettimeofday(&t1, NULL);
+    d_us = delta(&start, &t1);
+
+    /* VERBOSE_LOG("C: Time to acquire conversation lock: %li\n", d_us); */
+
     int ret = flv_parse_tag(flv_data, flv_len, stream_name, &sb);
     if (ret)
     {
@@ -238,12 +245,21 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
         goto exit;
     }
 
+    gettimeofday(&t2, NULL);
+    d_us = delta(&t1, &t2);
+
+    /* VERBOSE_LOG("C: Time to parse flv tag: %li\n", d_us); */
+
     conversation_process_samples(c, conv_side, sb);
+
+    gettimeofday(&t1, NULL);
+    d_us = delta(&t2, &t1);
+    /* VERBOSE_LOG("C: Time to echo-cancel samples: %li\n", d_us); */
 
     /* sb now contains echo-canceled samples */
 
     gettimeofday(&end, NULL);
-    long d_us = delta(&start, &end);
+    d_us = delta(&start, &end);
 
     /* TODO: is this kosher? */
     /* sb->pts += d_us/1000; */
@@ -256,19 +272,24 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
         goto free_sample_block;
     }
 
+    gettimeofday(&t2, NULL);
+    d_us = delta(&t1, &t2);
+    /* VERBOSE_LOG("C: Time to create return FLV tag: %li\n", d_us); */
+
+
     end_cycles = cycles();
     /* Reuse end */
     gettimeofday(&end, NULL);
     d_us = delta(&start, &end);
 
-    /* float mips_cpu = (end_cycles - before_cycles) / (d_us); */
-    /* float secs_of_speech = (float)(sb->count)/SAMPLE_RATE; */
-    /* float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us); */
+    float mips_cpu = (end_cycles - before_cycles) / (d_us);
+    float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
+    float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us);
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    /* VERBOSE_LOG("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n", */
-    /*     (d_us/1000.), secs_of_speech*1000, mips_per_ec); */
+    VERBOSE_LOG("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n",
+        (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
     G_LOCK(stats);

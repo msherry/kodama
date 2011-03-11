@@ -143,6 +143,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     int reflect = 1;            /* Reflect this message back unchanged? */
 
     struct timeval start, end;
+    long d_us;
     char *hex;
 
     decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
@@ -175,8 +176,11 @@ void handle_imo_message(unsigned char *msg, int msg_length)
         {
             unsigned char *return_flv_packet = NULL;
             int return_flv_len;
+            struct timeval t1, t2;
+
 
             gettimeofday(&start, NULL);
+            gettimeofday(&t1, NULL);
             int ret;
             int lock_failure_count = 0;
             do {
@@ -193,6 +197,10 @@ void handle_imo_message(unsigned char *msg, int msg_length)
                     usleep(LOCK_SLEEP_TIME);
                 }
             } while (ret == LOCK_FAILURE);
+
+            gettimeofday(&t2, NULL);
+            d_us = delta(&t1, &t2);
+            VERBOSE_LOG("P: Time to acquire lock and r: %li\n", d_us);
 
             /* Don't reflect if everything is OK */
             reflect = ((ret != 0) || (return_flv_packet == NULL) ||
@@ -215,8 +223,8 @@ void handle_imo_message(unsigned char *msg, int msg_length)
             free(return_flv_packet);
 
             gettimeofday(&end, NULL);
-            long d_us = delta(&start, &end);
-            VERBOSE_LOG("%.02f ms to handle message\n", (d_us/1000.));
+            d_us = delta(&start, &end);
+            VERBOSE_LOG("P: %.02f ms to handle message\n", (d_us/1000.));
         }
         break;
     default:

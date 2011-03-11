@@ -3,6 +3,7 @@
 #include <libavcodec/avcodec.h>
 #include <libavutil/avutil.h>
 #include <glib.h>
+#include <sys/time.h>
 
 #include "av.h"
 #include "cbuffer.h"
@@ -118,6 +119,13 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
        http://osflash.org/flv
     */
 
+    struct timeval start, end;
+    struct timeval t1, t2;
+    long d_us;
+
+    gettimeofday(&start, NULL);
+    gettimeofday(&t1, NULL);
+
     G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
     G_UNLOCK(id_to_flvstream);
@@ -215,11 +223,12 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
         /* ffmpeg claims that memory should be 16-byte aligned for decoding, but
          * it seems to make no difference speed-wise either way */
         uint8_t *aligned;
-        ret = posix_memalign((void **)&aligned, 16,
+        int pos_ret;
+        pos_ret = posix_memalign((void **)&aligned, 16,
             bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
-        if (ret)
+        if (pos_ret)
         {
-            g_warning("posix_memalign failed with value %d", ret);
+            g_warning("posix_memalign failed with value %d", pos_ret);
             goto exit;
         }
         memset(aligned, 0, bodyLength+FF_INPUT_BUFFER_PADDING_SIZE);
@@ -237,6 +246,10 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
          * stack */
         SAMPLE sample_array[AVCODEC_MAX_AUDIO_FRAME_SIZE];
         int frame_size = AVCODEC_MAX_AUDIO_FRAME_SIZE;
+
+        gettimeofday(&t2, NULL);
+        d_us = delta(&t1, &t2);
+        /* VERBOSE_LOG("F: Time to set up for decoding: %li\n", d_us); */
 
         /*
           Warning:
@@ -258,8 +271,14 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
           and on others it will work but it will have an impact on performance.
         */
 
+        gettimeofday(&t1, NULL);
+
         int bytesDecoded = avcodec_decode_audio3(flv->d_codec_ctx, sample_array,
                 &frame_size, &avpkt);
+
+        gettimeofday(&t2, NULL);
+        d_us = delta(&t1, &t2);
+        /* VERBOSE_LOG("F: Time to decode audio: %li\n", d_us); */
 
         FLV_LOG("Bytes decoded: %d\n", bytesDecoded);
 
@@ -285,6 +304,8 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                 FLV_LOG("Resampling from %d to %d Hz\n",
                     flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
 
+                gettimeofday(&t1, NULL);
+
                 int newrate_num_samples;
 
                 newrate_num_samples = audio_resample(flv->d_resample_ctx,
@@ -296,24 +317,33 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
                     goto exit;
                 }
 
+                gettimeofday(&t2, NULL);
+                d_us = delta(&t1, &t2);
+
+                /* VERBOSE_LOG("F: Time to resample audio: %li\n", d_us); */
+
                 numSamples = newrate_num_samples;
                 sample_buf = resampled;
             }
 
             char *hex;
 
-            hex = hexify(packet_data, packet_len);
-            FLV_LOG("Incoming FLV packet: %s\n", hex);
-            free(hex);
+            /* hex = hexify(packet_data, packet_len); */
+            /* FLV_LOG("Incoming FLV packet: %s\n", hex); */
+            /* free(hex); */
 
             /* hex = samples_to_text(sample_buf, numSamples); */
             /* FLV_LOG("Decoded incoming samples: %s\n", hex); */
             /* free(hex); */
 
+            gettimeofday(&t1, NULL);
             *sb = sample_block_create(numSamples);
             memcpy((*sb)->s, sample_buf, numSamples*sizeof(SAMPLE));
             (*sb)->pts = timestamp; /* We're just going to pass this back to the
                                      * encoder */
+            gettimeofday(&t2, NULL);
+            d_us = delta(&t1, &t2);
+            /* VERBOSE_LOG("F: Time to create SB: %li\n", d_us); */
 
             ret = 0;
         }
@@ -340,6 +370,11 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
 exit:
     g_mutex_unlock(flv->mutex);
 
+    gettimeofday(&end, NULL);
+    d_us = delta(&start, &end);
+
+    /* VERBOSE_LOG("F: All of flv_parse_tag: %li\n", d_us); */
+
     return ret;
 }
 
@@ -347,6 +382,9 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     const char *stream_name, SAMPLE_BLOCK *sb)
 {
     /* This should always only create FLV tags of type 'A' */
+
+    struct timeval t1, t2;
+    long d_us;
 
     char *hex;
 
@@ -396,9 +434,15 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
         numSamples = newrate_num_samples;
     }
 
+    gettimeofday(&t1, NULL);
+
     uint8_t encoded_audio[FF_MIN_BUFFER_SIZE];
     int bytesEncoded = avcodec_encode_audio(flv->e_codec_ctx, encoded_audio,
                 FF_MIN_BUFFER_SIZE, sample_buf);
+
+    gettimeofday(&t2, NULL);
+    d_us = delta(&t1, &t2);
+    /* VERBOSE_LOG("F: Time to encode audio: %li\n", d_us); */
 
     FLV_LOG("Bytes encoded: %d\n", bytesEncoded);
 
