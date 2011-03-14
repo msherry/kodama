@@ -5,7 +5,8 @@
 typedef struct Conversation {
     struct hybrid *h0, *h1;
 
-    GMutex *mutex;
+    GMutex *c0_mutex, *c1_mutex; /// Mutexes for each side of the conversation
+    GMutex *echo_mutex;          /// Mutex for the conversation as a whole
 } Conversation;
 
 #define LOCK_FAILURE (-20)

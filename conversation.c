@@ -60,7 +60,9 @@ static Conversation *conversation_create(void)
     c->h1->tx_cb_fn = NULL;
     c->h1->rx_cb_fn = NULL;
 
-    c->mutex = g_mutex_new();
+    c->c0_mutex = g_mutex_new();
+    c->c1_mutex = g_mutex_new();
+    c->echo_mutex = g_mutex_new();
 
     return c;
 }
@@ -72,7 +74,9 @@ static void conversation_destroy(Conversation *c)
     hybrid_destroy(c->h0);
     hybrid_destroy(c->h1);
 
-    g_mutex_free(c->mutex);
+    g_mutex_free(c->c0_mutex);
+    g_mutex_free(c->c1_mutex);
+    g_mutex_free(c->echo_mutex);
 
     free(c);
 }
@@ -119,6 +123,8 @@ void conversation_end(const char *stream_name)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
 
+    /* TODO: fix these comments to deal with separate mutexes */
+
     /* If one side of the conversation is processing samples, and we try to
      * destroy the conversation via other side, we free the mutex while another
      * thread holds it. This is bad.
@@ -140,8 +146,14 @@ void conversation_end(const char *stream_name)
         stream_name_0 = g_strdup_printf("%s:%d", conv_and_num[0], 0);
         stream_name_1 = g_strdup_printf("%s:%d", conv_and_num[0], 1);
 
-        g_mutex_lock(c->mutex);
-        g_mutex_unlock(c->mutex);
+        g_mutex_lock(c->c0_mutex);
+        g_mutex_lock(c->c1_mutex);
+
+        /* TODO: do we need to acquire the echo mutex? Probably not, since it
+         * can't be held without holding c0 or c1 */
+
+        g_mutex_unlock(c->c1_mutex);
+        g_mutex_unlock(c->c0_mutex);
 
         flv_end_stream(stream_name_0);
         flv_end_stream(stream_name_1);
@@ -204,11 +216,16 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
         return -1;
     }
 
-    gboolean got_lock = g_mutex_trylock(c->mutex);
+    /* Try for a mutex for just our side of the conversation for now */
+    GMutex *conv_side_mutex = (conv_side == 0) ? c->c0_mutex : c->c1_mutex;
+
+    gboolean got_lock = g_mutex_trylock(conv_side_mutex);
     G_UNLOCK(id_to_conv);
 
     if (!got_lock)
     {
+        /* TODO: fix these comments to deal with the new 2-mutex system */
+
         /* c exists, but we couldn't immediately get its mutex. Someone else is
          * using c, possibly deleting it. If they're deleting it, we don't want
          * to wait around for its mutex to become free, so we tell our caller to
@@ -288,7 +305,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    VERBOSE_LOG("%.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n",
+    VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n",
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
     /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
@@ -309,7 +326,7 @@ free_sample_block:
     sample_block_destroy(sb);
 
 exit:
-    g_mutex_unlock(c->mutex);
+    g_mutex_unlock(conv_side_mutex);
     return ret;
 }
 
@@ -319,6 +336,10 @@ static void conversation_process_samples(Conversation *c, int conv_side,
 {
     hybrid *hl = (conv_side == 0) ? c->h0 : c->h1;
     hybrid *hr = (conv_side == 0) ? c->h1 : c->h0;
+
+    /* Only one thread can update samples at a time, since it affects both
+     * sides */
+    g_mutex_lock(c->echo_mutex);
 
     /* TODO: use sb->pts to determine a) if these samples are too old for us to
      * care about, and b) if we need to insert them other than at the head of
@@ -330,6 +351,8 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     /* Now that the samples have been echo-canceled, let the right-side hybrid
      * see them */
     hybrid_put_rx_samples(hr, sb);
+
+    g_mutex_unlock(c->echo_mutex);
 }
 
 static Conversation *find_conv_for_stream(const char *stream_name,
