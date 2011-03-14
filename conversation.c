@@ -202,7 +202,14 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     int conv_side;
 
+    gettimeofday(&t1, NULL);
     G_LOCK(id_to_conv);
+    gettimeofday(&t2, NULL);
+
+    d_us = delta(&t1, &t2);
+
+    VERBOSE_LOG("C: Time to acquire id_to_conv lock: %li\n", d_us);
+
     Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
     {
