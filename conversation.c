@@ -209,10 +209,13 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     d_us = delta(&t1, &t2);
 
+    Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
+
+    /* This log message comes after find_conv_for_stream_nolock just so
+     * conv_side is set properly - that call isn't included in the timing
+     * data */
     VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader) for side %d: %li\n",
             conv_side, d_us);
-
-    Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
     {
         g_static_rw_lock_reader_unlock(&id_to_conv_rwlock);
