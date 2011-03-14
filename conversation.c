@@ -248,6 +248,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
          * waiting on it. If no thread can make progress towards acquiring
          * c->mutex for some amount of time, we might want to forcibly remove
          * c */
+        VERBOSE_LOG("C: Failed to get conv lock for side %d\n", conv_side);
         return LOCK_FAILURE;
     }
 
