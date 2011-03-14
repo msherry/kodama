@@ -32,7 +32,7 @@ static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length);
 
 /// How long, in us, to sleep when we can't immediately acquire a conversation's
 /// lock
-#define LOCK_SLEEP_TIME 100
+#define LOCK_SLEEP_TIME 10
 
 
 void init_protocol(void)
