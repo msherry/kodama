@@ -15,8 +15,9 @@ GHashTable *closed_conversations = NULL;
 extern globals_t globals;
 extern stats_t stats;
 
-G_LOCK_DEFINE(id_to_conv);
-G_LOCK_DEFINE(closed_conversations);
+GStaticRWLock id_to_conv_rwlock = G_STATIC_RW_LOCK_INIT;
+
+G_LOCK_DEFINE(closed_conversations); /* TODO: make this a rwlock */
 G_LOCK_EXTERN(stats);
 
 static Conversation *conversation_create(void);
@@ -31,12 +32,12 @@ static gboolean conv_is_closed(const char *stream_name);
 
 void init_conversations(void)
 {
-    G_LOCK(id_to_conv);
+    g_static_rw_lock_writer_lock(&id_to_conv_rwlock);
     id_to_conv = g_hash_table_new_full(g_str_hash, g_str_equal,
             g_free,
             /* We don't put the destroy function here - explained below */
             NULL);
-    G_UNLOCK(id_to_conv);
+    g_static_rw_lock_writer_unlock(&id_to_conv_rwlock);
 
     G_LOCK(closed_conversations);
     closed_conversations = g_hash_table_new_full(g_str_hash, g_str_equal,
@@ -85,7 +86,7 @@ void conversation_start(const char *stream_name)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
 
-    G_LOCK(id_to_conv);
+    g_static_rw_lock_writer_lock(&id_to_conv_rwlock);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
 
     /* This will be called once per participant in a conversation -- only create
@@ -114,7 +115,7 @@ void conversation_start(const char *stream_name)
 
         g_hash_table_insert(id_to_conv, g_strdup(conv_and_num[0]), c);
     }
-    G_UNLOCK(id_to_conv);
+    g_static_rw_lock_writer_unlock(&id_to_conv_rwlock);
 
     g_strfreev(conv_and_num);
 }
@@ -134,10 +135,10 @@ void conversation_end(const char *stream_name)
      * release its lock. Once we do, we can immediately free it without worrying
      * that another thread will grab it again */
 
-    G_LOCK(id_to_conv);
+    g_static_rw_lock_writer_lock(&id_to_conv_rwlock);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
     g_hash_table_remove(id_to_conv, conv_and_num[0]);
-    G_UNLOCK(id_to_conv);
+    g_static_rw_lock_writer_unlock(&id_to_conv_rwlock);
 
     if(c)
     {
@@ -203,17 +204,17 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     int conv_side;
 
     gettimeofday(&t1, NULL);
-    G_LOCK(id_to_conv);
+    g_static_rw_lock_reader_lock(&id_to_conv_rwlock);
     gettimeofday(&t2, NULL);
 
     d_us = delta(&t1, &t2);
 
-    VERBOSE_LOG("C: Time to acquire id_to_conv lock: %li\n", d_us);
+    VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader): %li\n", d_us);
 
     Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
     {
-        G_UNLOCK(id_to_conv);
+        g_static_rw_lock_reader_unlock(&id_to_conv_rwlock);
 
         /* Maybe the conversation was recently closed */
         if (!conv_is_closed(stream_name))
@@ -227,7 +228,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     GMutex *conv_side_mutex = (conv_side == 0) ? c->c0_mutex : c->c1_mutex;
 
     gboolean got_lock = g_mutex_trylock(conv_side_mutex);
-    G_UNLOCK(id_to_conv);
+    g_static_rw_lock_reader_unlock(&id_to_conv_rwlock);
 
     if (!got_lock)
     {
@@ -362,13 +363,14 @@ static void conversation_process_samples(Conversation *c, int conv_side,
     g_mutex_unlock(c->echo_mutex);
 }
 
+/* Called when not holding the lock on id_to_conv */
 static Conversation *find_conv_for_stream(const char *stream_name,
         int *conv_side)
 {
     gchar **conv_and_num = g_strsplit(stream_name, ":", 2);
-    G_LOCK(id_to_conv);
+    g_static_rw_lock_reader_lock(&id_to_conv_rwlock);
     Conversation *c = g_hash_table_lookup(id_to_conv, conv_and_num[0]);
-    G_UNLOCK(id_to_conv);
+    g_static_rw_lock_reader_unlock(&id_to_conv_rwlock);
     *conv_side = atoi(conv_and_num[1]);
 
     g_strfreev(conv_and_num);
