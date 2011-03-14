@@ -191,7 +191,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
                     lock_failure_count++;
                     if ((lock_failure_count % 10) == 0)
                     {
-                        g_warning("Failed %d times to get process stream %s",
+                        g_warning("Failed %d times to get lock and process stream %s",
                                 lock_failure_count, stream_name);
                     }
                     usleep(LOCK_SLEEP_TIME);
