@@ -209,7 +209,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     d_us = delta(&t1, &t2);
 
-    VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader): %li\n", d_us);
+    VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader) for side %d: %li\n",
+            conv_side, d_us);
 
     Conversation *c = find_conv_for_stream_nolock(stream_name, &conv_side);
     if (!c)
@@ -313,8 +314,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec)\n",
-        (d_us/1000.), secs_of_speech*1000, mips_per_ec);
+    VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec) - side %d\n",
+            (d_us/1000.), secs_of_speech*1000, mips_per_ec, conv_side);
     /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
     G_LOCK(stats);
