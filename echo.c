@@ -36,7 +36,7 @@ const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 static hp_fir *hp_fir_create(void);
 static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
-static int dtd(echo *e, float tx, float rx);
+static int geigel_dtd(echo *e, float tx, float rx);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
 
@@ -134,7 +134,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         rx = iirdc_highpass(e->iir_dc, rx);
 
         /* Geigel double-talk detector */
-        int update = !dtd(e, tx, rx);
+        int update = !geigel_dtd(e, tx, rx);
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
