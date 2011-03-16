@@ -357,7 +357,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
  * acoustic echo. Look into something more sophisticated. */
 
 #ifdef FAST_DTD
-static int dtd(echo *e, float tx, float rx)
+static int geigel_dtd(echo *e, float tx, float rx)
 {
     /* Get the last NLMS_LEN rx samples and find the max*/
     size_t i;
@@ -411,7 +411,7 @@ static int dtd(echo *e, float tx, float rx)
 }
 
 #else
-static int dtd(echo *e, float tx, float rx_unused)
+static int geigel_dtd(echo *e, float tx, float rx_unused)
 {
     UNUSED(rx_unused);          /* Just here to make the signatures match */
 
