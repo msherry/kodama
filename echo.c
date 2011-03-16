@@ -448,6 +448,12 @@ static int geigel_dtd(echo *e, float tx, float rx_unused)
 }
 #endif
 
+static int mecc_dtd(echo *e, float tx, float rx_unused)
+{
+
+    return 1;
+}
+
 /*********** High-pass FIR functions ***********/
 static hp_fir *hp_fir_create(void)
 {
