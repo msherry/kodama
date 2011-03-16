@@ -448,9 +448,8 @@ static int geigel_dtd(echo *e, float tx, float rx_unused)
 }
 #endif
 
-static int mecc_dtd(echo *e, float tx, float rx_unused)
+static int mecc_dtd(echo *e, float tx, float rx)
 {
-
     return 1;
 }
 
