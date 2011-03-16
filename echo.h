@@ -75,30 +75,30 @@ typedef struct echo {
     CBuffer *rx_buf;
 
     /* TODO: is this the same as rx_buf? */
-    float *x;                   /**< tap delayed speaker signal */
-    float *xf;                  /**< pre-whitened tap delayed speaker signal */
-    float *w;                   /**< tap weights */
+    float *x;                   ///< tap-delayed speaker signal
+    float *xf;                  ///< pre-whitened tap-delayed speaker signal
+    float *w;                   ///< tap weights
 
-    int j;                      /**< offset into x and xf */
+    int j;                      ///< offset into x and xf
 
     /* Geigel DTD values */
     float *max_x;
     float max_max_x;
-    int holdover;               /**< DTD hangover */
+    int holdover;               ///< DTD hangover
     int dtd_index;
     int dtd_count;
 
     /* MECC DTD values */
-    float Rem;                  /// Cross-correlation of err and mic signal
-    float sig_sqr;              /** Variance of the microphone signal  */
+    float Rem;                  ///< Cross-correlation of err and mic signal
+    float sig_sqr;              ///< Variance of the microphone signal
 
-    hp_fir *hp;                 /**< >300Hz filter */
+    hp_fir *hp;                 ///< 300Hz high-pass filter
 
     /* IIR filters */
-    struct IIR_DC *iir_dc;      /**< For rx samples, not tx  */
+    struct IIR_DC *iir_dc;      ///< For rx samples, not tx
     struct IIR *Fx, *Fe;
 
-    double dotp_xf_xf;          /**< rolling dot product of xf */
+    double dotp_xf_xf;          ///< rolling dot product of xf
 
     struct hybrid *h;
 } echo;
