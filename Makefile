@@ -17,7 +17,7 @@ CFLAGS = -g ${PROFILE_FLAGS} ${ARCH_FLAGS} ${OPTFLAGS} -Wall \
 	-DDEBUG=1 -D_FILE_OFFSET_BITS=64 -DG_ERRORCHECK_MUTEXES -DFAST_DOTP \
 	-DFAST_DTD -DASM_DOTP -DTHREADED=1
 
-INCLUDES = -I${PORTAUDIODIR}/include
+INCLUDES = -I${PORTAUDIODIR}/include -I/usr/local/include
 LDFLAGS = ${PROFILE_FLAGS} -L${PORTAUDIODIR}/lib/.libs
 LIBRARIES = -lportaudio -lm -lavcodec -lavformat -lavutil -lavcore
 
@@ -30,7 +30,8 @@ ifeq ($(OS), Linux)
 	GLIB_LIBS = -L/usr/lib -lgobject-2.0 -lgnet-2.0
 	ARCH_FLAGS += -mtune=barcelona
 else
-	CC=/opt/local/bin/gcc-mp-4.6 # This one can tune for corei7
+	# This one can tune for corei7
+	CC=/opt/local/bin/gcc-mp-4.6
 	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/include/gnet-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
