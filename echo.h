@@ -89,7 +89,7 @@ typedef struct echo {
     int dtd_count;
 
     /* MECC DTD values */
-    float Rem;                  ///< Cross-correlation of err and mic signal
+    float Rem;                  ///< Cross-correlation of err and mic (tx)
     float sig_sqr;              ///< Variance of the microphone signal
 
     hp_fir *hp;                 ///< 300Hz high-pass filter
