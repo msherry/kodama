@@ -40,17 +40,12 @@ typedef struct hp_fir {
 
 #define MIN_XF M85dB_PCM
 
+/// Number of taps per millisecond of speech
+#define TAPS_PER_MS (SAMPLE_RATE / 1000)
+
 /** convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
-
-/** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
-#define GeigelThreshold (M6dB)
-
-#define TAPS_PER_MS (SAMPLE_RATE / 1000)
-
-/** Holdover for DTD, in taps (ms * TAPS_PER_MS) */
-#define DTD_HOLDOVER (30 * TAPS_PER_MS)
 
 /** NLMS length in taps (ms * TAPS_PER_MS) */
 #define NLMS_LEN (200 * TAPS_PER_MS)
@@ -58,12 +53,22 @@ typedef struct hp_fir {
 /** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
 
+
+
+
+// Double-talk detection constants
+
+/** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
+#define GeigelThreshold (M6dB)
+/** Holdover for DTD, in taps (ms * TAPS_PER_MS) */
+#define DTD_HOLDOVER (30 * TAPS_PER_MS)
 /** Optimize Geigel DTD calculation  */
 #define DTD_LEN (80)
-
 #if (NLMS_LEN % DTD_LEN)
 #error DTD_LEN must divide evenly into NLMS_LEN
 #endif
+
+
 
 /// Context for echo-canceling one side of a conversation.
 typedef struct echo {
@@ -76,11 +81,16 @@ typedef struct echo {
 
     int j;                      /**< offset into x and xf */
 
+    /* Geigel DTD values */
     float *max_x;
     float max_max_x;
     int holdover;               /**< DTD hangover */
     int dtd_index;
     int dtd_count;
+
+    /* MECC DTD values */
+    float Rem;                  /// Cross-correlation of err and mic signal
+    float sig_sqr;              /** Variance of the microphone signal  */
 
     hp_fir *hp;                 /**< >300Hz filter */
 

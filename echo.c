@@ -46,7 +46,7 @@ static int geigel_dtd(echo *e, float tx, float rx);
   error cross-correlation.
   http://research.microsoft.com/apps/pubs/?id=69447
 **/
-static int mecc_dtd(echo *e, float tx, float rx);
+static int mecc_dtd(echo *e, float err, float tx);
 
 
 echo *echo_create(hybrid *h)
@@ -60,11 +60,16 @@ echo *echo_create(hybrid *h)
 
     e->j  = NLMS_EXT;
 
+    /* Geigel DTD */
     e->max_x = malloc((NLMS_LEN/DTD_LEN) * sizeof(float));
     memset(e->max_x, 0, (NLMS_LEN/DTD_LEN) * sizeof(float));
     e->max_max_x = 0.0;
     e->dtd_index = 0;
     e->dtd_count = 0;
+
+    /* MECC dtd */
+    e->Rem = 0.0;
+    e->sig_sqr = 0.0;
 
     /* HACK: we increment w rather than setting it directly, so it needs to have
      * a valid IEEE-754 value */
@@ -141,8 +146,17 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* Speaker high-pass filter - remove DC */
         rx = iirdc_highpass(e->iir_dc, rx);
 
+        int update;
+
+#ifdef GEIGEL_DTD
         /* Geigel double-talk detector */
-        int update = !geigel_dtd(e, tx, rx);
+        update = !geigel_dtd(e, tx, rx);
+#else
+        /* MECC double-talk detector */
+        /* TODO: we don't have err here, since that's calculated in nlms_pw. Is
+         * it ok to save old values and use them one sample late? */
+        update = !mecc_dtd(e, err, tx);
+#endif
 
         /* nlms-pw */
         tx = nlms_pw(e, tx, rx, update);
@@ -236,7 +250,6 @@ static float dotp(const float * restrict a, const float * restrict b)
     float sum = 0.0;
 
 #ifdef ASM_DOTP
-    /* TODO: try using dpps */
     int *i = 0;
     __asm__ volatile(
 "1:                                       \n\t"
@@ -448,9 +461,17 @@ static int geigel_dtd(echo *e, float tx, float rx_unused)
 }
 #endif
 
-static int mecc_dtd(echo *e, float tx, float rx)
+static int mecc_dtd(echo *e, float err, float tx)
 {
-    return 1;
+    const float T = 0.7;        /* threshold */
+    const float f = 0.2;        /* weighting constant */
+
+    e->Rem     = (f * e->Rem) + ((1-f) * (err * tx));
+    e->sig_sqr = (f * e->sig_sqr) + ((1-f) * (tx * tx));
+
+    float mecc = 1 - (e->Rem / e->sig_sqr);
+
+    return mecc < T;
 }
 
 /*********** High-pass FIR functions ***********/
