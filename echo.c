@@ -468,7 +468,7 @@ static int geigel_dtd(echo *e, float tx, float rx_unused)
 static int mecc_dtd(echo *e, float err, float tx)
 {
     const float T = 0.7;        /* threshold */
-    const float f = 0.2;        /* weighting constant */
+    const float f = 0.75;        /* weighting constant */
 
     e->Rem     = (f * e->Rem) + ((1-f) * (err * tx));
     e->sig_sqr = (f * e->sig_sqr) + ((1-f) * (tx * tx));
