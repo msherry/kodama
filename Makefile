@@ -30,12 +30,14 @@ ifeq ($(OS), Linux)
 	GLIB_LIBS = -L/usr/lib -lgobject-2.0 -lgnet-2.0
 	ARCH_FLAGS += -mtune=barcelona
 else
+	CC=/opt/local/bin/gcc-mp-4.6 # This one can tune for corei7
 	GLIB_INCLUDES = -I/opt/local/include/glib-2.0 \
 	-I/opt/local/include/gnet-2.0 \
 	-I/opt/local/lib/glib-2.0/include \
 	-I/opt/local/lib/gnet-2.0/include
         # need to bring in lgthread explicitly on the Mac
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0 -lgthread-2.0
+	ARCH_FLAGS += -mtune=corei7
 endif
 
 OBJS = av.o calibrate.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o \
