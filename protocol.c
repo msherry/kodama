@@ -191,8 +191,8 @@ void handle_imo_message(unsigned char *msg, int msg_length)
                     lock_failure_count++;
                     if ((lock_failure_count % 10) == 0)
                     {
-                        g_warning("Failed %d times to get lock and process stream %s",
-                                lock_failure_count, stream_name);
+                        /* g_warning("Failed %d times to get lock and process stream %s", */
+                        /*         lock_failure_count, stream_name); */
                     }
                     usleep(LOCK_SLEEP_TIME);
                 }
@@ -200,7 +200,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
             gettimeofday(&t2, NULL);
             d_us = delta(&t1, &t2);
-            VERBOSE_LOG("P: Time to acquire lock and r: %li\n", d_us);
+            /* VERBOSE_LOG("P: Time to acquire lock and r: %li\n", d_us); */
 
             /* Don't reflect if everything is OK */
             reflect = ((ret != 0) || (return_flv_packet == NULL) ||
@@ -224,7 +224,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
             gettimeofday(&end, NULL);
             d_us = delta(&start, &end);
-            VERBOSE_LOG("P: %.02f ms to handle message\n", (d_us/1000.));
+            /* VERBOSE_LOG("P: %.02f ms to handle message\n", (d_us/1000.)); */
         }
         break;
     default:

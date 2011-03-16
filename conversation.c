@@ -214,8 +214,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     /* This log message comes after find_conv_for_stream_nolock just so
      * conv_side is set properly - that call isn't included in the timing
      * data */
-    VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader) for side %d: %li\n",
-            conv_side, d_us);
+    /* VERBOSE_LOG("C: Time to acquire id_to_conv rwlock (reader) for side %d: %li\n", */
+    /*         conv_side, d_us); */
     if (!c)
     {
         g_static_rw_lock_reader_unlock(&id_to_conv_rwlock);
@@ -248,7 +248,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
          * waiting on it. If no thread can make progress towards acquiring
          * c->mutex for some amount of time, we might want to forcibly remove
          * c */
-        VERBOSE_LOG("C: Failed to get conv lock for side %d\n", conv_side);
+        /* VERBOSE_LOG("C: Failed to get conv lock for side %d\n", conv_side); */
         return LOCK_FAILURE;
     }
 
@@ -318,8 +318,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     /* g_debug("CPU executes %5.2f MIPS", mips_cpu); */
 
-    VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec) - side %d\n",
-            (d_us/1000.), secs_of_speech*1000, mips_per_ec, conv_side);
+    /* VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec) - side %d\n", */
+    /*         (d_us/1000.), secs_of_speech*1000, mips_per_ec, conv_side); */
     /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
     G_LOCK(stats);
