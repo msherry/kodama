@@ -38,6 +38,7 @@ static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
+static float dotp(const float * restrict a, const float * restrict b);
 
 /// Standard Geigel dtd
 static int geigel_dtd(echo *e, float tx, float rx);
@@ -148,6 +149,11 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         int update;
 
+        /* These used to be done in nlms_pw, but at least one DTD needs access
+         * to err */
+        float dotp_w_x = dotp(e->w, e->x+e->j);
+        float err = tx - dotp_w_x;
+
 #ifdef GEIGEL_DTD
         /* Geigel double-talk detector */
         update = !geigel_dtd(e, tx, rx);
@@ -159,7 +165,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 #endif
 
         /* nlms-pw */
-        tx = nlms_pw(e, tx, rx, update);
+        tx = nlms_pw(e, err, rx, update);
         tx_nlms_pw = tx;
 
         /* If we're not talking, let's attenuate our signal */
@@ -282,7 +288,7 @@ static float dotp(const float * restrict a, const float * restrict b)
     return sum;
 }
 
-static float nlms_pw(echo *e, float tx, float rx, int update)
+static float nlms_pw(echo *e, float err, float rx, int update)
 {
     char *hex;
     int j = e->j;
@@ -290,14 +296,12 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
     e->x[j] = rx;
     e->xf[j] = iir_highpass(e->Fx, rx); /* pre-whitening of x */
 
-    float dotp_w_x = dotp(e->w, e->x+j);
-    float err = tx - dotp_w_x;
     float ef = iir_highpass(e->Fe, err); /* pre-whitening of err */
     if (isnan(ef))
     {
         DEBUG_LOG("%s\n", "ef went NaN");
         DEBUG_LOG("err: %f\n", err);
-        DEBUG_LOG("dotp_w_x: %f\n", dotp_w_x);
+        /* DEBUG_LOG("dotp_w_x: %f\n", dotp_w_x); */
         hex = floats_to_text(e->w, NLMS_LEN);
         DEBUG_LOG("w: %s\n", hex);
         free(hex);
@@ -326,7 +330,7 @@ static float nlms_pw(echo *e, float tx, float rx, int update)
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
             DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
-            DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err);
+            /* DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err); */
             DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
             hex = floats_to_text(e->w, NLMS_LEN);
             DEBUG_LOG("e->w: %s\n", hex);
