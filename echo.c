@@ -36,9 +36,17 @@ const float HP_FIR[] = {-0.043183226, -0.046636667, -0.049576525, -0.051936015,
 static hp_fir *hp_fir_create(void);
 static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
-static int geigel_dtd(echo *e, float tx, float rx);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
+
+/// Standard Geigel dtd
+static int geigel_dtd(echo *e, float tx, float rx);
+/**
+  MECC dtd - Normalized double-talk detection based on microphone and AEC
+  error cross-correlation.
+  http://research.microsoft.com/apps/pubs/?id=69447
+**/
+static int mecc_dtd(echo *e, float tx, float rx);
 
 
 echo *echo_create(hybrid *h)
