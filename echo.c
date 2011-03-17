@@ -159,8 +159,6 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         update = !geigel_dtd(e, tx, rx);
 #else
         /* MECC double-talk detector */
-        /* TODO: we don't have err here, since that's calculated in nlms_pw. Is
-         * it ok to save old values and use them one sample late? */
         update = !mecc_dtd(e, err, tx);
 #endif
 
