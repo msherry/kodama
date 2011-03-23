@@ -473,8 +473,8 @@ static int mecc_dtd(echo *e, float err, float tx)
 
     float mecc = 1 - (e->Rem / e->sig_sqr);
 
-    VERBOSE_LOG("E: Rem: %f\tsig_sqr: %f\tmecc: %f\tDTD: %d\n",
-            e->Rem, e->sig_sqr, mecc, mecc<T);
+    /* VERBOSE_LOG("E: Rem: %f\tsig_sqr: %f\tmecc: %f\tDTD: %d\n", */
+    /*         e->Rem, e->sig_sqr, mecc, mecc<T); */
     return mecc < T;
 }
 
