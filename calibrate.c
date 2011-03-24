@@ -89,6 +89,8 @@ void calibrate(void)
 
     gettimeofday(&start, NULL);
     before_cycles = cycles();
+
+    struct timeval t1, t2;
     do {
         unsigned char *flv_return_packet = NULL;
         int flv_return_len;
@@ -96,8 +98,10 @@ void calibrate(void)
         r(stream_name_0, flv_packet_0, FLV_PACKET_LEN,
             &flv_return_packet, &flv_return_len);
         free(flv_return_packet);
+        gettimeofday(&t1, NULL);
         r(stream_name_1, flv_packet_1, FLV_PACKET_LEN,
             &flv_return_packet, &flv_return_len);
+        gettimeofday(&t2, NULL);
         free(flv_return_packet);
 
         gettimeofday(&end, NULL);
@@ -123,6 +127,9 @@ void calibrate(void)
     g_debug("%5.2f total instances possible", max_instances);
     int num_threads =  max_instances * .8; /* Be conservative */
     num_threads = MAX(num_threads, 1);   /* Be pedantic */
+
+    d_us = delta(&t1, &t2);
+    g_debug("Last 20 ms of audio took %.03f ms", d_us/1000.);
 
     conversation_end(stream_name_0);
 
