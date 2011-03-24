@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "cbuffer.h"
 #include "echo.h"
 #include "hybrid.h"
 #include "iir.h"

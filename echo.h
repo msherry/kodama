@@ -1,7 +1,6 @@
 #ifndef _ECHO_H_
 #define _ECHO_H_
 
-#include "cbuffer.h"
 #include "kodama.h"
 
 typedef struct hp_fir {
@@ -73,7 +72,7 @@ typedef struct hp_fir {
 
 /// Context for echo-canceling one side of a conversation.
 typedef struct echo {
-    CBuffer *rx_buf;
+    struct CBuffer *rx_buf;
 
     /* TODO: is this the same as rx_buf? */
     float *x;                   ///< tap-delayed speaker signal
@@ -104,6 +103,8 @@ typedef struct echo {
     struct hybrid *h;
 } echo;
 
+struct SAMPLE_BLOCK;
+
 echo *echo_create(struct hybrid *h);
 void echo_destroy(echo *e);
 /**
@@ -113,7 +114,7 @@ void echo_destroy(echo *e);
  * @param e The echo-cancellation context.
  * @param sb The samples to echo-cancel.
  */
-void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
+void echo_update_tx(echo *e, struct SAMPLE_BLOCK *sb);
 
 /**
  * Just copies samples into the rx part of the echo-cancellation context - no
@@ -122,7 +123,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
  * @param e Echo-cancellation context.
  * @param sb Samples to copy.
  */
-void echo_update_rx(echo *e, SAMPLE_BLOCK *sb);
+void echo_update_rx(echo *e, struct SAMPLE_BLOCK *sb);
 
 /**
  * Calculate the dot product of two vectors of length NLMS_LEN. Exported for
