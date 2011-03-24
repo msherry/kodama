@@ -248,10 +248,10 @@ static inline float clip(float in)
 /* Mac OS X gcc 4.6 (prerelease), -mtune=corei7 does one load, then a multiply
  * from memory (16-byte stride) */
 
-//__attribute__ ((noinline))
 
 // TODO: now that this is declared externally (for verification), gcc doesn't
 // inline it by default. Find out if it's still possible to do this
+/* __attribute__ ((noinline)) */
 float dotp(const float * restrict a, const float * restrict b)
 {
     float sum = 0.0;
