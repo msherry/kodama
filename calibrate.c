@@ -20,7 +20,7 @@ unsigned char flv_packet_1[] = "\x08\x00\x00\x35\x00\x15\x6B\x00\x00\x00\x00\xB6
 
 /// Size of our calibration packets
 #define FLV_PACKET_LEN (68)
-/// Number of seconds to calibrate for
+/// Number of microseconds to calibrate for
 #define CALIBRATE_TIME_US (2 * 1000000)
 
 void calibrate(void)
