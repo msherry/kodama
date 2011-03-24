@@ -475,7 +475,18 @@ static int mecc_dtd(echo *e, float err, float tx)
 
     /* VERBOSE_LOG("E: Rem: %f\tsig_sqr: %f\tmecc: %f\tDTD: %d\n", */
     /*         e->Rem, e->sig_sqr, mecc, mecc<T); */
-    return mecc < T;
+
+    if (mecc < T)
+    {
+        e->holdover = DTD_HOLDOVER;
+    }
+
+    if (e->holdover)
+    {
+        e->holdover--;
+    }
+
+    return e->holdover > 0;
 }
 
 /*********** High-pass FIR functions ***********/
