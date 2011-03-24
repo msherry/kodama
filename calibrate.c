@@ -1,5 +1,6 @@
 #include <glib.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/time.h>
 
 #include "calibrate.h"
@@ -51,10 +52,35 @@ void calibrate(void)
         vec_a[i] = vals[i%len];
         vec_b[i] = vals[(i+1)%len];
     }
+    float correct_result;
+    int temp;
+    if (NLMS_LEN == 1600)       /* 8000 Hz */
+    {
+        temp = DOTP_1600;
+    }
+    else if (NLMS_LEN == 3200)  /* 16000 Hz */
+    {
+        temp = DOTP_3200;
+    }
+    else
+    {
+        g_error("Unable to determine correct dotp value for NLMS_LEN = %d", NLMS_LEN);
+    }
+    memcpy(&correct_result, &temp, sizeof(float));
+
     float dotp_result = dotp(vec_a, vec_b);
 
-    g_debug("dotp result: %.05f", dotp_result);
-
+    if (correct_result != dotp_result)
+    {
+        g_error("dotp returned wrong value for NLMS of length %d: "
+                "expected %.05f, got %.05f", NLMS_LEN, correct_result,
+                dotp_result);
+    }
+    else
+    {
+        g_debug("dotp returned correct result for NLMS of length %d: "
+                "   %.05f", NLMS_LEN, correct_result);
+    }
 
     /* Find how many threads to run */
     g_debug("Calibrating...");
