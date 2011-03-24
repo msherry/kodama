@@ -248,6 +248,9 @@ static inline float clip(float in)
  * from memory (16-byte stride) */
 
 //__attribute__ ((noinline))
+
+// TODO: now that this is declared externally (for verification), gcc doesn't
+// inline it by default. Find out if it's still possible to do this
 float dotp(const float * restrict a, const float * restrict b)
 {
     float sum = 0.0;
