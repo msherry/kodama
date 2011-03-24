@@ -92,7 +92,7 @@ typedef struct FLVStream {
 
     /** Both libavcodec and libspeex are reentrant, but not
      * thread-safe. */
-    GMutex *mutex;
+    GMutex *d_mutex, *e_mutex;
 } FLVStream;
 
 struct SAMPLE_BLOCK;

@@ -46,10 +46,8 @@ static FLVStream *create_flv_stream(void)
     flv->e_codec_ctx->sample_fmt = SAMPLE_FMT_S16;
     flv->e_resample_ctx = NULL;
 
-    /* TODO: I bet we could speed things up by having separate mutexes for
-     * encoding and decoding. They don't share any data, so it should be
-     * safe. */
-    flv->mutex = g_mutex_new();
+    flv->d_mutex = g_mutex_new();
+    flv->e_mutex = g_mutex_new();
 
     return flv;
 }
@@ -64,7 +62,8 @@ static void destroy_flv_stream(FLVStream *flv)
     av_free(flv->e_codec_ctx);
     av_free(flv->e_resample_ctx);
 
-    g_mutex_free(flv->mutex);
+    g_mutex_free(flv->d_mutex);
+    g_mutex_free(flv->e_mutex);
 
     free(flv);
 }
@@ -111,8 +110,11 @@ void flv_end_stream(const char *stream_name)
 
     if (flv)
     {
-        g_mutex_lock(flv->mutex);
-        g_mutex_unlock(flv->mutex);
+        g_mutex_lock(flv->d_mutex);
+        g_mutex_lock(flv->e_mutex);
+
+        g_mutex_unlock(flv->e_mutex);
+        g_mutex_unlock(flv->d_mutex);
         destroy_flv_stream(flv);
     }
 }
@@ -152,7 +154,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
      * obtaining flv above, and using it below. This probably makes locking flv
      * unnecessary, but we'll keep it here for now */
 
-    g_mutex_lock(flv->mutex);
+    g_mutex_lock(flv->d_mutex);
 
     unsigned char type_code, type;
     int offset = 0;
@@ -373,7 +375,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
     }
 
 exit:
-    g_mutex_unlock(flv->mutex);
+    g_mutex_unlock(flv->d_mutex);
 
     gettimeofday(&end, NULL);
     d_us = delta(&start, &end);
@@ -404,7 +406,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     }
 
     /* Only one thread should work on this stream at a time */
-    g_mutex_lock(flv->mutex);
+    g_mutex_lock(flv->e_mutex);
 
     SAMPLE *sample_buf = sb->s;
     int numSamples = sb->count;
@@ -494,6 +496,6 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     free(hex);
 
 exit:
-    g_mutex_unlock(flv->mutex);
+    g_mutex_unlock(flv->e_mutex);
     return 0;
 }
