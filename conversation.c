@@ -320,7 +320,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
 
     /* VERBOSE_LOG("C: %.02f ms for %.02f ms of speech (%.02f MIPS / ec) - side %d\n", */
     /*         (d_us/1000.), secs_of_speech*1000, mips_per_ec, conv_side); */
-    /* g_debug("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
+    /* VERBOSE_LOG("%5.2f instances possible / core", (mips_cpu/mips_per_ec)); */
 
     G_LOCK(stats);
     stats.samples_processed += sb->count;
