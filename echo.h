@@ -47,13 +47,14 @@ typedef struct hp_fir {
  * more AEC in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
 
+/** Number of milliseconds of echo path to handle */
+#define ECHO_PATH_MS (200)
+
 /** NLMS length in taps (ms * TAPS_PER_MS) */
-#define NLMS_LEN (200 * TAPS_PER_MS)
+#define NLMS_LEN (ECHO_PATH_MS * TAPS_PER_MS)
 
 /** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
-
-
 
 
 // Double-talk detection constants
