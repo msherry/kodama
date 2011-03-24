@@ -38,7 +38,6 @@ static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
-static float dotp(const float * restrict a, const float * restrict b);
 
 /// Standard Geigel dtd
 static int geigel_dtd(echo *e, float tx, float rx);
@@ -249,7 +248,7 @@ static inline float clip(float in)
  * from memory (16-byte stride) */
 
 //__attribute__ ((noinline))
-static float dotp(const float * restrict a, const float * restrict b)
+float dotp(const float * restrict a, const float * restrict b)
 {
     float sum = 0.0;
 

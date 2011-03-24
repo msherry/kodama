@@ -123,4 +123,15 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb);
  */
 void echo_update_rx(echo *e, SAMPLE_BLOCK *sb);
 
+/**
+ * Calculate the dot product of two vectors of length NLMS_LEN. Exported for
+ * calibration/verification purposes
+ *
+ * @param a first vector
+ * @param b second vector
+ *
+ * @return dot product of a and b
+ */
+float dotp(const float * restrict a, const float * restrict b);
+
 #endif

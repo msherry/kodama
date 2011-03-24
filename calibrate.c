@@ -4,6 +4,7 @@
 
 #include "calibrate.h"
 #include "conversation.h"
+#include "echo.h"
 #include "kodama.h"
 #include "util.h"
 
@@ -38,6 +39,24 @@ void calibrate(void)
     g_debug("Num cpus: %i", num_cpus);
     g_debug("Sample rate: %d", SAMPLE_RATE);
 
+    /* Verify that we get the values we expect */
+    g_debug("Validating...");
+
+    /* Validate dot product fn */
+    float vec_a[NLMS_LEN], vec_b[NLMS_LEN];
+    for (int i = 0; i< NLMS_LEN; i++)
+    {
+        float vals[] = {0.1, 0.2, 0.3};
+        int len = sizeof(vals)/sizeof(vals[0]);
+        vec_a[i] = vals[i%len];
+        vec_b[i] = vals[(i+1)%len];
+    }
+    float dotp_result = dotp(vec_a, vec_b);
+
+    g_debug("dotp result: %.05f", dotp_result);
+
+
+    /* Find how many threads to run */
     g_debug("Calibrating...");
     conversation_start(stream_name_0);
 
