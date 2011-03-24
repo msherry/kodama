@@ -373,7 +373,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
 /* TODO: apparently Geigel works well on line echo, but rather more poorly on
  * acoustic echo. Look into something more sophisticated. */
 
-#ifdef FAST_DTD
+#ifdef FAST_GEIGEL_DTD
 static int geigel_dtd(echo *e, float err, float tx, float rx)
 {
     UNUSED(err);
