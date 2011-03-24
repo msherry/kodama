@@ -98,6 +98,8 @@ void flv_end_stream(const char *stream_name)
 
     /* This will be called while holding a lock on the conversation associated
      * with this FLVStream, so the locking we're doing is probably excessive */
+    /* TODO: is this still correct? Conversations now have a mutex for each
+     * side */
 
     G_LOCK(id_to_flvstream);
     FLVStream *flv = g_hash_table_lookup(id_to_flvstream, stream_name);
