@@ -46,6 +46,9 @@ static FLVStream *create_flv_stream(void)
     flv->e_codec_ctx->sample_fmt = SAMPLE_FMT_S16;
     flv->e_resample_ctx = NULL;
 
+    /* TODO: I bet we could speed things up by having separate mutexes for
+     * encoding and decoding. They don't share any data, so it should be
+     * safe. */
     flv->mutex = g_mutex_new();
 
     return flv;
