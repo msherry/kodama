@@ -40,13 +40,13 @@ static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
 
 /// Standard Geigel dtd
-static int geigel_dtd(echo *e, float tx, float rx);
+static int geigel_dtd(echo *e, float err, float tx, float rx);
 /**
   MECC dtd - Normalized double-talk detection based on microphone and AEC
   error cross-correlation.
   http://research.microsoft.com/apps/pubs/?id=69447
 **/
-static int mecc_dtd(echo *e, float err, float tx);
+static int mecc_dtd(echo *e, float err, float tx, float rx);
 
 
 echo *echo_create(hybrid *h)
@@ -155,10 +155,10 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
 #ifdef GEIGEL_DTD
         /* Geigel double-talk detector */
-        update = !geigel_dtd(e, tx, rx);
+        update = !geigel_dtd(e, err, tx, rx);
 #else
         /* MECC double-talk detector */
-        update = !mecc_dtd(e, err, tx);
+        update = !mecc_dtd(e, err, tx, rx);
 #endif
 
         /* nlms-pw */
@@ -374,8 +374,10 @@ static float nlms_pw(echo *e, float err, float rx, int update)
  * acoustic echo. Look into something more sophisticated. */
 
 #ifdef FAST_DTD
-static int geigel_dtd(echo *e, float tx, float rx)
+static int geigel_dtd(echo *e, float err, float tx, float rx)
 {
+    UNUSED(err);
+
     /* Get the last NLMS_LEN rx samples and find the max*/
     size_t i;
 
@@ -428,9 +430,10 @@ static int geigel_dtd(echo *e, float tx, float rx)
 }
 
 #else
-static int geigel_dtd(echo *e, float tx, float rx_unused)
+static int geigel_dtd(echo *e, float err, float tx, float rx)
 {
-    UNUSED(rx_unused);          /* Just here to make the signatures match */
+    UNUSED(err);
+    UNUSED(rx);
 
     /* Get the last NLMS_LEN rx samples and find the max*/
     float max = 0.0;
@@ -465,8 +468,10 @@ static int geigel_dtd(echo *e, float tx, float rx_unused)
 }
 #endif
 
-static int mecc_dtd(echo *e, float err, float tx)
+static int mecc_dtd(echo *e, float err, float tx, float rx)
 {
+    UNUSED(rx);
+
     const float T = 0.7;         /* threshold */
     const float f = 0.95;        /* weighting constant */
 
