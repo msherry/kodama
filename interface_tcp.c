@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <glib.h>
 #include <netdb.h>
+#include <netinet/tcp.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -78,7 +79,9 @@ void tcp_connect(void)
         return;
     }
 
-    /* TODO: set socket options here, probably */
+    int flag = 1;
+    error = setsockopt(sock_fd, IPPROTO_TCP, TCP_NODELAY,
+            &flag, sizeof(int));
 
     error = connect(sock_fd, result->ai_addr, result->ai_addrlen);
     if (error)
