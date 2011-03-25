@@ -267,7 +267,7 @@ int write_data(int fd)
     gettimeofday(&now, NULL);
 
     long d_us = delta(msg->ts, &now);
-    VERBOSE_LOG("Total time to handle message: %.03f ms\n", d_us/1000.);
+    /* VERBOSE_LOG("Total time to handle message: %.03f ms\n", d_us/1000.); */
 
     /* We're done with msg at this point */
     imo_message_destroy(msg);
