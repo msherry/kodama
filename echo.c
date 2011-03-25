@@ -11,6 +11,9 @@
 
 extern globals_t globals;
 
+/* Useful thread:
+http://comments.gmane.org/gmane.comp.audio.compression.speex.devel/6890 */
+
 /* Much of this is from http://www.andreadrian.de/echo_cancel, with credit also
  * to the OSLEC project */
 
