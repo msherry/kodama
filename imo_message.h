@@ -5,13 +5,13 @@
 typedef struct imo_message {
     unsigned char *text;
     int length;
+    struct timeval *ts;
 } imo_message;
 
 /**
  * Parse an incoming imo message and extract the FLV tag, if any.
  *
  * @param msg The incoming message.
- * @param length The length of the incoming message.
  * @param type Will be set to the type of the imo message - 'S', 'D', or 'E'.
  * @param stream_name Will be set to the name of the stream contained in the
  * message. Must be freed by caller

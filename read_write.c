@@ -4,12 +4,16 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/ioctl.h>
+#include <sys/time.h>
 #include <unistd.h>
 
 #include "imolist.h"
 #include "imo_message.h"
 #include "kodama.h"
 #include "read_write.h"
+#include "util.h"
+
+extern globals_t globals;
 
 static int extract_messages(fd_buffer *fd_buf);
 
@@ -255,6 +259,15 @@ int write_data(int fd)
         }
         written += length;
     }
+
+    /* We have nothing more to do with the original incoming message. Its
+     * timestamp was copied to this outgoing message - let's see how long
+     * everything took */
+    struct timeval now;
+    gettimeofday(&now, NULL);
+
+    long d_us = delta(msg->ts, &now);
+    VERBOSE_LOG("Total time to handle message: %.03f ms\n", d_us/1000.);
 
     /* We're done with msg at this point */
     imo_message_destroy(msg);

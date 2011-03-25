@@ -209,6 +209,9 @@ void handle_imo_message(imo_message *msg)
                 return_msg = create_imo_message('D',
                     stream_name, return_flv_packet, return_flv_len);
 
+
+                /* Copy the timestamp from the original, incoming message */
+                memcpy(return_msg->ts, msg->ts, sizeof(struct timeval));
 #if THREADED
                 queue_imo_message_for_wowza(return_msg);
 #else

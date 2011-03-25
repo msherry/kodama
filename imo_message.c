@@ -2,6 +2,7 @@
 #include <glib.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/time.h>
 
 #include "imo_message.h"
 
@@ -80,6 +81,8 @@ imo_message *create_imo_message_from_text(unsigned char *text, int msg_len)
 
     msg->text = text;
     msg->length = msg_len;
+    msg->ts = malloc(sizeof(struct timeval));
+    gettimeofday(msg->ts, NULL);
 
     return msg;
 }
