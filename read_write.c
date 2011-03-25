@@ -7,6 +7,7 @@
 #include <unistd.h>
 
 #include "imolist.h"
+#include "imo_message.h"
 #include "kodama.h"
 #include "read_write.h"
 
@@ -35,10 +36,8 @@ void register_fd(int fd)
     fd_buf->buffer_len = 0;
 
     fd_buf->read_head = fd_buf->read_tail = NULL;
-    fd_buf->read_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
 
     fd_buf->write_head = fd_buf->write_tail = NULL;
-    fd_buf->write_msg_size = g_array_new(FALSE, TRUE, sizeof(int));
 
     fd_buf->mutex = g_mutex_new();
 
@@ -86,11 +85,12 @@ static int extract_messages(fd_buffer *fd_buf)
             temp = malloc(msg_length);
             memcpy(temp, buf+offset, msg_length);
 
+            imo_message *msg = create_imo_message_from_text(temp, msg_length);
+
             /* Queue the message in the full message list. temp will have to be
              * freed later */
             g_mutex_lock(fd_buf->mutex);
-            slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), temp);
-            g_array_append_val(fd_buf->read_msg_size, msg_length);
+            slist_append(&(fd_buf->read_head), &(fd_buf->read_tail), msg);
             g_mutex_unlock(fd_buf->mutex);
 
             num_msgs++;
@@ -209,7 +209,7 @@ int read_data(int fd)
 int write_data(int fd)
 {
     fd_buffer *fd_buf;
-    unsigned char *msg = NULL;
+    imo_message *msg = NULL;
     int written = 0, total;
     int messages_remaining = 0;
 
@@ -225,9 +225,6 @@ int write_data(int fd)
     {
         msg = g_slist_nth_data(fd_buf->write_head, 0);
         slist_delete_first(&(fd_buf->write_head), &(fd_buf->write_tail));
-
-        total = g_array_index(fd_buf->write_msg_size, int, 0);
-        g_array_remove_index(fd_buf->write_msg_size, 0);
     }
 
     g_mutex_unlock(fd_buf->mutex);
@@ -239,17 +236,20 @@ int write_data(int fd)
 
     messages_remaining--;
 
+    total = msg->length;
+
     while (written < total)
     {
         int length;
-        if((length = write(fd, msg+written, total-written)) < 0)
+        if((length = write(fd, msg->text+written, total-written)) < 0)
         {
             if (errno == EAGAIN || errno == EINTR)
             {
                 continue;
             }
             /* Some other error */
-            free(msg);
+            g_warning("Error in write_data:write(): %s", strerror(errno));
+            imo_message_destroy(msg);
             /* TODO: handle this */
             return WRITE_ERROR;
         }
@@ -257,16 +257,15 @@ int write_data(int fd)
     }
 
     /* We're done with msg at this point */
-    free(msg);
+    imo_message_destroy(msg);
 
-    /* g_debug("Sent an imo packet"); */
+    /* g_debug("Sent an imo message"); */
 
     return messages_remaining;
 }
 
-int get_next_message(int fd, unsigned char **msg, int *msg_length)
+int get_next_message(int fd, imo_message **msg)
 {
-
     fd_buffer *fd_buf;
 
     /* This existed in a call to read_data immediately prior to this, so should
@@ -277,7 +276,6 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     if (g_slist_length(fd_buf->read_head) <= 0)
     {
         *msg = NULL;
-        *msg_length = 0;
         return 0;
     }
 
@@ -286,17 +284,14 @@ int get_next_message(int fd, unsigned char **msg, int *msg_length)
     *msg = g_slist_nth_data(fd_buf->read_head, 0);
     slist_delete_first(&(fd_buf->read_head), &(fd_buf->read_tail));
 
-    *msg_length = g_array_index(fd_buf->read_msg_size, int, 0);
-    g_array_remove_index(fd_buf->read_msg_size, 0);
-
     return g_slist_length(fd_buf->read_head);
 }
 
-int queue_message(int fd, unsigned char *msg, int length)
+int queue_message(int fd, imo_message *msg)
 {
     fd_buffer *fd_buf;
 
-    if (!msg || length <= 0)
+    if (!msg || msg->length == 0)
     {
         return 0;
     }
@@ -313,7 +308,6 @@ int queue_message(int fd, unsigned char *msg, int length)
     /* Queue the new message in the write list */
     g_mutex_lock(fd_buf->mutex);
     slist_append(&(fd_buf->write_head), &(fd_buf->write_tail), msg);
-    g_array_append_val(fd_buf->write_msg_size, length);
     g_mutex_unlock(fd_buf->mutex);
 
     return 0;

@@ -6,6 +6,7 @@
 #include <string.h>
 #include <unistd.h>
 
+#include "imo_message.h"
 #include "interface_tcp.h"
 #include "kodama.h"
 #include "protocol.h"
@@ -148,16 +149,15 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     {
         /* Handler must handle freeing this message (or keeping it around, in
          * case we're reflecting it back to wowza untouched) */
-        unsigned char *msg;
-        int msg_length;
-        n = get_next_message(fd, &msg, &msg_length);
+        imo_message *msg;
+        n = get_next_message(fd, &msg);
 
-        if (msg && msg_length)
+        if (msg && msg->text && msg->length)
         {
 #if THREADED
-            queue_imo_message_for_worker(msg, msg_length);
+            queue_imo_message_for_worker(msg);
 #else
-            handle_imo_message(msg, msg_length);
+            handle_imo_message(msg);
 #endif
         }
         else
@@ -170,9 +170,9 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
     return TRUE;
 }
 
-void send_imo_message(unsigned char *msg, int msg_len)
+void send_imo_message(imo_message *msg)
 {
-    if (!msg || msg_len == 0)
+    if (!msg || !msg->text || !msg->length)
     {
         g_warning("(%s:%d) msg is NULL or has zero length", __FILE__, __LINE__);
         return;
@@ -192,7 +192,7 @@ void send_imo_message(unsigned char *msg, int msg_len)
         return;
     }
 
-    queue_message(wowza_fd, msg, msg_len);
+    queue_message(wowza_fd, msg);
 
     /* Add a watch on the channel so we write data once the channel is
      * writable */

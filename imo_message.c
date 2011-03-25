@@ -14,28 +14,29 @@
 
 /* Caller must free stream_name and packet_data */
 /* TODO: error checking would be good */
-void decode_imo_message(const unsigned char *msg, const int msg_length, char *type,
+void decode_imo_message(const imo_message *msg, char *type,
         char **stream_name, unsigned char **packet_data, int *packet_len)
 {
     int offset = 4;             /* sizeof(int) on java */
-    *type = msg[offset++];
+    unsigned char *text = msg->text;
+    *type = text[offset++];
 
-    int stream_name_length = (int)msg[offset++];
+    int stream_name_length = (int)text[offset++];
 
     *stream_name = malloc(stream_name_length+1); /* trailing \0 */
 
-    memcpy(*stream_name, msg+offset, stream_name_length);
+    memcpy(*stream_name, text+offset, stream_name_length);
     (*stream_name)[stream_name_length] = '\0';
 
     offset += stream_name_length;
 
     /* account for header */
-    *packet_len = msg_length - (6+stream_name_length);
+    *packet_len = msg->length - (6+stream_name_length);
 
     if (*packet_len)
     {
         *packet_data = malloc(*packet_len);
-        memcpy(*packet_data, msg+offset, *packet_len);
+        memcpy(*packet_data, text+offset, *packet_len);
     }
     else
     {
@@ -44,8 +45,8 @@ void decode_imo_message(const unsigned char *msg, const int msg_length, char *ty
     }
 }
 
-/* msg must eventually be freed */
-void create_imo_message(unsigned char **msg, int *msg_length, char type,
+/* returned imo_message must eventually be freed */
+imo_message *create_imo_message(char type,
         const char *stream_name, unsigned char *packet_data, int packet_len)
 {
     int stream_name_len = strlen(stream_name); // Hope this fits in a byte
@@ -53,18 +54,43 @@ void create_imo_message(unsigned char **msg, int *msg_length, char type,
     int offset;
     uint32_t msg_len_be = htonl(total_len);
 
-    *msg = malloc(total_len);
-    memcpy(*msg, &msg_len_be, 4); /* 4 bytes exactly, not sizeof(int) */
+    unsigned char *text;
+
+    text = malloc(total_len);
+    memcpy(text, &msg_len_be, 4); /* 4 bytes exactly, not sizeof(int) */
     offset = 4;
 
-    *(*msg+offset++) = type;
+    *(text+offset++) = type;
 
-    *(*msg+offset++) = stream_name_len;
+    *(text+offset++) = stream_name_len;
 
-    memcpy(*msg+offset, stream_name, stream_name_len);
+    memcpy(text+offset, stream_name, stream_name_len);
     offset += stream_name_len;
 
-    memcpy(*msg+offset, packet_data, packet_len);
+    memcpy(text+offset, packet_data, packet_len);
 
-    *msg_length = total_len;
+    imo_message *msg = create_imo_message_from_text(text, total_len);
+
+    return msg;
+}
+
+imo_message *create_imo_message_from_text(unsigned char *text, int msg_len)
+{
+    imo_message *msg = malloc(sizeof(imo_message));
+
+    msg->text = text;
+    msg->length = msg_len;
+
+    return msg;
+}
+
+void imo_message_destroy(imo_message *msg)
+{
+    if (msg == NULL)
+    {
+        return;
+    }
+
+    free(msg->text);
+    free(msg);
 }

@@ -10,12 +10,6 @@
 #include "protocol.h"
 #include "util.h"
 
-typedef struct msg_block
-{
-    unsigned char *msg;
-    int len;
-} msg_block;
-
 extern globals_t globals;
 extern stats_t stats;
 
@@ -28,7 +22,7 @@ GAsyncQueue *return_queue = NULL;
 static gpointer worker_thread_loop(gpointer data);
 static gpointer wowza_thread_loop(gpointer data);
 
-static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length);
+static void queue_imo_message_for_wowza(imo_message *msg);
 
 /// How long, in us, to sleep when we can't immediately acquire a conversation's
 /// lock
@@ -129,9 +123,11 @@ gchar *samples_to_message(SAMPLE_BLOCK *sb, gint *num_bytes, protocol proto)
 
 /* PROTOCOL 2 - IMO MESSAGES */
 
-void handle_imo_message(unsigned char *msg, int msg_length)
+void handle_imo_message(imo_message *msg)
 {
-    /* g_debug("Got an imo packet"); */
+    /* g_debug("Got an imo message"); */
+
+    g_return_if_fail(msg != NULL);
 
     char *stream_name;
     char type;
@@ -146,8 +142,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     long d_us;
     char *hex;
 
-    decode_imo_message(msg, msg_length, &type, &stream_name, &flv_data,
-            &flv_len);
+    decode_imo_message(msg, &type, &stream_name, &flv_data, &flv_len);
 
     /* TODO: test reflecting message back with different delays -- see what
      * wowza's deadline is */
@@ -158,16 +153,16 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     switch(type)
     {
     case 'S':
-        g_debug("Got an S message");
+        g_debug("Got an S message for stream %s", stream_name);
         conversation_start(stream_name);
         break;
     case 'E':
-        g_debug("Got an E message");
+        g_debug("Got an E message for stream %s", stream_name);
         /* Any messages from the other side will just be reflected */
         conversation_end(stream_name);
         break;
     case 'D':
-        /* g_debug("Got a D message"); */
+        /* g_debug("Got a D message for stream %s", stream_name); */
         if ((!flv_data) || (flv_len == 0))
         {
             g_warning("D message received with no FLV packet");
@@ -210,15 +205,14 @@ void handle_imo_message(unsigned char *msg, int msg_length)
 
             if (!reflect)
             {
-                unsigned char *return_msg;
-                int return_msg_length;
-                create_imo_message(&return_msg, &return_msg_length, 'D',
+                imo_message *return_msg;
+                return_msg = create_imo_message('D',
                     stream_name, return_flv_packet, return_flv_len);
 
 #if THREADED
-                queue_imo_message_for_wowza(return_msg, return_msg_length);
+                queue_imo_message_for_wowza(return_msg);
 #else
-                send_imo_message(return_msg, return_msg_length);
+                send_imo_message(return_msg);
 #endif
             }
             /* Ok to do this even if it's NULL */
@@ -231,7 +225,7 @@ void handle_imo_message(unsigned char *msg, int msg_length)
         break;
     default:
         g_debug("Unknown message type %c", type);
-        hex = hexify(msg, msg_length);
+        hex = hexify(msg->text, msg->length);
         g_debug("%s", hex);
         free(hex);
     }
@@ -239,36 +233,31 @@ void handle_imo_message(unsigned char *msg, int msg_length)
     if (reflect)
     {
 #if THREADED
-        queue_imo_message_for_wowza(msg, msg_length);
+        queue_imo_message_for_wowza(msg);
 #else
-        send_imo_message(msg, msg_length);
+        send_imo_message(msg);
 #endif
     }
     else
     {
         /* Done with this message */
-        free(msg);
+        imo_message_destroy(msg);
     }
 
     free(stream_name);
     free(flv_data);             /* Should be ok to free even if it's NULL */
 }
 
-void queue_imo_message_for_worker(unsigned char *msg, int msg_length)
+void queue_imo_message_for_worker(imo_message *msg)
 {
-    /* g_debug("Queueing a message block for worker threads"); */
-    msg_block *mb = malloc(sizeof(msg_block));
-    mb->msg = msg;
-    mb->len = msg_length;
-    g_async_queue_push(work_queue, mb);
+    /* g_debug("Queueing an imo message for worker threads"); */
+
+    g_async_queue_push(work_queue, msg);
 }
 
-static void queue_imo_message_for_wowza(unsigned char *msg, int msg_length)
+static void queue_imo_message_for_wowza(imo_message *msg)
 {
-    msg_block *mb = malloc(sizeof(msg_block));
-    mb->msg = msg;
-    mb->len = msg_length;
-    g_async_queue_push(return_queue, mb);
+    g_async_queue_push(return_queue, msg);
 }
 
 static gpointer worker_thread_loop(gpointer data)
@@ -276,24 +265,22 @@ static gpointer worker_thread_loop(gpointer data)
     UNUSED(data);
 
     g_async_queue_ref(work_queue);
+    /* Called fns will append to return_queue */
     g_async_queue_ref(return_queue);
 
     while(TRUE)
     {
-        /* g_debug("Waiting for a message block"); */
-        msg_block *mb;
-        unsigned char *msg;
-        int msg_len;
+        /* g_debug("Waiting for an imo message"); */
+        imo_message *msg;
 
-        mb = g_async_queue_pop(work_queue);
-        msg = mb->msg;
-        msg_len = mb->len;
+        msg = g_async_queue_pop(work_queue);
 
-        /* g_debug("Got a message block"); */
-        handle_imo_message(msg, msg_len);
-        /* g_debug("Handled a message block"); */
+        handle_imo_message(msg);
+        /* g_debug("Handled an imo message"); */
 
-        free(mb);
+        /* Message will either reflected back and freed once written, or freed
+         * in handle_imo_message */
+        /* imo_message_destroy(msg); */
     }
     g_async_queue_unref(return_queue);
     g_async_queue_unref(work_queue);
@@ -309,17 +296,14 @@ static gpointer wowza_thread_loop(gpointer data)
 
     while(TRUE)
     {
-        msg_block *mb;
-        unsigned char *msg;
-        int msg_len;
+        imo_message *msg;
 
-        mb = g_async_queue_pop(return_queue);
-        msg = mb->msg;
-        msg_len = mb->len;
+        msg = g_async_queue_pop(return_queue);
 
-        send_imo_message(msg, msg_len);
+        send_imo_message(msg);
 
-        free(mb);
+        /* msg will be freed once it's written, in write_data */
+        /* imo_message_destroy(msg); */
     }
 
     g_async_queue_unref(return_queue);

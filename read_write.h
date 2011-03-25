@@ -14,21 +14,21 @@ typedef struct fd_buffer {
 
     GSList *read_head;   /**< Completely read messages */
     GSList *read_tail;
-    GArray *read_msg_size;
 
     GSList *write_head;         /**< Messages queued to send */
     GSList *write_tail;
-    GArray *write_msg_size;
 
     GMutex *mutex;              /**< per-fd mutex */
 } fd_buffer;
+
+struct imo_message;
 
 void init_read_write(void);
 void register_fd(int fd);
 void unregister_fd(int fd);
 int read_data(int fd);
 int write_data(int fd);
-int get_next_message(int fd, unsigned char **msg, int *msg_length);
-int queue_message(int fd, unsigned char *msg, int length);
+int get_next_message(int fd, struct imo_message **msg);
+int queue_message(int fd, struct imo_message *msg);
 
 #endif

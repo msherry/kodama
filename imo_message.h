@@ -1,6 +1,12 @@
 #ifndef _IMO_MESSAGE_H_
 #define _IMO_MESSAGE_H_
 
+/// A message to/from Wowza
+typedef struct imo_message {
+    unsigned char *text;
+    int length;
+} imo_message;
+
 /**
  * Parse an incoming imo message and extract the FLV tag, if any.
  *
@@ -13,11 +19,13 @@
  * is present. Must be freed by caller.
  * @param data_len Will be set to the length of the embedded FLV tag.
  */
-void decode_imo_message(const unsigned char *msg, const int length, char *type,
+void decode_imo_message(const imo_message *msg, char *type,
         char **stream_name, unsigned char **packet_data, int *data_len);
 
-void create_imo_message(unsigned char **msg, int *msg_length, char type,
+imo_message *create_imo_message(char type,
         const char *stream_name, unsigned char *packet_data, int packet_len);
 
+imo_message *create_imo_message_from_text(unsigned char *text, int msg_len);
+void imo_message_destroy(imo_message *msg);
 
 #endif
