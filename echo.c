@@ -137,6 +137,13 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         /* TODO: these values are for debugging - remove them later */
         float tx_fir, tx_nlms_pw;
 
+        /* TODO: temporary. Don't attempt echo cancellation if we have no rx
+         * samples */
+        if (!cbuffer_get_count(e->rx_buf))
+        {
+            break;
+        }
+
         rx_s = cbuffer_pop(e->rx_buf);
         tx_s = sb->s[i];
 
