@@ -57,6 +57,7 @@ static void usage(char *arg0)
     fprintf(stderr, "-m: ms     tx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "--dtd: {geigel|mecc} Which double-talk detector to use\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "IMO options:\n");
     fprintf(stderr, "--shard: shardnum of this shard (enables imo mode)\n");
@@ -104,6 +105,7 @@ static void parse_command_line(int argc, char *argv[])
     globals.rx_delay_ms = 0;
 
     globals.echo_cancel = 0;
+    globals.dtd = geigel;
 
     globals.basename = NULL;
     globals.fullname = NULL;
@@ -125,6 +127,7 @@ static void parse_command_line(int argc, char *argv[])
             {"shard", 1, 0, 0}, /* 0 */
             {"server", 1, 0, 0},
             {"basename", 1, 0, 0},
+            {"dtd", 1, 0, 0},
             {"flv", 0, 0, 0},
             {"help", 0, 0, 'h'},
             {0, 0, 0, 0}
@@ -175,6 +178,23 @@ static void parse_command_line(int argc, char *argv[])
             else if (!strcmp("flv", long_options[option_index].name))
             {
                 globals.flv_debug = 1;
+            }
+            else if (!strcmp("dtd", long_options[option_index].name))
+            {
+                if (!strcmp("geigel", optarg))
+                {
+                    globals.dtd = geigel;
+                }
+                else if (!strcmp("mecc", optarg))
+                {
+                    globals.dtd = mecc;
+                }
+                else
+                {
+                    fprintf(stderr, "Unknown DTD algorithm %s\n", optarg);
+                    usage(argv[0]);
+                    exit(0);
+                }
             }
            break;
         case 'e':

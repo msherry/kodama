@@ -27,6 +27,11 @@
 
 #define PORTNUM (7650)
 
+/// Doubletalk detection algorithms
+typedef enum dtd_algo {
+    geigel, mecc
+} dtd_algo;
+
 /* Select sample format. TODO: let's not make these constants, yes? */
 #define PA_SAMPLE_TYPE  paInt16
 typedef int16_t SAMPLE;
@@ -54,6 +59,8 @@ typedef struct globals_t {
 
     /* rx-side echo cancellation */
     int echo_cancel;
+
+    dtd_algo dtd;
 
     /* Logging options */
     int verbose;

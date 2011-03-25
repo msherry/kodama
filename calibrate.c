@@ -28,6 +28,18 @@ void calibrate(void)
     struct timeval start, end;
     uint64_t before_cycles, end_cycles;
     unsigned long d_us;
+    char *dtd_name;
+    switch (globals.dtd)
+    {
+    case geigel:
+        dtd_name = "geigel";
+        break;
+    case mecc:
+        dtd_name = "mecc";
+        break;
+    default:
+        dtd_name = "unknown";
+    }
 
     /* Save global logging prefs, but disable as much as we can while
      * calibrating */
@@ -39,6 +51,7 @@ void calibrate(void)
     int num_cpus = num_processors();
     g_debug("Num cpus: %i", num_cpus);
     g_debug("Sample rate: %d", SAMPLE_RATE);
+    g_debug("DTD algorithm: %s", dtd_name);
 
     /* Verify that we get the values we expect */
     g_debug("Validating...");

@@ -64,6 +64,17 @@ echo *echo_create(hybrid *h)
 
     e->j  = NLMS_EXT;
 
+    /* HACK: we increment w rather than setting it directly, so it needs to have
+     * a valid IEEE-754 value */
+    int i;
+    int j = e->j;
+    for (i = 0; i < NLMS_LEN; i++)
+    {
+        e->x[j+i] = 0;
+        e->xf[j+i] = 1.0/NLMS_LEN;
+        e->w[i] = 1.0/NLMS_LEN;
+    }
+
     /* Geigel DTD */
     e->max_x = malloc((NLMS_LEN/DTD_LEN) * sizeof(float));
     memset(e->max_x, 0, (NLMS_LEN/DTD_LEN) * sizeof(float));
@@ -75,16 +86,8 @@ echo *echo_create(hybrid *h)
     e->Rem = 0.0;
     e->sig_sqr = 0.0;
 
-    /* HACK: we increment w rather than setting it directly, so it needs to have
-     * a valid IEEE-754 value */
-    int i;
-    int j = e->j;
-    for (i = 0; i < NLMS_LEN; i++)
-    {
-        e->x[j+i] = 0;
-        e->xf[j+i] = 1.0/NLMS_LEN;
-        e->w[i] = 1.0/NLMS_LEN;
-    }
+    /* Set which DTD to use */
+    e->dtd_fn = geigel_dtd;
 
     e->hp = hp_fir_create();
 
@@ -164,15 +167,8 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         float dotp_w_x = dotp(e->w, e->x+e->j);
         float err = tx - dotp_w_x;
 
-#if DTD == GEIGEL
-        /* Geigel double-talk detector */
-        update = !geigel_dtd(e, err, tx, rx);
-#elif DTD == MECC
-        /* MECC double-talk detector */
-        update = !mecc_dtd(e, err, tx, rx);
-#else
-        #error "Unknown DTD selected"
-#endif
+        /* DTD - assumes the dtd_fn field is properly set */
+        update = !e->dtd_fn(e, err, tx, rx);
 
         /* nlms-pw */
         tx = nlms_pw(e, err, rx, update);
