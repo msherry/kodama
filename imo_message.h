@@ -3,9 +3,9 @@
 
 /// A message to/from Wowza
 typedef struct imo_message {
-    unsigned char *text;
-    int length;
-    struct timeval *ts;
+    unsigned char *text;        /**< Message bytes */
+    int length;                 /**< Length of text */
+    struct timeval *ts;         /**< Timestamp of message arrival */
 } imo_message;
 
 /**
