@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <glib.h>
-#include <gnet.h>
+#include <netdb.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -14,6 +14,7 @@
 
 static char *g_host;
 static int g_port;
+static char *g_port_str;
 
 int attempt_reconnect;
 int wowza_fd = -1;      /* TODO: we probably want something more flexible */
@@ -37,6 +38,7 @@ void setup_tcp_connection(char *host, int port)
 
     g_host = g_strdup_printf("%s", host);
     g_port = port;
+    g_port_str = g_strdup_printf("%d", g_port);
 
     tcp_connect();
 }
@@ -44,50 +46,62 @@ void setup_tcp_connection(char *host, int port)
 /* Uses the global g_host and g_port */
 void tcp_connect(void)
 {
-    GTcpSocket *sock;
-    GInetAddr *host_addr;
+    int sock_fd;
+    int error;
+    struct addrinfo hints, *result;
 
     /* Stop trying to reconnect */
+    /* TODO: having to set this to 1 on on every failure is lame */
     attempt_reconnect = 0;
 
+    memset(&hints, 0, sizeof(struct addrinfo));
+    hints.ai_family = AF_INET;
+    hints.ai_socktype = SOCK_STREAM;
+
     /* Does a blocking DNS lookup */
-    host_addr = gnet_inetaddr_new(g_host, g_port);
-
-    if (!host_addr)
+    error = getaddrinfo(g_host, g_port_str, &hints, &result);
+    if (error)
     {
-        g_warning("There was an error looking up the address for %s:%d",
-                g_host, g_port);
+        g_warning("There was an error looking up the address for %s:%d - %s",
+                g_host, g_port, gai_strerror(error));
         attempt_reconnect = 1;
         return;
     }
 
-    /* This blocks until we connect or fail to connect */
-    sock = gnet_tcp_socket_new(host_addr);
-
-    g_free(host_addr);
-
-    if (sock == NULL)
+    /* These values are all in result, but ehh */
+    sock_fd = socket(AF_INET, SOCK_STREAM, 0);
+    if (sock_fd < 0)
     {
-        g_warning("There was an error connecting to wowza on %s:%d - this service will be fairly useless", g_host, g_port);
+        g_warning("There was an error creating a socket: %s",
+                strerror(errno));
         attempt_reconnect = 1;
         return;
     }
+
+    /* TODO: set socket options here, probably */
+
+    error = connect(sock_fd, result->ai_addr, result->ai_addrlen);
+    if (error)
+    {
+        g_warning("There was an error connecting to wowza on %s:%d (%s)"
+                " - this service will be fairly useless",
+                g_host, g_port, strerror(errno));
+        attempt_reconnect = 1;
+        return;
+    }
+
+    freeaddrinfo(result);
 
     g_message("Successfully connected to wowza on %s:%d", g_host, g_port);
 
     /* Connected to Wowza - set up a watch on the channel */
-    GIOChannel *chan = gnet_tcp_socket_get_io_channel(sock);
-    /* Has to be set to buffered when setting the encoding, even with NULL
-     * encoding, because glib is stupid */
-    g_io_channel_set_buffered(chan, TRUE);
+    GIOChannel *chan = g_io_channel_unix_new(sock_fd);
     // Set NULL encoding so that NULL bytes are handled properly
     g_io_channel_set_encoding(chan, NULL, NULL);
     g_io_channel_set_buffered(chan, FALSE);
     g_io_channel_set_flags(chan, G_IO_FLAG_NONBLOCK, NULL);
 
-    int fd = g_io_channel_unix_get_fd(chan);
-
-    register_fd(fd);
+    register_fd(sock_fd);
 
     if (!g_io_add_watch(chan, (G_IO_IN | G_IO_HUP | G_IO_ERR),
             handle_input, NULL))
@@ -95,13 +109,13 @@ void tcp_connect(void)
         g_warning("(%s:%d) Unable to add watch on channel", __FILE__, __LINE__);
         g_io_channel_shutdown(chan, FALSE, NULL);
         g_io_channel_unref(chan);
-        unregister_fd(fd);
+        unregister_fd(sock_fd);
 
         wowza_fd = -1;
         wowza_channel = NULL;
         exit(-1);
     }
-    wowza_fd = fd;
+    wowza_fd = sock_fd;
     wowza_channel = chan;
 }
 
