@@ -157,12 +157,14 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         float dotp_w_x = dotp(e->w, e->x+e->j);
         float err = tx - dotp_w_x;
 
-#ifdef GEIGEL_DTD
+#if DTD == GEIGEL
         /* Geigel double-talk detector */
         update = !geigel_dtd(e, err, tx, rx);
-#else
+#elif DTD == MECC
         /* MECC double-talk detector */
         update = !mecc_dtd(e, err, tx, rx);
+#else
+        #error "Unknown DTD selected"
 #endif
 
         /* nlms-pw */

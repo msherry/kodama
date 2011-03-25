@@ -58,6 +58,10 @@ typedef struct hp_fir {
 
 // Double-talk detection constants
 
+/// Doubletalk detection algorithms
+#define GEIGEL (1)
+#define MECC (2)
+
 /** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
 /** Holdover for DTD, in taps (ms * TAPS_PER_MS) */
