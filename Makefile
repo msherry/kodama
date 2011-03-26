@@ -39,7 +39,7 @@ else
         # need to bring in lgthread explicitly on the Mac
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0 -lgthread-2.0
 
-	ARCH_FLAGS += -mtune=corei7
+	ARCH_FLAGS += -mtune=corei7 # corei7-avx, when available
 	#Introduced in 4.6, but not supported on Mac os yet
 	PEDANTIC += -fno-var-tracking
 	# TODO: Look into the -fsplit-stack option
