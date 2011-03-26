@@ -38,7 +38,10 @@ else
 	-I/opt/local/lib/gnet-2.0/include
         # need to bring in lgthread explicitly on the Mac
 	GLIB_LIBS = -L/opt/local/lib -lglib-2.0 -lgnet-2.0 -lgthread-2.0
+
 	ARCH_FLAGS += -mtune=corei7
+	#Introduced in 4.6, but not supported on Mac os yet
+	PEDANTIC += -fno-var-tracking
 endif
 
 OBJS = av.o calibrate.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o \
