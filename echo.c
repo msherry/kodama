@@ -479,12 +479,12 @@ static int mecc_dtd(echo *e, float err, float tx, float rx)
     e->Rem     = (f * e->Rem)     + ((1-f) * (err * tx));
     e->sig_sqr = (f * e->sig_sqr) + ((1-f) * (tx * tx));
 
-    float mecc = 1 - (e->Rem / e->sig_sqr);
+    float xi = 1 - (e->Rem / e->sig_sqr);
 
-    /* VERBOSE_LOG("E: Rem: %f\tsig_sqr: %f\tmecc: %f\tDTD: %d\n", */
-    /*         e->Rem, e->sig_sqr, mecc, mecc<T); */
+    /* VERBOSE_LOG("E: Rem: %f\tsig_sqr: %f\txi: %f\tDTD: %d\n", */
+    /*         e->Rem, e->sig_sqr, xi, xi<T); */
 
-    if (mecc < T)
+    if (xi < T)
     {
         e->holdover = DTD_HOLDOVER;
     }
