@@ -96,8 +96,8 @@ void calibrate(void)
     }
     else
     {
-        g_debug("dotp returned correct result for NLMS of length %d: "
-                "   %.05f", NLMS_LEN, correct_result);
+        /* g_debug("dotp returned correct result for NLMS of length %d: " */
+        /*         "   %.05f", NLMS_LEN, correct_result); */
     }
 
     /* Find how many threads to run */
@@ -138,10 +138,10 @@ void calibrate(void)
     g_debug("CPU runs at %.02f MIPS", cpu_mips);
     g_debug("%.02f ms for %.02f ms of speech (%.02f MIPS/ec)",
         (d_us/1000.), secs_of_speech*1000, mips_per_ec);
-    g_debug("%5.2f instances possible / core", instances_per_core);
-
     float max_instances = instances_per_core * num_cpus;
-    g_debug("%5.2f total instances possible", max_instances);
+    g_debug("%5.2f instances possible / core, %5.2f total",
+            instances_per_core, max_instances);
+
     int num_threads =  max_instances * .8; /* Be conservative */
     num_threads = MAX(num_threads, 1);   /* Be pedantic */
 
