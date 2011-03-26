@@ -42,6 +42,7 @@ else
 	ARCH_FLAGS += -mtune=corei7
 	#Introduced in 4.6, but not supported on Mac os yet
 	PEDANTIC += -fno-var-tracking
+	# TODO: Look into the -fsplit-stack option
 endif
 
 OBJS = av.o calibrate.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o \
