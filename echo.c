@@ -42,6 +42,7 @@ static inline float clip(float in);
 static float nlms_pw(echo *e, float tx, float rx, int update);
 static void hp_fir_destroy(hp_fir *hp);
 static float update_fir(hp_fir *hp, float in);
+static void dump_ec_state(echo *e);
 
 /// Standard Geigel dtd
 static int geigel_dtd(echo *e, float err, float tx, float rx);
@@ -306,7 +307,6 @@ float dotp(const float * restrict a, const float * restrict b)
 
 static float nlms_pw(echo *e, float err, float rx, int update)
 {
-    char *hex;
     int j = e->j;
 
     e->x[j] = rx;
@@ -316,14 +316,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
     if (isnan(ef))
     {
         DEBUG_LOG("%s\n", "ef went NaN");
-        DEBUG_LOG("err: %f\n", err);
-        /* DEBUG_LOG("dotp_w_x: %f\n", dotp_w_x); */
-        hex = floats_to_text(e->w, NLMS_LEN);
-        DEBUG_LOG("w: %s\n", hex);
-        free(hex);
-        hex = floats_to_text(e->x+j, NLMS_LEN);
-        DEBUG_LOG("x: %s\n", hex);
-        free(hex);
+        dump_ec_state(e);
         stack_trace(1);
     }
 
@@ -345,15 +338,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
         if (isinf(u_ef))
         {
             DEBUG_LOG("%s\n", "u_ef went infinite");
-            DEBUG_LOG("ef: %f\tdotp_xf_xf: %f\n", ef, e->dotp_xf_xf);
-            /* DEBUG_LOG("dotp_w_x: %f\terr: %f\n", dotp_w_x, err); */
-            DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
-            hex = floats_to_text(e->w, NLMS_LEN);
-            DEBUG_LOG("e->w: %s\n", hex);
-            free(hex);
-            hex = floats_to_text(e->x+j, NLMS_LEN);
-            DEBUG_LOG("e->x+j: %s\n", hex);
-            free(hex);
+            dump_ec_state(e);
             /* stack_trace(1); */
 
             /* TODO: / HACK: for now, reset the weights to zero */
@@ -547,4 +532,18 @@ float update_fir(hp_fir * restrict hp, float in)
         sum += HP_FIR[i] * hp->z[i];
     }
     return sum;
+}
+
+static void dump_ec_state(echo *e)
+{
+    char *hex;
+
+    DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf);
+    DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
+    hex = floats_to_text(e->w, NLMS_LEN);
+    DEBUG_LOG("e->w: %s\n", hex);
+    free(hex);
+    hex = floats_to_text(e->x+e->j, NLMS_LEN);
+    DEBUG_LOG("e->x+j: %s\n", hex);
+    free(hex);
 }
