@@ -43,30 +43,32 @@ typedef int16_t SAMPLE;
 void stack_trace(int die);
 
 typedef struct globals_t {
-    /* tx side */
+    /** tx side */
     gchar *txhost;
     int tx_xmit_port;
     int tx_recv_port;
 
-    /* rx side */
+    /** rx side */
     gchar *rxhost;
     int rx_xmit_port;
     int rx_recv_port;
 
-    /* Fake delay */
+    /** Fake delay */
     int tx_delay_ms;
     int rx_delay_ms;
 
-    /* rx-side echo cancellation */
+    /** rx-side echo cancellation */
     int echo_cancel;
 
     dtd_algo dtd;
+    /** Dummy mode - reflect all messages back unchanged */
+    int dummy;
 
-    /* Logging options */
+    /** Logging options */
     int verbose;
     int flv_debug;
 
-    /* Imo flags */
+    /** Imo flags */
     char *basename;
     int shardnum;
     char *fullname;

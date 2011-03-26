@@ -57,7 +57,8 @@ static void usage(char *arg0)
     fprintf(stderr, "-m: ms     tx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "\n");
-    fprintf(stderr, "--dtd: {geigel|mecc} Which double-talk detector to use\n");
+    fprintf(stderr, "--dtd {geigel|mecc}: Which double-talk detector to use\n");
+    fprintf(stderr, "--dummy:   Reflect all messages back to wowza unchanged\n");
     fprintf(stderr, "\n");
     fprintf(stderr, "IMO options:\n");
     fprintf(stderr, "--shard: shardnum of this shard (enables imo mode)\n");
@@ -106,6 +107,7 @@ static void parse_command_line(int argc, char *argv[])
 
     globals.echo_cancel = 0;
     globals.dtd = geigel;
+    globals.dummy = 0;
 
     globals.basename = NULL;
     globals.fullname = NULL;
@@ -128,6 +130,7 @@ static void parse_command_line(int argc, char *argv[])
             {"server", 1, 0, 0},
             {"basename", 1, 0, 0},
             {"dtd", 1, 0, 0},
+            {"dummy", 0, 0, 0},
             {"flv", 0, 0, 0},
             {"help", 0, 0, 'h'},
             {0, 0, 0, 0}
@@ -195,6 +198,10 @@ static void parse_command_line(int argc, char *argv[])
                     usage(argv[0]);
                     exit(0);
                 }
+            }
+            else if (!strcmp("dummy", long_options[option_index].name))
+            {
+                globals.dummy = 1;
             }
            break;
         case 'e':

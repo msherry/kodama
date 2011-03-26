@@ -52,6 +52,10 @@ void calibrate(void)
     g_debug("Num cpus: %i", num_cpus);
     g_debug("Sample rate: %d", SAMPLE_RATE);
     g_debug("DTD algorithm: %s", dtd_name);
+    if (globals.dummy)
+    {
+        g_debug("DUMMY MODE");
+    }
 
     /* Verify that we get the values we expect */
     g_debug("Validating...");

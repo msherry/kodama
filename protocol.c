@@ -167,7 +167,7 @@ void handle_imo_message(imo_message *msg)
         {
             g_warning("D message received with no FLV packet");
         }
-        else
+        else if (!globals.dummy)
         {
             unsigned char *return_flv_packet = NULL;
             int return_flv_len;
