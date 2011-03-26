@@ -64,8 +64,6 @@ echo *echo_create(hybrid *h)
 
     e->j  = NLMS_EXT;
 
-    /* HACK: we increment w rather than setting it directly, so it needs to have
-     * a valid IEEE-754 value */
     int i;
     int j = e->j;
     for (i = 0; i < NLMS_LEN; i++)
