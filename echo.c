@@ -87,7 +87,17 @@ echo *echo_create(hybrid *h)
     e->sig_sqr = 0.0;
 
     /* Set which DTD to use */
-    e->dtd_fn = geigel_dtd;
+    switch(globals.dtd)
+    {
+    case geigel:
+        e->dtd_fn = geigel_dtd;
+        break;
+    case mecc:
+        e->dtd_fn = mecc_dtd;
+        break;
+    default:
+        g_warning("Unknown dtd type set");
+    }
 
     e->hp = hp_fir_create();
 
