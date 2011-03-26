@@ -31,10 +31,11 @@ static void queue_imo_message_for_wowza(imo_message *msg);
 
 void init_protocol(void)
 {
-#if !THREADED
-    g_debug("THREADING DISABLED");
-    return;
-#endif
+    if (globals.nothread)
+    {
+        g_debug("THREADING DISABLED");
+        return;
+    }
 
     if (work_queue)
     {
@@ -212,11 +213,17 @@ void handle_imo_message(imo_message *msg)
 
                 /* Copy the timestamp from the original, incoming message */
                 memcpy(return_msg->ts, msg->ts, sizeof(struct timeval));
-#if THREADED
-                queue_imo_message_for_wowza(return_msg);
-#else
-                send_imo_message(return_msg);
-#endif
+
+                if (globals.nothread)
+                {
+                    /* Send message right away */
+                    send_imo_message(return_msg);
+                }
+                else
+                {
+                    /* Put on return queue for main thread */
+                    queue_imo_message_for_wowza(return_msg);
+                }
             }
             /* Ok to do this even if it's NULL */
             free(return_flv_packet);
@@ -235,11 +242,14 @@ void handle_imo_message(imo_message *msg)
 
     if (reflect)
     {
-#if THREADED
-        queue_imo_message_for_wowza(msg);
-#else
-        send_imo_message(msg);
-#endif
+        if (globals.nothread)
+        {
+            send_imo_message(msg);
+        }
+        else
+        {
+            queue_imo_message_for_wowza(msg);
+        }
     }
     else
     {

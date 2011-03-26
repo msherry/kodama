@@ -13,6 +13,8 @@
 #include "protocol.h"
 #include "read_write.h"
 
+extern globals_t globals;
+
 static char *g_host;
 static int g_port;
 static char *g_port_str;
@@ -171,11 +173,14 @@ handle_input(GIOChannel *source, GIOCondition cond, gpointer data)
 
         if (msg && msg->text && msg->length)
         {
-#if THREADED
-            queue_imo_message_for_worker(msg);
-#else
-            handle_imo_message(msg);
-#endif
+            if (globals.nothread)
+            {
+                handle_imo_message(msg);
+            }
+            else
+            {
+                queue_imo_message_for_worker(msg);
+            }
         }
         else
         {

@@ -63,6 +63,8 @@ typedef struct globals_t {
     dtd_algo dtd;
     /** Dummy mode - reflect all messages back unchanged */
     int dummy;
+    /** No threading mode - run in a single thread */
+    int nothread;
 
     /** Logging options */
     int verbose;
