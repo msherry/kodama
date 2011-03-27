@@ -15,6 +15,9 @@ typedef struct proto_header {
 struct imo_message;
 
 void init_protocol(void);
+void exit_all_threads(void);
+
+
 void queue_imo_message_for_worker(struct imo_message *msg);
 
 /* Protocol 1 - UDP */

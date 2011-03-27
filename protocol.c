@@ -19,6 +19,7 @@ GAsyncQueue *work_queue = NULL;
 /// Messages to send back to wowza get queued here for the main thread
 GAsyncQueue *return_queue = NULL;
 
+static void exit_thread_now(gpointer thread, gpointer user_data);
 static gpointer worker_thread_loop(gpointer data);
 static gpointer wowza_thread_loop(gpointer data);
 
@@ -64,6 +65,19 @@ void init_protocol(void)
     }
 
     g_thread_create(wowza_thread_loop, NULL, FALSE, NULL);
+}
+
+void exit_all_threads(void)
+{
+    g_thread_foreach(exit_thread_now, NULL);
+}
+
+static void exit_thread_now(gpointer thread, gpointer user_data)
+{
+    UNUSED(thread);
+    UNUSED(user_data);
+    /* TODO: flag variable might work, but not if thread is
+     * blocked. pthread_cancel might be good */
 }
 
 /* PROTOCOL 1 - UDP */
