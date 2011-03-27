@@ -10,6 +10,7 @@ LD=gcc
 PEDANTIC = -pedantic -fstrict-aliasing -Wno-variadic-macros -Wno-declaration-after-statement -Wmissing-prototypes -Wstrict-prototypes -Wshadow -Wpointer-arith -Wcast-qual -Wcast-align -fno-common -Wfloat-equal -Wno-system-headers -Wundef
 ARCH_FLAGS = -msse4.1
 OPTFLAGS = -O3 -ftree-vectorize -ftree-vectorizer-verbose=5 -ffast-math
+LINKTIME_OPTFLAGS =
 PROFILE_FLAGS = -pg
 
 CFLAGS = -g ${PROFILE_FLAGS} ${ARCH_FLAGS} ${OPTFLAGS} -Wall \
@@ -43,6 +44,8 @@ else
 	#Introduced in 4.6, but not supported on Mac os yet
 	PEDANTIC += -fno-var-tracking
 	# TODO: Look into the -fsplit-stack option
+	OPTFLAGS += -flto
+	LINKTIME_OPTFLAGS += -flto -fwhole-program
 endif
 
 OBJS = av.o calibrate.o cbuffer.o conversation.o echo.o hybrid.o flv.o iir.o \
@@ -54,7 +57,7 @@ PROG = kodama
 ALL: ${PROG} documentation
 
 ${PROG}: ${OBJS}
-	${LD} -o ${PROG} ${LDFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
+	${LD} -o ${PROG} ${LDFLAGS} ${LINKTIME_OPTFLAGS} ${LIBRARIES} ${GLIB_LIBS} ${OBJS}
 
 -include ${OBJS:.o=.d}
 
