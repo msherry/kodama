@@ -169,6 +169,10 @@ void handle_imo_message(imo_message *msg)
     {
     case 'S':
         g_debug("Got an S message for stream %s", stream_name);
+        if (globals.dummy)
+        {
+            g_debug("(Dummy mode)");
+        }
         conversation_start(stream_name);
         break;
     case 'E':
