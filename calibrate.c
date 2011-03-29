@@ -71,7 +71,7 @@ void calibrate(void)
         vec_b[i] = vals[(i+1)%len];
     }
     float correct_result;
-    int temp;
+    int temp = 0;
     if (globals.nlms_len == 1600)       /* 8000 Hz */
     {
         temp = DOTP_1600;
@@ -82,15 +82,15 @@ void calibrate(void)
     }
     else
     {
-        g_error("Unable to determine correct dotp value for nlms_len = %d",
-                globals.nlms_len);
+        g_warning("WARNING: Unable to determine correct dotp value for "
+                "nlms_len = %d", globals.nlms_len);
     }
     memcpy(&correct_result, &temp, sizeof(float));
 
     float dotp_result = dotp(vec_a, vec_b, globals.nlms_len);
 
     /* Gcc warns about comparing float values, but trust me - it's ok here */
-    if (correct_result != dotp_result)
+    if (correct_result && correct_result != dotp_result)
     {
         g_error("dotp returned wrong value for NLMS of length %d: "
                 "expected %.05f, got %.05f", globals.nlms_len, correct_result,
