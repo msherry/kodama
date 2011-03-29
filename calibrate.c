@@ -85,7 +85,7 @@ void calibrate(void)
     }
     memcpy(&correct_result, &temp, sizeof(float));
 
-    float dotp_result = dotp(vec_a, vec_b);
+    float dotp_result = dotp(vec_a, vec_b, NLMS_LEN);
 
     /* Gcc warns about comparing float values, but trust me - it's ok here */
     if (correct_result != dotp_result)

@@ -173,7 +173,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         /* These used to be done in nlms_pw, but at least one DTD needs access
          * to err */
-        float dotp_w_x = dotp(e->w, e->x+e->j);
+        float dotp_w_x = dotp(e->w, e->x+e->j, NLMS_LEN);
         float err = tx - dotp_w_x;
 
         /* DTD - assumes the dtd_fn field is properly set */
@@ -268,7 +268,7 @@ static inline float clip(float in)
 
 // It looks like gcc4.6 will inline this by default, but 4.2 won't
 /* __attribute__ ((noinline)) */
-float dotp(const float * restrict a, const float * restrict b)
+float dotp(const float * restrict a, const float * restrict b, const int len)
 {
     float sum = 0.0;
 
@@ -281,7 +281,7 @@ float dotp(const float * restrict a, const float * restrict b)
         "movups 16(%2,%0), %%xmm3         \n\t"
         "movups 16(%3,%0), %%xmm4         \n\t"
         "addq   $32, %0                   \n\t"
-        "cmpq   %4, %0                    \n\t"
+        "cmpq   %4, %0         \n\t" /* TODO: doesn't work with int * and int */
         "mulps  %%xmm2, %%xmm1            \n\t"
         "addps  %%xmm1, %1                \n\t"
         "mulps  %%xmm4, %%xmm3            \n\t"
@@ -296,7 +296,7 @@ float dotp(const float * restrict a, const float * restrict b)
     );
 
 #else
-    for (int i=0; i<NLMS_LEN; i++)
+    for (int i=0; i<len; i++)
     {
         sum += a[i] * b[i];
     }
@@ -326,7 +326,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
         e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
 #else
     /* The slow way to do this */
-    e->dotp_xf_xf = dotp(e->xf, e->xf);
+    e->dotp_xf_xf = dotp(e->xf, e->xf, NLMS_LEN);
 #endif
 
     /* TODO: find a reasonable value for this */

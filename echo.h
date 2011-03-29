@@ -134,9 +134,10 @@ void echo_update_rx(echo *e, struct SAMPLE_BLOCK *sb);
  *
  * @param a first vector
  * @param b second vector
+ * @param len length of vectors
  *
  * @return dot product of a and b
  */
-float dotp(const float * restrict a, const float * restrict b);
+float dotp(const float * restrict a, const float * restrict b, const int len);
 
 #endif
