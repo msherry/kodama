@@ -29,6 +29,7 @@ extern int attempt_reconnect;
 
 static void usage(char *arg0);
 static void set_fullname(void);
+static void calc_echo_globals(void);
 static void parse_command_line(int argc, char **argv);
 static void signal_handler(int signum);
 static void init_sig_handlers(void);
@@ -57,6 +58,8 @@ static void usage(char *arg0)
     fprintf(stderr, "-m: ms     tx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "-n: ms     rx-side number of milliseconds of delay to simulate\n");
     fprintf(stderr, "\n");
+    fprintf(stderr, "--sample/-s: rate    Sampling rate for echo cancellation\n");
+    fprintf(stderr, "--echopath path len: Echo path length in milliseconds\n");
     fprintf(stderr, "--dtd {geigel|mecc}: Which double-talk detector to use\n");
     fprintf(stderr, "--dummy:             Reflect all messages back to wowza unchanged\n");
     fprintf(stderr, "--nothread:          Run in single-threaded mode\n");
@@ -93,6 +96,13 @@ static void set_fullname(void)
     g_debug("Set fullname to %s", globals.fullname);
 }
 
+static void calc_echo_globals(void)
+{
+    /* Computed */
+    globals.nlms_len = globals.echo_path * TAPS_PER_MS;
+    globals.dtd_hangover = 30 * TAPS_PER_MS; /* TODO: make user-settable */
+}
+
 static void parse_command_line(int argc, char *argv[])
 {
     globals.txhost = NULL;
@@ -109,10 +119,11 @@ static void parse_command_line(int argc, char *argv[])
     globals.echo_cancel = 0;
 
     globals.dtd = geigel;
+
     globals.echo_path = 200;    /* TODO: constants */
     globals.sample_rate = 16000;
-    globals.nlms_len = globals.echo_path * TAPS_PER_MS;
-    globals.dtd_hangover = 30 * TAPS_PER_MS;
+
+    calc_echo_globals();
 
     globals.dummy = 0;
     globals.nothread = 0;
@@ -141,6 +152,8 @@ static void parse_command_line(int argc, char *argv[])
             {"server", 1, 0, 0},
             {"basename", 1, 0, 0},
             {"dtd", 1, 0, 0},
+            {"sample", 1, 0, 's'},
+            {"echopath", 1, 0, 0},
             {"dummy", 0, 0, 0},
             {"nothread", 0, 0, 0},
             {"flv", 0, 0, 0},
@@ -219,6 +232,11 @@ static void parse_command_line(int argc, char *argv[])
             {
                 globals.nothread = 1;
             }
+            else if (!strcmp("echopath", long_options[option_index].name))
+            {
+                globals.echo_path = atoi(optarg);
+                calc_echo_globals();
+            }
            break;
         case 'e':
             globals.echo_cancel = 1;
@@ -249,6 +267,10 @@ static void parse_command_line(int argc, char *argv[])
             break;
         case 'n':
             globals.rx_delay_ms = atoi(optarg);
+            break;
+        case 's':
+            globals.sample_rate = atoi(optarg);
+            calc_echo_globals();
             break;
         case '?':
             fprintf(stderr, "Unknown option '%c'\n", optopt);
