@@ -50,7 +50,8 @@ void calibrate(void)
 
     int num_cpus = num_processors();
     g_debug("Num cpus: %i", num_cpus);
-    g_debug("Sample rate: %d", globals.sample_rate);
+    g_debug("Sample rate: %d Hz", globals.sample_rate);
+    g_debug("Echo path length: %d ms", globals.echo_path);
     g_debug("DTD algorithm: %s", dtd_name);
     if (globals.dummy)
     {
