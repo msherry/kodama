@@ -15,6 +15,7 @@ static PaStream *in_stream, *out_stream;
 /* Let portaudio choose how many frames it wants per buffer */
 int gFramesPerBuffer = paFramesPerBufferUnspecified;
 
+extern globals_t globals;
 
 /*********** Static prototypes ***********/
 static void init_portaudio(void);
@@ -65,7 +66,7 @@ void setup_hw_in(hybrid *h)
         Pa_GetDeviceInfo(inputParameters.device)->defaultLowInputLatency;
     inputParameters.hostApiSpecificStreamInfo = NULL;
 
-    err = Pa_OpenStream(&in_stream, &inputParameters, NULL, SAMPLE_RATE,
+    err = Pa_OpenStream(&in_stream, &inputParameters, NULL, globals.sample_rate,
             gFramesPerBuffer,
             paClipOff,
             handle_read,
@@ -103,7 +104,8 @@ void setup_hw_out(hybrid *h)
         Pa_GetDeviceInfo(outputParameters.device)->defaultLowOutputLatency;
     outputParameters.hostApiSpecificStreamInfo = NULL;
 
-    err = Pa_OpenStream(&out_stream, NULL, &outputParameters, SAMPLE_RATE,
+    err = Pa_OpenStream(&out_stream, NULL, &outputParameters,
+            globals.sample_rate,
             gFramesPerBuffer,
             paClipOff,
             handle_write,

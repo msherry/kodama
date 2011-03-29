@@ -50,7 +50,7 @@ void calibrate(void)
 
     int num_cpus = num_processors();
     g_debug("Num cpus: %i", num_cpus);
-    g_debug("Sample rate: %d", SAMPLE_RATE);
+    g_debug("Sample rate: %d", globals.sample_rate);
     g_debug("DTD algorithm: %s", dtd_name);
     if (globals.dummy)
     {
@@ -130,7 +130,8 @@ void calibrate(void)
 
 
     float cpu_mips = (end_cycles - before_cycles) / (d_us);
-    float secs_of_speech = (float)(stats.total_samples_processed) / SAMPLE_RATE;
+    float secs_of_speech = (float)(stats.total_samples_processed) / \
+        globals.sample_rate;
     float mips_per_ec = cpu_mips / ((secs_of_speech*1E6)/d_us);
     float instances_per_core = cpu_mips/mips_per_ec;
 

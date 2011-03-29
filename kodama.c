@@ -325,9 +325,9 @@ static void report_stats(void)
     if (stats.samples_processed)
     {
         g_debug("*** Stats dump ***");
-        g_debug("Samples processed: %lu (%.02f s)",
+        g_debug("Samples processed: %llu (%.02f s)",
             stats.samples_processed,
-            (float)stats.samples_processed/SAMPLE_RATE);
+            (float)stats.samples_processed/globals.sample_rate);
     }
 
     stats.samples_processed = 0;

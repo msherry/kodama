@@ -309,7 +309,7 @@ int flv_parse_tag(const unsigned char *packet_data, const int packet_len,
             {
                 /* Need to resample */
                 FLV_LOG("Resampling from %d to %d Hz\n",
-                    flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
+                    flv->d_codec_ctx->sample_rate, globals.sample_rate);
 
                 gettimeofday(&t1, NULL);
 
@@ -421,7 +421,7 @@ int flv_create_tag(unsigned char **flv_packet, int *packet_len,
     if (flv->e_resample_ctx)
     {
         FLV_LOG("Resampling from %d to %d Hz\n",
-                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
+                globals.sample_rate, flv->d_codec_ctx->sample_rate);
 
         int newrate_num_samples = audio_resample(flv->e_resample_ctx,
                 resampled, sb->s, sb->count);

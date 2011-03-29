@@ -19,11 +19,11 @@
 #define ERROR_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 
 #define NUM_CHANNELS (1)
-#define SAMPLE_RATE  (16000)
+/* #define SAMPLE_RATE  (16000) */
 
-#if (SAMPLE_RATE % 8000)
-#error SAMPLE_RATE must be a multiple of 8000
-#endif
+/* #if (SAMPLE_RATE % 8000) */
+/* #error SAMPLE_RATE must be a multiple of 8000 */
+/* #endif */
 
 #define PORTNUM (7650)
 

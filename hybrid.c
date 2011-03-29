@@ -6,6 +6,7 @@
 #include "hybrid.h"
 
 /* Globals */
+extern globals_t globals;
 static GHashTable *id_to_hybrid;
 
 void init_hybrids(void)
@@ -29,8 +30,8 @@ hybrid *hybrid_new(void)
 {
     hybrid *h = malloc(sizeof(hybrid));
 
-    h->tx_buf = cbuffer_init(20 * SAMPLE_RATE * NUM_CHANNELS);
-    h->rx_buf = cbuffer_init(20 * SAMPLE_RATE * NUM_CHANNELS);
+    h->tx_buf = cbuffer_init(20 * globals.sample_rate * NUM_CHANNELS);
+    h->rx_buf = cbuffer_init(20 * globals.sample_rate * NUM_CHANNELS);
 
     h->tx_count = 0;
     h->rx_count = 0;
@@ -151,7 +152,7 @@ void hybrid_simulate_tx_delay(hybrid *h, float ms)
 {
     /* Dummy initial data to simulate delay */
     int i;
-    for (i=0; i<(ms * SAMPLE_RATE * NUM_CHANNELS)/1000.0; i++)
+    for (i=0; i<(ms * globals.sample_rate * NUM_CHANNELS)/1000.0; i++)
     {
         cbuffer_push(h->tx_buf, SAMPLE_SILENCE);
     }
@@ -161,7 +162,7 @@ void hybrid_simulate_rx_delay(hybrid *h, float ms)
 {
     /* Dummy initial data to simulate delay */
     int i;
-    for (i=0; i<(ms * SAMPLE_RATE * NUM_CHANNELS)/1000.0; i++)
+    for (i=0; i<(ms * globals.sample_rate * NUM_CHANNELS)/1000.0; i++)
     {
         cbuffer_push(h->rx_buf, SAMPLE_SILENCE);
     }

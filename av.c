@@ -80,12 +80,12 @@ int setup_decode_context(FLVStream *flv, unsigned char formatByte)
 
     /* Determine if we need to resample. Base it off the codec context's
      * sample rate, since the format byte often lies */
-    if (flv->d_codec_ctx->sample_rate != SAMPLE_RATE)
+    if (flv->d_codec_ctx->sample_rate != globals.sample_rate)
     {
         FLV_LOG("Creating decode resample context: %d -> %d\n",
-            flv->d_codec_ctx->sample_rate, SAMPLE_RATE);
+            flv->d_codec_ctx->sample_rate, globals.sample_rate);
         flv->d_resample_ctx = av_audio_resample_init(1, channels,
-            SAMPLE_RATE, flv->d_codec_ctx->sample_rate,
+            globals.sample_rate, flv->d_codec_ctx->sample_rate,
             SAMPLE_FMT_S16, SAMPLE_FMT_S16,
             16, //TODO: How many taps do we need?
             10, 0, .8); /* TODO: fix these */
@@ -170,12 +170,12 @@ int setup_encode_context(FLVStream *flv)
 
     /* Resample back to the original sample rate, if we downsampled for echo
      * cancellation */
-    if (flv->e_codec_ctx->sample_rate != SAMPLE_RATE)
+    if (flv->e_codec_ctx->sample_rate != globals.sample_rate)
     {
         FLV_LOG("Creating encode resample context: %d -> %d\n",
-                SAMPLE_RATE, flv->d_codec_ctx->sample_rate);
+                globals.sample_rate, flv->d_codec_ctx->sample_rate);
         flv->e_resample_ctx = av_audio_resample_init(1, channels,
-            flv->e_codec_ctx->sample_rate, SAMPLE_RATE,
+            flv->e_codec_ctx->sample_rate, globals.sample_rate,
             SAMPLE_FMT_S16, SAMPLE_FMT_S16,
             16,  // TODO: again, how many taps do we need?
             10, 0, .8);

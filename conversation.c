@@ -313,7 +313,7 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     d_us = delta(&start, &end);
 
     float mips_cpu = (end_cycles - before_cycles) / (d_us);
-    float secs_of_speech = (float)(sb->count)/SAMPLE_RATE;
+    float secs_of_speech = (float)(sb->count)/globals.sample_rate;
     float mips_per_ec = mips_cpu / ((secs_of_speech*1E6)/d_us);
 
     /* VERBOSE_LOG("CPU executes %5.2f MIPS\n", mips_cpu); */
@@ -328,7 +328,8 @@ int r(const char *stream_name, const unsigned char *flv_data, int flv_len,
     stats.total_samples_processed += sb->count;
     stats.total_us += d_us;
 
-    float total_secs_of_speech = (float)(stats.total_samples_processed)/SAMPLE_RATE;
+    float total_secs_of_speech = (float)(stats.total_samples_processed) / \
+        globals.sample_rate;
     float total_us = stats.total_us;
     G_UNLOCK(stats);
 
