@@ -380,7 +380,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
     UNUSED(err);
 
     /* Get the last nlms_len rx samples and find the max*/
-    size_t i;
+    int i;
 
     float a_rx = fabsf(rx);
 
