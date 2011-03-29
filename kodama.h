@@ -95,8 +95,4 @@ typedef struct stats_t {
 
 /* Convenience macros */
 
-/// Number of taps per millisecond of speech
-#define TAPS_PER_MS (globals.sample_rate / 1000)
-
-
 #endif

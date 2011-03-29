@@ -12,6 +12,7 @@
 #include "calibrate.h"
 #include "conversation.h"
 #include "hybrid.h"
+#include "echo.h"
 #include "interface_hardware.h"
 #include "interface_tcp.h"
 #include "interface_udp.h"
@@ -101,6 +102,25 @@ static void calc_echo_globals(void)
     /* Computed */
     globals.nlms_len = globals.echo_path * TAPS_PER_MS;
     globals.dtd_hangover = 30 * TAPS_PER_MS; /* TODO: make user-settable */
+
+    if (globals.nlms_len % DTD_LEN)
+    {
+        /* Log handlers haven't been set up at this point, so there's a good
+         * chance we won't see this message if the run scripts call this
+         * badly */
+        fprintf(stderr, "DTD_LEN (%d) must divide evenly into nlms_len (%d)\n",
+                DTD_LEN, globals.nlms_len);
+        exit(1);
+    }
+    if (globals.sample_rate % 1000)
+    {
+        fprintf(stderr, "Sample rate (%d) must be a multiple of 1000\n",
+                globals.sample_rate);
+        exit(1);
+    }
+
+    /* TODO: we used to make sure that sample_rate was a multiple of 8000. We
+     * would never not want this, but is it strictly necessary? */
 }
 
 static void parse_command_line(int argc, char *argv[])
@@ -127,9 +147,6 @@ static void parse_command_line(int argc, char *argv[])
 
     globals.dummy = 0;
     globals.nothread = 0;
-
-    /* TODO: verify that sample_rate is a multiple of 8000, dtd_len divides into
-     * nlms_len, sample_rate divides by 1000 */
 
     globals.basename = NULL;
     globals.fullname = NULL;

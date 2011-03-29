@@ -53,11 +53,9 @@ typedef struct hp_fir {
 #define GeigelThreshold (M6dB)
 /** Optimize Geigel DTD calculation  */
 #define DTD_LEN (80)
-/* #if (NLMS_LEN % DTD_LEN) */
-/* #error DTD_LEN must divide evenly into NLMS_LEN */
-/* #endif */
 
-
+/// Number of taps per millisecond of speech
+#define TAPS_PER_MS (globals.sample_rate / 1000)
 
 /// Context for echo-canceling one side of a conversation.
 typedef struct echo {
