@@ -108,6 +108,9 @@ static void parse_command_line(int argc, char *argv[])
 
     globals.echo_cancel = 0;
     globals.dtd = geigel;
+    globals.echo_path = 200;    /* TODO: constants */
+    globals.sample_rate = 16000;
+    globals.nlms_len = globals.echo_path * globals.sample_rate / 1000;
     globals.dummy = 0;
     globals.nothread = 0;
 

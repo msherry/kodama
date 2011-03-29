@@ -58,25 +58,25 @@ echo *echo_create(hybrid *h)
 {
     echo * restrict e = malloc(sizeof(echo));
 
-    e->rx_buf = cbuffer_init((size_t)NLMS_LEN);
-    e->x  = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
-    e->xf = malloc((NLMS_LEN+NLMS_EXT) * sizeof(float));
-    e->w  = malloc(NLMS_LEN * sizeof(float));
+    e->rx_buf = cbuffer_init((size_t)globals.nlms_len);
+    e->x  = malloc((globals.nlms_len+NLMS_EXT) * sizeof(float));
+    e->xf = malloc((globals.nlms_len+NLMS_EXT) * sizeof(float));
+    e->w  = malloc(globals.nlms_len * sizeof(float));
 
     e->j  = NLMS_EXT;
 
     int i;
     int j = e->j;
-    for (i = 0; i < NLMS_LEN; i++)
+    for (i = 0; i < globals.nlms_len; i++)
     {
         e->x[j+i] = 0;
-        e->xf[j+i] = 1.0/NLMS_LEN;
-        e->w[i] = 1.0/NLMS_LEN;
+        e->xf[j+i] = 1.0/globals.nlms_len;
+        e->w[i] = 1.0/globals.nlms_len;
     }
 
     /* Geigel DTD */
-    e->max_x = malloc((NLMS_LEN/DTD_LEN) * sizeof(float));
-    memset(e->max_x, 0, (NLMS_LEN/DTD_LEN) * sizeof(float));
+    e->max_x = malloc((globals.nlms_len/DTD_LEN) * sizeof(float));
+    memset(e->max_x, 0, (globals.nlms_len/DTD_LEN) * sizeof(float));
     e->max_max_x = 0.0;
     e->dtd_index = 0;
     e->dtd_count = 0;
@@ -173,7 +173,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
 
         /* These used to be done in nlms_pw, but at least one DTD needs access
          * to err */
-        float dotp_w_x = dotp(e->w, e->x+e->j, NLMS_LEN);
+        float dotp_w_x = dotp(e->w, e->x+e->j, globals.nlms_len);
         float err = tx - dotp_w_x;
 
         /* DTD - assumes the dtd_fn field is properly set */
@@ -201,7 +201,7 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
         if (fabsf(tx)+10 > MAXPCM)
         {
             /* Wipe all the weights. Brutal. */
-            memset(e->w, 0, (NLMS_LEN*sizeof(float)));
+            memset(e->w, 0, (globals.nlms_len*sizeof(float)));
 
             g_debug("Orig: %i  clipped: %f", tx_s, tx);
             g_debug("tx_fir: %f   tx_nlms_pw: %f", tx_fir, tx_nlms_pw);
@@ -323,10 +323,10 @@ static float nlms_pw(echo *e, float err, float rx, int update)
 #ifdef FAST_DOTP
     /* Iterative update */
     e->dotp_xf_xf += (e->xf[j] * e->xf[j] -
-        e->xf[j+NLMS_LEN-1] * e->xf[j+NLMS_LEN-1]);
+        e->xf[j+globals.nlms_len-1] * e->xf[j+globals.nlms_len-1]);
 #else
     /* The slow way to do this */
-    e->dotp_xf_xf = dotp(e->xf, e->xf, NLMS_LEN);
+    e->dotp_xf_xf = dotp(e->xf, e->xf, globals.nlms_len);
 #endif
 
     /* TODO: find a reasonable value for this */
@@ -342,7 +342,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
             /* stack_trace(1); */
 
             /* TODO: / HACK: for now, reset the weights to zero */
-            memset(e->w, 0, (NLMS_LEN)*sizeof(float));
+            memset(e->w, 0, (globals.nlms_len)*sizeof(float));
         }
 
         /* Update tap weights */
@@ -351,7 +351,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
         float * restrict weights = e->w;
         float * restrict xf      = e->xf;
 
-        for (i = 0; i < NLMS_LEN; i++)
+        for (i = 0; i < globals.nlms_len; i++)
         {
             weights[i] += u_ef*xf[j+i];
         }
@@ -361,8 +361,8 @@ static float nlms_pw(echo *e, float err, float rx, int update)
     if (--e->j < 0)
     {
         e->j = NLMS_EXT;
-        memmove(e->x+e->j+1, e->x, (NLMS_LEN-1)*sizeof(float));
-        memmove(e->xf+e->j+1, e->xf, (NLMS_LEN-1)*sizeof(float));
+        memmove(e->x+e->j+1, e->x, (globals.nlms_len-1)*sizeof(float));
+        memmove(e->xf+e->j+1, e->xf, (globals.nlms_len-1)*sizeof(float));
     }
 
     return err;
@@ -370,7 +370,7 @@ static float nlms_pw(echo *e, float err, float rx, int update)
 
 /*********** DTD functions ***********/
 
-/* Compare against the last NLMS_LEN samples */
+/* Compare against the last nlms_len samples */
 /* TODO: apparently Geigel works well on line echo, but rather more poorly on
  * acoustic echo. Look into something more sophisticated. */
 
@@ -379,7 +379,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
 {
     UNUSED(err);
 
-    /* Get the last NLMS_LEN rx samples and find the max*/
+    /* Get the last nlms_len rx samples and find the max*/
     size_t i;
 
     float a_rx = fabsf(rx);
@@ -399,7 +399,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
         e->dtd_count = 0;
         /* Find max of max */
         e->max_max_x = 0;
-        for (i = 0; i< NLMS_LEN/DTD_LEN; i++)
+        for (i = 0; i< globals.nlms_len/DTD_LEN; i++)
         {
             if (e->max_x[i] > e->max_max_x)
             {
@@ -407,7 +407,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
             }
         }
         /* Rotate */
-        if (++e->dtd_index >= NLMS_LEN/DTD_LEN)
+        if (++e->dtd_index >= globals.nlms_len/DTD_LEN)
         {
             e->dtd_index = 0;
         }
@@ -436,12 +436,12 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
     UNUSED(err);
     UNUSED(rx);
 
-    /* Get the last NLMS_LEN rx samples and find the max*/
+    /* Get the last nlms_len rx samples and find the max*/
     float max = 0.0;
     size_t i;
     int j = e->j;
 
-    for (i=0; i<NLMS_LEN-1; i++)
+    for (i=0; i<globals.nlms_len-1; i++)
     {
         float rx = fabsf(e->x[j+i+1]); /* e->x[j] hasn't been set yet */
         if (rx > max)
@@ -540,10 +540,10 @@ static void dump_ec_state(echo *e)
 
     DEBUG_LOG("dotp_xf_xf: %f\n", e->dotp_xf_xf);
     DEBUG_LOG("STEPSIZE: %f\n", STEPSIZE);
-    hex = floats_to_text(e->w, NLMS_LEN);
+    hex = floats_to_text(e->w, globals.nlms_len);
     DEBUG_LOG("e->w: %s\n", hex);
     free(hex);
-    hex = floats_to_text(e->x+e->j, NLMS_LEN);
+    hex = floats_to_text(e->x+e->j, globals.nlms_len);
     DEBUG_LOG("e->x+j: %s\n", hex);
     free(hex);
 }

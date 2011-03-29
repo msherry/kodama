@@ -65,6 +65,12 @@ typedef struct globals_t {
     int dummy;
     /** No threading mode - run in a single thread */
     int nothread;
+    /** Number of milliseconds of echo to handle  */
+    int echo_path;
+    /** Sample rate to use for echo cancellation */
+    int sample_rate;
+    /** nlms length in taps (ms of echo path * taps per ms) */
+    int nlms_len;
 
     /** Logging options */
     int verbose;

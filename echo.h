@@ -47,10 +47,10 @@ typedef struct hp_fir {
 #define STEPSIZE (0.7f)
 
 /** Number of milliseconds of echo path to handle */
-#define ECHO_PATH_MS (200)
+/* #define ECHO_PATH_MS (200) */
 
 /** NLMS length in taps (ms * TAPS_PER_MS) */
-#define NLMS_LEN (ECHO_PATH_MS * TAPS_PER_MS)
+/* #define NLMS_LEN (ECHO_PATH_MS * TAPS_PER_MS) */
 
 /** Extension for NLMS buffer to minimize memmoves */
 #define NLMS_EXT (100)
@@ -64,9 +64,9 @@ typedef struct hp_fir {
 #define DTD_HOLDOVER (30 * TAPS_PER_MS)
 /** Optimize Geigel DTD calculation  */
 #define DTD_LEN (80)
-#if (NLMS_LEN % DTD_LEN)
-#error DTD_LEN must divide evenly into NLMS_LEN
-#endif
+/* #if (NLMS_LEN % DTD_LEN) */
+/* #error DTD_LEN must divide evenly into NLMS_LEN */
+/* #endif */
 
 
 

@@ -61,8 +61,9 @@ void calibrate(void)
     g_debug("Validating...");
 
     /* Validate dot product fn */
-    float vec_a[NLMS_LEN], vec_b[NLMS_LEN];
-    for (int i = 0; i< NLMS_LEN; i++)
+    float *vec_a = malloc(globals.nlms_len * sizeof(float));
+    float *vec_b = malloc(globals.nlms_len * sizeof(float));
+    for (int i = 0; i< globals.nlms_len; i++)
     {
         float vals[] = {0.1, 0.2, 0.3};
         int len = sizeof(vals)/sizeof(vals[0]);
@@ -71,27 +72,28 @@ void calibrate(void)
     }
     float correct_result;
     int temp;
-    if (NLMS_LEN == 1600)       /* 8000 Hz */
+    if (globals.nlms_len == 1600)       /* 8000 Hz */
     {
         temp = DOTP_1600;
     }
-    else if (NLMS_LEN == 3200)  /* 16000 Hz */
+    else if (globals.nlms_len == 3200)  /* 16000 Hz */
     {
         temp = DOTP_3200;
     }
     else
     {
-        g_error("Unable to determine correct dotp value for NLMS_LEN = %d", NLMS_LEN);
+        g_error("Unable to determine correct dotp value for nlms_len = %d",
+                globals.nlms_len);
     }
     memcpy(&correct_result, &temp, sizeof(float));
 
-    float dotp_result = dotp(vec_a, vec_b, NLMS_LEN);
+    float dotp_result = dotp(vec_a, vec_b, globals.nlms_len);
 
     /* Gcc warns about comparing float values, but trust me - it's ok here */
     if (correct_result != dotp_result)
     {
         g_error("dotp returned wrong value for NLMS of length %d: "
-                "expected %.05f, got %.05f", NLMS_LEN, correct_result,
+                "expected %.05f, got %.05f", globals.nlms_len, correct_result,
                 dotp_result);
     }
     else
