@@ -63,7 +63,7 @@ typedef struct globals_t {
     int echo_path;
     /** Sample rate to use for echo cancellation */
     int sample_rate;
-    /** nlms length in taps (ms of echo path * taps per ms) */
+    /** nlms length in taps (ms of echo path * TAPS_PER_MS) */
     int nlms_len;
     /** DTD hangover time, in taps - default is 30 ms. (ms * TAPS_PER_MS) */
     int dtd_hangover;
