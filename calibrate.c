@@ -99,7 +99,7 @@ void calibrate(void)
     else
     {
         /* g_debug("dotp returned correct result for NLMS of length %d: " */
-        /*         "   %.05f", NLMS_LEN, correct_result); */
+        /*         "   %.05f", globals.nlms_len, correct_result); */
     }
 
     /* Find how many threads to run */
