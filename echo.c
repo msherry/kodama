@@ -416,7 +416,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
 
     if (fabsf(tx) > (GeigelThreshold * e->max_max_x))
     {
-        e->holdover = DTD_HOLDOVER;
+        e->holdover = globals.dtd_hangover;
     }
 
     if (e->holdover)
@@ -454,7 +454,7 @@ static int geigel_dtd(echo *e, float err, float tx, float rx)
 
     if (a_tx > (GeigelThreshold * max))
     {
-        e->holdover = DTD_HOLDOVER;
+        e->holdover = globals.dtd_hangover;
     }
 
     if (e->holdover)
@@ -486,7 +486,7 @@ static int mecc_dtd(echo *e, float err, float tx, float rx)
 
     if (xi < T)
     {
-        e->holdover = DTD_HOLDOVER;
+        e->holdover = globals.dtd_hangover;
     }
 
     if (e->holdover)

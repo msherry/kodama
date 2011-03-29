@@ -39,9 +39,6 @@ typedef struct hp_fir {
 
 #define MIN_XF M85dB_PCM
 
-/// Number of taps per millisecond of speech
-/* #define TAPS_PER_MS (SAMPLE_RATE / 1000) */
-
 /** convergence speed. Range: >0 to <1 (0.2 to 0.7). Larger values give more AEC
  * in lower frequencies, but less AEC in higher frequencies. */
 #define STEPSIZE (0.7f)
@@ -54,10 +51,6 @@ typedef struct hp_fir {
 
 /** DTD Speaker/mic threshold. 0dB for single-talk, 12dB for double-talk */
 #define GeigelThreshold (M6dB)
-/** Holdover for DTD, in taps (ms * TAPS_PER_MS) */
-/* TODO: fix this */
-// #define DTD_HOLDOVER (30 * TAPS_PER_MS)
-#define DTD_HOLDOVER (30 * 16)
 /** Optimize Geigel DTD calculation  */
 #define DTD_LEN (80)
 /* #if (NLMS_LEN % DTD_LEN) */

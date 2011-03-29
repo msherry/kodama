@@ -19,12 +19,6 @@
 #define ERROR_LOG(...) {fprintf(stderr, __VA_ARGS__); fflush(stderr);}
 
 #define NUM_CHANNELS (1)
-/* #define SAMPLE_RATE  (16000) */
-
-/* #if (SAMPLE_RATE % 8000) */
-/* #error SAMPLE_RATE must be a multiple of 8000 */
-/* #endif */
-
 #define PORTNUM (7650)
 
 /// Doubletalk detection algorithms
@@ -71,6 +65,8 @@ typedef struct globals_t {
     int sample_rate;
     /** nlms length in taps (ms of echo path * taps per ms) */
     int nlms_len;
+    /** DTD hangover time, in taps - default is 30 ms. (ms * TAPS_PER_MS) */
+    int dtd_hangover;
 
     /** Logging options */
     int verbose;
@@ -95,5 +91,12 @@ typedef struct stats_t {
     uint64_t total_samples_processed;      /// Processed over server lifetime
     uint64_t total_us;                     /// Total time spent processing
 } stats_t;
+
+
+/* Convenience macros */
+
+/// Number of taps per millisecond of speech
+#define TAPS_PER_MS (globals.sample_rate / 1000)
+
 
 #endif

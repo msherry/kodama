@@ -107,12 +107,18 @@ static void parse_command_line(int argc, char *argv[])
     globals.rx_delay_ms = 0;
 
     globals.echo_cancel = 0;
+
     globals.dtd = geigel;
     globals.echo_path = 200;    /* TODO: constants */
     globals.sample_rate = 16000;
-    globals.nlms_len = globals.echo_path * globals.sample_rate / 1000;
+    globals.nlms_len = globals.echo_path * TAPS_PER_MS;
+    globals.dtd_hangover = 30 * TAPS_PER_MS;
+
     globals.dummy = 0;
     globals.nothread = 0;
+
+    /* TODO: verify that sample_rate is a multiple of 8000, dtd_len divides into
+     * nlms_len, sample_rate divides by 1000 */
 
     globals.basename = NULL;
     globals.fullname = NULL;
