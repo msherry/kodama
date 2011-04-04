@@ -215,14 +215,14 @@ void echo_update_tx(echo *e, SAMPLE_BLOCK *sb)
     /* Indicate which side doubletalk is on */
     if (any_doubletalk)
     {
-        int name_len = strlen(e->h->name);
-        char side = e->h->name[name_len-1];
-        char *spacing = side == '0' ? "\t" : "\t\t\t";
-        VERBOSE_LOG("%s|\n", spacing);
+        /* int name_len = strlen(e->h->name); */
+        /* char side = e->h->name[name_len-1]; */
+        /* char *spacing = side == '0' ? "\t" : "\t\t\t"; */
+        /* VERBOSE_LOG("%s|\n", spacing); */
     }
     else
     {
-        VERBOSE_LOG("\n");
+        /* VERBOSE_LOG("\n"); */
     }
 }
 
