@@ -77,5 +77,6 @@ distclean: clean
 
 check-syntax:
 	${CC} ${CFLAGS} ${INCLUDES} ${GLIB_INCLUDES} -fsyntax-only $(CHK_SOURCES)
+	rats $(CHK_SOURCES)
 
 .PHONY: all clean check-syntax
