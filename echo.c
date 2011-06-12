@@ -67,6 +67,7 @@ echo *echo_create(hybrid *h)
 
     int i;
     int j = e->j;
+    /* TODO: memset() would be faster */
     for (i = 0; i < globals.nlms_len; i++)
     {
         e->x[j+i] = 0;
